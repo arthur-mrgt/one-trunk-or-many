@@ -1,0 +1,11 @@
+# Large local resources (datasets/models) should not be versioned
+resources/
+
+# Optional external resource roots mirrored into repo
+data/
+datasets/
+models/
+
+# Python cache
+__pycache__/
+*.pyc

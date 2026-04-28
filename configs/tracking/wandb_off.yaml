@@ -1,0 +1,6 @@
+wandb:
+  enabled: false
+  project: one-trunk-or-many
+  entity: null
+  run_name: null
+  tags: []

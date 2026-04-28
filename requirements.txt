@@ -1,0 +1,6 @@
+hydra-core
+omegaconf
+numpy
+pandas
+wandb
+pyarrow

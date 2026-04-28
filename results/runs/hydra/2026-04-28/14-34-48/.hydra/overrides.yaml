@@ -1,0 +1,3 @@
+- data.n_scenes=1
+- metrics.pairs=[[rgb,depth]]
+- tracking=wandb_off

@@ -52,26 +52,37 @@ conda create -n trunk python=3.11
 conda activate trunk
 pip install -r requirements.txt
 
-# Download 4M-21 checkpoint (from HuggingFace)
-python scripts/download_checkpoint.py --model 4m-21-b
+# Setup base resources (folders + 4M model)
+# Linux/SCITAS:
+bash scripts/setup_base.sh EPFL-VILAB/4M-7_B_CC12M
+# Windows PowerShell:
+powershell -ExecutionPolicy Bypass -File scripts/setup_base.ps1 -ModelRepo EPFL-VILAB/4M-7_B_CC12M
 ```
 
-Datasets (Hypersim, DIODE) must be downloaded separately. See [`docs/data.md`](docs/data.md).
+Datasets (Hypersim, DIODE) must be downloaded separately into the configured
+resource root. Full instructions are in [`docs/data.md`](docs/data.md).
 
 ## Reproducing Results
 
 ```bash
-# 1. Extract activations
-python -m src.run_extraction --dataset hypersim --n_scenes 500
+# 1) Run full CKA benchmark pipeline (default config)
+python -m src.run_benchmark
 
-# 2. Compute metrics + null distribution
-python -m src.run_metrics --pairs rgb-depth rgb-normals depth-normals
+# 2) Example override: Hypersim rgb-depth POC, 20 scenes, W&B on
+python -m src.run_benchmark \
+  data.name=hypersim \
+  data.n_scenes=20 \
+  metrics.pairs='[[rgb,depth]]' \
+  tracking=wandb_on
 
-# 3. Generate figures
-python -m src.make_figures
+# 3) Optional stage entrypoints (same config interface)
+python -m src.run_extraction
+python -m src.run_metrics
 ```
 
 Full SCITAS job scripts are in [`scripts/`](scripts/).
+
+Detailed pipeline and config reference: [`docs/pipeline.md`](docs/pipeline.md).
 
 ## Status
 

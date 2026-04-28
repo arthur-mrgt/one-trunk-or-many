@@ -1,1 +1,31 @@
-# Default experiment configuration
+defaults:
+  - data: hypersim
+  - model: fourm_mock
+  - metrics: cka
+  - tracking: wandb_off
+  - runtime: local
+  - slurm: izar
+  - _self_
+
+project:
+  name: one-trunk-or-many
+  stage: rq1_cka_pipeline
+  seed: 42
+
+paths:
+  resources_root: ./resources
+  datasets_root: ${paths.resources_root}/datasets
+  models_root: ${paths.resources_root}/models/4m
+  results_root: ./results
+  runs_root: ${paths.results_root}/runs
+
+analysis:
+  null_distribution:
+    enabled: false
+    n_mismatched_pairs: 1000
+    sampling: random_scene
+    note: "Scaffold only in this iteration."
+
+hydra:
+  run:
+    dir: ${paths.runs_root}/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}

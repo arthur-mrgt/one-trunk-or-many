@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=cka-metrics
+#SBATCH --job-name=cka-benchmark
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=8
@@ -17,4 +17,7 @@ echo "[INFO] Started at: $(date)"
 # source ~/.bashrc
 # conda activate trunk
 
-python -m src.run_metrics data.name=hypersim metrics.pairs='[[rgb,depth]]'
+python -m src.run_benchmark \
+  data.name=hypersim \
+  metrics.pairs='[[rgb,depth]]' \
+  tracking=wandb_on

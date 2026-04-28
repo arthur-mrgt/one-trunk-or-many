@@ -1,0 +1,12 @@
+enabled:
+  - cka
+pairs:
+  - [rgb, depth]
+
+cka:
+  center_gram: true
+  unbiased: false
+
+output:
+  save_csv: true
+  save_parquet: false

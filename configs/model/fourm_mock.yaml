@@ -1,0 +1,11 @@
+backend: fourm_mock
+hf_repo: EPFL-VILAB/4M-7_B_CC12M
+local_dir: ${paths.models_root}/EPFL-VILAB/4M-7_B_CC12M
+embedding_dim: 512
+layers:
+  - layer_00
+  - layer_01
+  - layer_02
+  - layer_03
+  - layer_04
+  - layer_05

@@ -1,1 +1,73 @@
-"""Hypersim dataloader utilities."""
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass
+from pathlib import Path
+
+
+@dataclass
+class PairSample:
+    scene_id: str
+    sample_key: str
+    modality_paths: dict[str, Path]
+
+
+def _frame_key(path: Path) -> str:
+    cam_match = re.search(r"scene_(cam_\d+)_", path.as_posix())
+    frame_match = re.search(r"frame\.(\d+)", path.name)
+    cam = cam_match.group(1) if cam_match else "cam_unknown"
+    frame = frame_match.group(1) if frame_match else "frame_unknown"
+    return f"{cam}:{frame}"
+
+
+def _list_scene_ids(root: Path) -> list[str]:
+    return sorted(
+        p.name for p in root.rglob("ai_*_*") if p.is_dir() and p.name.startswith("ai_")
+    )
+
+
+def _index_scene_files(scene_root: Path, modality: str) -> dict[str, Path]:
+    if modality == "rgb":
+        pattern = "images/scene_cam_*_final_hdf5/frame.*.color.hdf5"
+    elif modality == "depth":
+        pattern = "images/scene_cam_*_geometry_hdf5/frame.*.depth_meters.hdf5"
+    else:
+        raise ValueError(f"Unsupported Hypersim modality: {modality}")
+
+    mapping: dict[str, Path] = {}
+    for file_path in scene_root.glob(pattern):
+        mapping[_frame_key(file_path)] = file_path
+    return mapping
+
+
+def load_pairs(
+    root: Path,
+    modalities: tuple[str, str],
+    n_scenes: int,
+    scene_stride: int,
+) -> list[PairSample]:
+    scene_ids = _list_scene_ids(root)
+    sampled_scene_ids = scene_ids[:: max(scene_stride, 1)][:n_scenes]
+    output: list[PairSample] = []
+
+    for scene_id in sampled_scene_ids:
+        scene_root = root / "scenes" / scene_id
+        if not scene_root.exists():
+            continue
+
+        left = _index_scene_files(scene_root, modalities[0])
+        right = _index_scene_files(scene_root, modalities[1])
+        common_keys = sorted(set(left).intersection(right))
+
+        for key in common_keys:
+            output.append(
+                PairSample(
+                    scene_id=scene_id,
+                    sample_key=key,
+                    modality_paths={
+                        modalities[0]: left[key],
+                        modalities[1]: right[key],
+                    },
+                )
+            )
+    return output

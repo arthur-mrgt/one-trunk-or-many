@@ -1,0 +1,5 @@
+batch_size: 1
+num_workers: 4
+device: cpu
+precision: fp32
+save_activations: true
