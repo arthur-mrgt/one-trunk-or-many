@@ -3,26 +3,49 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
 from omegaconf import DictConfig
 
 from src.data.registry import load_dataset_pairs
 from src.models.registry import build_model
 from src.pipeline.extraction import run_extraction
 from src.pipeline.metrics import run_metrics
-from src.utils.config import RunContext, cfg_to_container, make_run_context
+from src.utils.config import RunContext, cfg_to_container, ensure_dir, make_run_context
 from src.utils.io import write_json, write_optional_parquet, write_table
 from src.utils.tracking import build_tracker
 
 
-def run_benchmark(cfg: DictConfig) -> RunContext:
+def _list_activation_index_files(run_ctx: RunContext) -> list[Path]:
+    return sorted(run_ctx.artifacts_dir.glob("activation_index_*.csv"))
+
+
+def _resolve_run_ctx_for_metrics(cfg_dict: dict[str, Any]) -> RunContext:
+    run_id = cfg_dict["runtime"].get("metrics_input_run_id")
+    runs_root = Path(cfg_dict["paths"]["runs_root"])
+    if run_id:
+        run_dir = runs_root / run_id
+    else:
+        candidates = sorted([p for p in runs_root.glob("*") if p.is_dir()])
+        if not candidates:
+            raise FileNotFoundError(
+                "No run directory found for metrics stage. "
+                "Run extraction first or set runtime.metrics_input_run_id."
+            )
+        run_dir = candidates[-1]
+    return RunContext(
+        run_id=run_dir.name,
+        run_dir=run_dir,
+        activations_dir=run_dir / "activations",
+        metrics_dir=ensure_dir(run_dir / "metrics"),
+        artifacts_dir=ensure_dir(run_dir / "artifacts"),
+    )
+
+
+def run_extraction_stage(cfg: DictConfig) -> RunContext:
     cfg_dict = cfg_to_container(cfg)
     run_ctx = make_run_context(cfg)
-    tracker = build_tracker(cfg=cfg_dict, run_id=run_ctx.run_id)
-    tracker.log_config(cfg_dict)
-
     model = build_model(cfg_dict["model"])
 
-    all_metric_frames = []
     for pair in cfg_dict["metrics"]["pairs"]:
         left_mod, right_mod = pair[0], pair[1]
         pair_name = f"{left_mod}-{right_mod}"
@@ -42,7 +65,34 @@ def run_benchmark(cfg: DictConfig) -> RunContext:
             out_dir=run_ctx.activations_dir,
         )
         write_table(run_ctx.artifacts_dir / f"activation_index_{pair_name}.csv", activation_index)
+    write_json(run_ctx.run_dir / "resolved_config.json", cfg_dict)
+    write_json(
+        run_ctx.run_dir / "run_summary.json",
+        {
+            "run_id": run_ctx.run_id,
+            "dataset": cfg_dict["data"]["name"],
+            "pairs": cfg_dict["metrics"]["pairs"],
+            "stage": "extraction",
+            "activation_indices": [str(p) for p in _list_activation_index_files(run_ctx)],
+        },
+    )
+    return run_ctx
 
+
+def run_metrics_stage(cfg: DictConfig) -> RunContext:
+    cfg_dict = cfg_to_container(cfg)
+    run_ctx = _resolve_run_ctx_for_metrics(cfg_dict)
+    tracker = build_tracker(cfg=cfg_dict, run_id=run_ctx.run_id)
+    tracker.log_config(cfg_dict)
+
+    all_metric_frames: list[pd.DataFrame] = []
+    for idx_file in _list_activation_index_files(run_ctx):
+        activation_index = pd.read_csv(idx_file)
+        pair_name = idx_file.stem.replace("activation_index_", "")
+        try:
+            left_mod, right_mod = tuple(pair_name.split("-", 1))
+        except ValueError:
+            continue
         for metric_name in cfg_dict["metrics"]["enabled"]:
             metric_df = run_metrics(
                 activation_index=activation_index,
@@ -53,12 +103,8 @@ def run_benchmark(cfg: DictConfig) -> RunContext:
             all_metric_frames.append(metric_df)
 
     if all_metric_frames:
-        import pandas as pd
-
         metric_table = pd.concat(all_metric_frames, ignore_index=True)
     else:
-        import pandas as pd
-
         metric_table = pd.DataFrame()
 
     csv_path = run_ctx.metrics_dir / "metrics.csv"
@@ -74,9 +120,9 @@ def run_benchmark(cfg: DictConfig) -> RunContext:
         {
             "run_id": run_ctx.run_id,
             "dataset": cfg_dict["data"]["name"],
-            "pairs": cfg_dict["metrics"]["pairs"],
             "metrics": cfg_dict["metrics"]["enabled"],
             "n_rows_metrics": int(len(metric_table)),
+            "stage": "metrics",
         },
     )
     write_json(run_ctx.run_dir / "resolved_config.json", cfg_dict)
@@ -86,3 +132,13 @@ def run_benchmark(cfg: DictConfig) -> RunContext:
         tracker.log_summary({"metrics_rows": int(len(metric_table))})
     tracker.finish()
     return run_ctx
+
+
+def run_benchmark(cfg: DictConfig) -> RunContext:
+    run_ctx = run_extraction_stage(cfg)
+    cfg_dict = cfg_to_container(cfg)
+    cfg_dict["runtime"]["metrics_input_run_id"] = run_ctx.run_id
+    from omegaconf import OmegaConf
+
+    cfg_for_metrics = OmegaConf.create(cfg_dict)
+    return run_metrics_stage(cfg_for_metrics)

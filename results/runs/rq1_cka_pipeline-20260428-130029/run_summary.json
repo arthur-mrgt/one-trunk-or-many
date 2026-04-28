@@ -1,0 +1,9 @@
+{
+  "run_id": "rq1_cka_pipeline-20260428-130029",
+  "dataset": "hypersim",
+  "metrics": [
+    "cka"
+  ],
+  "n_rows_metrics": 0,
+  "stage": "metrics"
+}

@@ -75,9 +75,9 @@ python -m src.run_benchmark \
   metrics.pairs='[[rgb,depth]]' \
   tracking=wandb_on
 
-# 3) Optional stage entrypoints (same config interface)
+# 3) Stage entrypoints (separated)
 python -m src.run_extraction
-python -m src.run_metrics
+python -m src.run_metrics runtime.metrics_input_run_id=<run_id>
 ```
 
 Full SCITAS job scripts are in [`scripts/`](scripts/).

@@ -15,12 +15,81 @@ import argparse
 import os
 import subprocess
 import sys
+import urllib.request
+import zipfile
 from pathlib import Path
 
 
 def run(cmd: list[str]) -> None:
     print("[CMD]", " ".join(cmd))
     subprocess.run(cmd, check=True)
+
+
+def _scene_zip_url(scene_id: str) -> str:
+    return (
+        "https://docs-assets.developer.apple.com/ml-research/datasets/"
+        f"hypersim/v1/scenes/{scene_id}.zip"
+    )
+
+
+def _download_scene_zip(scene_id: str, downloads_dir: Path) -> Path:
+    downloads_dir.mkdir(parents=True, exist_ok=True)
+    zip_path = downloads_dir / f"{scene_id}.zip"
+    if zip_path.exists():
+        return zip_path
+    url = _scene_zip_url(scene_id)
+    print(f"[INFO] Downloading scene archive: {url}")
+    urllib.request.urlretrieve(url, zip_path)
+    return zip_path
+
+
+def _should_extract(member: str, scene_id: str, args: argparse.Namespace) -> bool:
+    if not member.startswith(f"{scene_id}/"):
+        return False
+    if member.endswith("/"):
+        return False
+
+    # If scene is requested but no modality flag is set, extract everything for that scene.
+    modality_flags = any(
+        [
+            args.include_rgb,
+            args.include_depth,
+            args.include_metadata,
+            args.include_normals,
+            args.include_semantic,
+        ]
+    )
+    if not modality_flags:
+        return True
+
+    checks: list[bool] = []
+    if args.include_rgb:
+        checks.append("final_hdf5" in member and member.endswith(".color.hdf5"))
+    if args.include_depth:
+        checks.append("geometry_hdf5" in member and member.endswith(".depth_meters.hdf5"))
+    if args.include_normals:
+        checks.append("geometry_hdf5" in member and member.endswith(".normal_cam.hdf5"))
+        checks.append("geometry_hdf5" in member and member.endswith(".normal_world.hdf5"))
+    if args.include_semantic:
+        checks.append("geometry_hdf5" in member and member.endswith(".semantic.hdf5"))
+        checks.append("geometry_hdf5" in member and member.endswith(".semantic_instance.hdf5"))
+    if args.include_metadata:
+        checks.append(member.endswith("_detail/metadata_cameras.csv"))
+        checks.append(member.endswith("_detail/metadata_scene.csv"))
+    return any(checks)
+
+
+def _extract_scene_subset(
+    scene_id: str,
+    zip_path: Path,
+    out_dir: Path,
+    args: argparse.Namespace,
+) -> None:
+    print(f"[INFO] Extracting selected files from {zip_path.name}")
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        members = [m for m in zf.namelist() if _should_extract(m, scene_id, args)]
+        for member in members:
+            zf.extract(member, path=out_dir)
 
 
 def parse_args() -> argparse.Namespace:
@@ -104,6 +173,20 @@ def main() -> int:
             cmd.append("--silent")
         run(cmd)
         print(f"[DONE] Full Hypersim dataset downloaded in {hypersim_dir}")
+        return 0
+
+    # Fast path for subset downloads: scene ZIP + selective extraction.
+    if has_scene_filter:
+        downloads_dir = hypersim_dir / "downloads"
+        for scene in args.scenes:
+            zip_path = _download_scene_zip(scene_id=scene, downloads_dir=downloads_dir)
+            _extract_scene_subset(
+                scene_id=scene,
+                zip_path=zip_path,
+                out_dir=hypersim_dir,
+                args=args,
+            )
+        print(f"[DONE] Hypersim subset downloaded in {hypersim_dir}")
         return 0
 
     modality_filters: list[list[str]] = []

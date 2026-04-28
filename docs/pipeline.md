@@ -9,10 +9,17 @@ The benchmark is Hydra-driven and fully YAML-configurable.
 - Metrics are selected via `metrics.enabled` and `metrics.pairs`.
 - Tracking is controlled via `tracking` config group.
 
-Main entrypoint:
+Main end-to-end entrypoint:
 
 ```bash
 python -m src.run_benchmark
+```
+
+Separated stage entrypoints:
+
+```bash
+python -m src.run_extraction
+python -m src.run_metrics runtime.metrics_input_run_id=<run_id>
 ```
 
 ## Config groups

@@ -4,7 +4,8 @@ param(
   [switch]$IncludeDepth,
   [switch]$IncludeMetadata,
   [switch]$IncludeNormals,
-  [switch]$IncludeSemantic
+  [switch]$IncludeSemantic,
+  [switch]$Silent
 )
 
 $ErrorActionPreference = "Stop"
@@ -18,6 +19,7 @@ if ($IncludeDepth) { $cmd += "--include-depth" }
 if ($IncludeMetadata) { $cmd += "--include-metadata" }
 if ($IncludeNormals) { $cmd += "--include-normals" }
 if ($IncludeSemantic) { $cmd += "--include-semantic" }
+if ($Silent) { $cmd += "--silent" }
 
 Write-Host "[INFO] Running: $($cmd -join ' ')"
 & $cmd[0] $cmd[1..($cmd.Length-1)]

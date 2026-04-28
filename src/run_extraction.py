@@ -3,12 +3,14 @@ from __future__ import annotations
 import hydra
 from omegaconf import DictConfig
 
-from src.pipeline.benchmark import run_benchmark
+from src.pipeline.benchmark import run_extraction_stage
 
 
 @hydra.main(version_base=None, config_path="../configs", config_name="default")
 def main(cfg: DictConfig) -> None:
-    run_benchmark(cfg)
+    run_ctx = run_extraction_stage(cfg)
+    print(f"[DONE] Extraction completed: {run_ctx.run_id}")
+    print(f"[DONE] Artifacts: {run_ctx.artifacts_dir}")
 
 
 if __name__ == "__main__":
