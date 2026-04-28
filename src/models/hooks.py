@@ -1,0 +1,1 @@
+"""Activation hook helpers."""
