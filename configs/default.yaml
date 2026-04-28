@@ -1,6 +1,6 @@
 defaults:
   - data: hypersim
-  - model: fourm_mock
+  - model: fourm
   - metrics: cka
   - tracking: wandb_off
   - runtime: local
@@ -28,4 +28,4 @@ analysis:
 
 hydra:
   run:
-    dir: ${paths.runs_root}/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${paths.runs_root}/hydra/${now_utc:%Y-%m-%d}/${now_utc:%H-%M-%S}

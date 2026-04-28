@@ -5,6 +5,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from tqdm.auto import tqdm
 
 from src.metrics.registry import build_metric
 
@@ -18,6 +19,7 @@ def run_metrics(
     metric_name: str,
     cka_cfg: dict[str, Any],
     pair_modalities: tuple[str, str],
+    show_progress: bool = True,
 ) -> pd.DataFrame:
     if activation_index.empty:
         return pd.DataFrame(
@@ -39,7 +41,13 @@ def run_metrics(
     rows: list[dict[str, Any]] = []
     layers = sorted(activation_index["layer"].unique().tolist())
 
-    for layer in layers:
+    layer_iter = tqdm(
+        layers,
+        desc=f"Metric[{metric_name}][{left_mod}-{right_mod}]",
+        unit="layer",
+        disable=not show_progress,
+    )
+    for layer in layer_iter:
         left_df = activation_index[
             (activation_index["layer"] == layer) & (activation_index["modality"] == left_mod)
         ]
@@ -69,5 +77,7 @@ def run_metrics(
                 "right_modality": right_mod,
             }
         )
+        if show_progress:
+            layer_iter.set_postfix_str(f"n={len(merged)}")
 
     return pd.DataFrame.from_records(rows)

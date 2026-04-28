@@ -1,0 +1,94 @@
+{
+  "data": {
+    "name": "hypersim",
+    "root": "./resources/datasets/hypersim",
+    "split": "train",
+    "n_scenes": 1,
+    "scene_stride": 1,
+    "modalities": [
+      "rgb",
+      "depth"
+    ]
+  },
+  "model": {
+    "backend": "fourm_mock",
+    "hf_repo": "EPFL-VILAB/4M-7_B_CC12M",
+    "local_dir": "./resources/models/4m/EPFL-VILAB/4M-7_B_CC12M",
+    "embedding_dim": 512,
+    "layers": [
+      "layer_00",
+      "layer_01",
+      "layer_02",
+      "layer_03",
+      "layer_04",
+      "layer_05"
+    ]
+  },
+  "metrics": {
+    "enabled": [
+      "cka"
+    ],
+    "pairs": [
+      [
+        "rgb",
+        "depth"
+      ]
+    ],
+    "cka": {
+      "center_gram": true,
+      "unbiased": false
+    },
+    "output": {
+      "save_csv": true,
+      "save_parquet": false
+    }
+  },
+  "tracking": {
+    "wandb": {
+      "enabled": false,
+      "project": "one-trunk-or-many",
+      "entity": "your-wandb-entity",
+      "run_name": null,
+      "tags": []
+    }
+  },
+  "runtime": {
+    "batch_size": 1,
+    "num_workers": 4,
+    "device": "auto",
+    "precision": "fp32",
+    "save_activations": true,
+    "metrics_input_run_id": "rq1_cka_pipeline-20260428-141615",
+    "multi_gpu_strategy": "none"
+  },
+  "slurm": {
+    "enabled": false,
+    "partition": "gpu",
+    "gres": "gpu:1",
+    "cpus_per_task": 8,
+    "mem_gb": 64,
+    "time": "04:00:00",
+    "job_name": "cka-benchmark",
+    "log_dir": "./results/slurm"
+  },
+  "project": {
+    "name": "one-trunk-or-many",
+    "stage": "rq1_cka_pipeline",
+    "seed": 42
+  },
+  "paths": {
+    "resources_root": "./resources",
+    "datasets_root": "./resources/datasets",
+    "models_root": "./resources/models/4m",
+    "results_root": "./results",
+    "runs_root": "./results/runs"
+  },
+  "analysis": {
+    "null_distribution": {
+      "enabled": false,
+      "n_mismatched_pairs": 1000,
+      "sampling": "random_scene",
+      "note": "Scaffold only in this iteration."
+    }
+  }
+}

@@ -1,6 +1,7 @@
 wandb:
   enabled: false
   project: one-trunk-or-many
-  entity: null
+  # Keep in sync with wandb_on.yaml for quick switching.
+  entity: your-wandb-entity
   run_name: null
   tags: []

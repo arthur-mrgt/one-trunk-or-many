@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+from tqdm.auto import tqdm
 
 from src.utils.io import save_vector
 
@@ -14,6 +15,7 @@ def run_extraction(
     pair_name: str,
     run_id: str,
     out_dir: Path,
+    show_progress: bool = True,
 ) -> pd.DataFrame:
     records: list[dict[str, Any]] = []
     columns = [
@@ -26,7 +28,14 @@ def run_extraction(
         "activation_path",
     ]
 
-    for sample in samples:
+    sample_iter = tqdm(
+        samples,
+        desc=f"Extract[{pair_name}]",
+        unit="sample",
+        disable=not show_progress,
+    )
+
+    for sample in sample_iter:
         for modality, file_path in sample.modality_paths.items():
             acts = model.encode_path(file_path=file_path, modality=modality)
             for layer, vec in acts.items():
@@ -49,5 +58,7 @@ def run_extraction(
                         "activation_path": str(abs_path),
                     }
                 )
+        if show_progress:
+            sample_iter.set_postfix_str(f"scene={sample.scene_id}")
 
     return pd.DataFrame.from_records(records, columns=columns)

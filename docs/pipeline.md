@@ -62,7 +62,23 @@ python -m src.run_benchmark tracking=wandb_on
 Switch model backend config:
 
 ```bash
-python -m src.run_benchmark model=fourm_real
+python -m src.run_benchmark model=fourm
+```
+
+Device controls:
+
+```bash
+# auto (default): cuda if available else cpu
+python -m src.run_benchmark runtime.device=auto
+
+# force cpu
+python -m src.run_benchmark runtime.device=cpu
+
+# force single-gpu
+python -m src.run_benchmark runtime.device=cuda
+
+# multi-gpu via DataParallel
+python -m src.run_benchmark runtime.device=cuda runtime.multi_gpu_strategy=data_parallel
 ```
 
 ## SLURM

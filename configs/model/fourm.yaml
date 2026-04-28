@@ -1,4 +1,4 @@
-backend: fourm_real
+backend: fourm
 hf_repo: EPFL-VILAB/4M-7_B_CC12M
 local_dir: ${paths.models_root}/EPFL-VILAB/4M-7_B_CC12M
 embedding_dim: 512

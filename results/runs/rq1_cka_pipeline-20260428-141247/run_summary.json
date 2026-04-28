@@ -1,0 +1,14 @@
+{
+  "run_id": "rq1_cka_pipeline-20260428-141247",
+  "dataset": "hypersim",
+  "pairs": [
+    [
+      "rgb",
+      "depth"
+    ]
+  ],
+  "stage": "extraction",
+  "activation_indices": [
+    "results\\runs\\rq1_cka_pipeline-20260428-141247\\artifacts\\activation_index_rgb-depth.csv"
+  ]
+}

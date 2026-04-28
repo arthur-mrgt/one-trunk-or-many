@@ -4,6 +4,9 @@ import hydra
 from omegaconf import DictConfig
 
 from src.pipeline.benchmark import run_benchmark
+from src.utils.hydra_setup import register_hydra_resolvers
+
+register_hydra_resolvers()
 
 
 @hydra.main(version_base=None, config_path="../configs", config_name="default")

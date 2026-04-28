@@ -19,6 +19,10 @@ def _list_activation_index_files(run_ctx: RunContext) -> list[Path]:
     return sorted(run_ctx.artifacts_dir.glob("activation_index_*.csv"))
 
 
+def _log(message: str) -> None:
+    print(f"[INFO] {message}")
+
+
 def _resolve_run_ctx_for_metrics(cfg_dict: dict[str, Any]) -> RunContext:
     run_id = cfg_dict["runtime"].get("metrics_input_run_id")
     runs_root = Path(cfg_dict["paths"]["runs_root"])
@@ -44,11 +48,13 @@ def _resolve_run_ctx_for_metrics(cfg_dict: dict[str, Any]) -> RunContext:
 def run_extraction_stage(cfg: DictConfig) -> RunContext:
     cfg_dict = cfg_to_container(cfg)
     run_ctx = make_run_context(cfg)
-    model = build_model(cfg_dict["model"])
+    _log(f"Starting extraction stage: run_id={run_ctx.run_id}")
+    model = build_model(cfg_dict["model"], cfg_dict["runtime"])
 
     for pair in cfg_dict["metrics"]["pairs"]:
         left_mod, right_mod = pair[0], pair[1]
         pair_name = f"{left_mod}-{right_mod}"
+        _log(f"Loading samples for pair {pair_name}")
         samples = load_dataset_pairs(
             dataset_name=cfg_dict["data"]["name"],
             root=Path(cfg_dict["data"]["root"]),
@@ -63,8 +69,10 @@ def run_extraction_stage(cfg: DictConfig) -> RunContext:
             pair_name=pair_name,
             run_id=run_ctx.run_id,
             out_dir=run_ctx.activations_dir,
+            show_progress=True,
         )
         write_table(run_ctx.artifacts_dir / f"activation_index_{pair_name}.csv", activation_index)
+        _log(f"Saved activation index for {pair_name}: rows={len(activation_index)}")
     write_json(run_ctx.run_dir / "resolved_config.json", cfg_dict)
     write_json(
         run_ctx.run_dir / "run_summary.json",
@@ -76,12 +84,14 @@ def run_extraction_stage(cfg: DictConfig) -> RunContext:
             "activation_indices": [str(p) for p in _list_activation_index_files(run_ctx)],
         },
     )
+    _log("Extraction stage completed.")
     return run_ctx
 
 
 def run_metrics_stage(cfg: DictConfig) -> RunContext:
     cfg_dict = cfg_to_container(cfg)
     run_ctx = _resolve_run_ctx_for_metrics(cfg_dict)
+    _log(f"Starting metrics stage for run_id={run_ctx.run_id}")
     tracker = build_tracker(cfg=cfg_dict, run_id=run_ctx.run_id)
     tracker.log_config(cfg_dict)
 
@@ -89,6 +99,7 @@ def run_metrics_stage(cfg: DictConfig) -> RunContext:
     for idx_file in _list_activation_index_files(run_ctx):
         activation_index = pd.read_csv(idx_file)
         pair_name = idx_file.stem.replace("activation_index_", "")
+        _log(f"Processing metrics for pair={pair_name}")
         try:
             left_mod, right_mod = tuple(pair_name.split("-", 1))
         except ValueError:
@@ -99,6 +110,7 @@ def run_metrics_stage(cfg: DictConfig) -> RunContext:
                 metric_name=metric_name,
                 cka_cfg=cfg_dict["metrics"]["cka"],
                 pair_modalities=(left_mod, right_mod),
+                show_progress=True,
             )
             all_metric_frames.append(metric_df)
 
@@ -131,6 +143,7 @@ def run_metrics_stage(cfg: DictConfig) -> RunContext:
         tracker.log_table("metrics_table", metric_table)
         tracker.log_summary({"metrics_rows": int(len(metric_table))})
     tracker.finish()
+    _log(f"Metrics stage completed. rows={len(metric_table)}")
     return run_ctx
 
 

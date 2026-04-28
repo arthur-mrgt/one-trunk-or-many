@@ -75,6 +75,12 @@ python -m src.run_benchmark \
   metrics.pairs='[[rgb,depth]]' \
   tracking=wandb_on
 
+# 2b) Run with real 4M backend on GPU (if available)
+python -m src.run_benchmark model=fourm runtime.device=cuda
+
+# 2c) Run with multi-GPU DataParallel
+python -m src.run_benchmark model=fourm runtime.device=cuda runtime.multi_gpu_strategy=data_parallel
+
 # 3) Stage entrypoints (separated)
 python -m src.run_extraction
 python -m src.run_metrics runtime.metrics_input_run_id=<run_id>
