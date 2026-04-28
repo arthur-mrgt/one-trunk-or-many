@@ -6,9 +6,7 @@ Any-to-any models like [4M](https://github.com/apple/ml-4m) share a single Trans
 
 This project develops a multi-metric protocol to probe representational convergence inside 4M-21's shared encoder, with statistical significance testing against a mismatched-scene null distribution.
 
-> 📄 [Project Proposal (PDF)](docs/proposal.pdf) · 🎓 CS-503 Visual Intelligence · EPFL Spring 2026
-
----
+[Project Proposal (PDF)](docs/proposal.pdf)
 
 ## Research Questions
 
@@ -20,9 +18,9 @@ This project develops a multi-metric protocol to probe representational converge
 
 We pass each modality (RGB, depth, normals, segmentation) of a given scene separately through 4M-21's encoder and extract layer-wise activations. For each layer and each pair of modalities, we compute three complementary similarity metrics:
 
-- **CKA** — global relational structure (scale-invariant, primary metric)
-- **PWCCA** — directional alignment of principal axes
-- **k-NN overlap** — local topological similarity
+- **CKA**: global relational structure (scale-invariant, primary metric)
+- **PWCCA**: directional alignment of principal axes
+- **k-NN overlap**: local topological similarity
 
 To distinguish encoder-driven convergence from architectural biases or dataset regularities, we test against an empirical null distribution constructed from mismatched-scene pairs. Only convergence significantly above this floor is attributed to genuine unification.
 
@@ -58,7 +56,7 @@ pip install -r requirements.txt
 python scripts/download_checkpoint.py --model 4m-21-b
 ```
 
-Datasets (Hypersim, DIODE) must be downloaded separately — see [`docs/data.md`](docs/data.md).
+Datasets (Hypersim, DIODE) must be downloaded separately. See [`docs/data.md`](docs/data.md).
 
 ## Reproducing Results
 
@@ -77,7 +75,7 @@ Full SCITAS job scripts are in [`scripts/`](scripts/).
 
 ## Status
 
-🚧 **Work in progress** — milestones tracked in [Issues](../../issues).
+Work in progress. Milestones tracked in [Issues](../../issues).
 
 - [x] Project proposal submitted
 - [ ] RQ1 pipeline (extraction + CKA + null testing)
@@ -93,11 +91,11 @@ Full SCITAS job scripts are in [`scripts/`](scripts/).
 - **Albert Fares** (341018)
 - **Martina Gatti** (341013)
 
-EPFL · CS-503 Visual Intelligence · Spring 2026
+EPFL, CS-503 Visual Intelligence, Spring 2026.
 
 ## References
 
-Key references — full list in the [proposal](docs/proposal.pdf).
+Key references. Full list in the [proposal](docs/proposal.pdf).
 
 - Mizrahi et al. *4M: Massively Multimodal Masked Modeling.* NeurIPS 2023.
 - Bachmann et al. *4M-21: An Any-to-Any Vision Model for Tens of Tasks and Modalities.* NeurIPS 2024.
@@ -107,4 +105,4 @@ Key references — full list in the [proposal](docs/proposal.pdf).
 
 ## License
 
-Apache License 2.0 — see [`LICENSE`](LICENSE).
+MIT License. See [`LICENSE`](LICENSE).
