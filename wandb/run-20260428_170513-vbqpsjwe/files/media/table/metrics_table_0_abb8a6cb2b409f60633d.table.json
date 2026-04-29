@@ -1,1 +1,0 @@
-{"columns": ["run_id", "pair", "layer", "metric", "value", "n_samples", "left_modality", "right_modality"], "data": [["rq1_cka_pipeline-20260428-150312", "rgb-depth", "layer_00", "cka", -0.9577793794748292, 98, "rgb", "depth"]]}
