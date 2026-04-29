@@ -13,3 +13,4 @@ __pycache__/
 # Benchmark outputs not meant for git
 results/**/activations/
 results/**/artifacts/
+wandb/
