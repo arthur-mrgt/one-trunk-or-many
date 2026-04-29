@@ -5,6 +5,10 @@ resources/
 data/
 datasets/
 models/
+!src/data/
+!src/data/registry.py
+!src/models/
+!src/models/registry.py
 
 # Python cache
 __pycache__/
