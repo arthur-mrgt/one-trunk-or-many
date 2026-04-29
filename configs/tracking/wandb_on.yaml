@@ -2,7 +2,7 @@ wandb:
   enabled: true
   project: one-trunk-or-many
   # Set to your W&B username or team name.
-  entity: one-trunk-or-man
+  entity: one-trunk-or-many
   # Optional: null keeps auto run_id naming.
   run_name: null
   tags:

@@ -1,0 +1,13 @@
+run_id,pair,layer,metric,value,n_samples,left_modality,right_modality
+rq1_cka_pipeline-20260428-152625,rgb-depth,layer_00,cka,0.020207726769802807,98,rgb,depth
+rq1_cka_pipeline-20260428-152625,rgb-depth,layer_01,cka,0.023144843087134204,98,rgb,depth
+rq1_cka_pipeline-20260428-152625,rgb-depth,layer_02,cka,0.031207472782659573,98,rgb,depth
+rq1_cka_pipeline-20260428-152625,rgb-depth,layer_03,cka,0.04622671593721216,98,rgb,depth
+rq1_cka_pipeline-20260428-152625,rgb-depth,layer_04,cka,0.05122000785183015,98,rgb,depth
+rq1_cka_pipeline-20260428-152625,rgb-depth,layer_05,cka,0.06197328954240262,98,rgb,depth
+rq1_cka_pipeline-20260428-152625,rgb-depth,layer_06,cka,0.08058431456984988,98,rgb,depth
+rq1_cka_pipeline-20260428-152625,rgb-depth,layer_07,cka,0.10592536427599931,98,rgb,depth
+rq1_cka_pipeline-20260428-152625,rgb-depth,layer_08,cka,0.12599239931470316,98,rgb,depth
+rq1_cka_pipeline-20260428-152625,rgb-depth,layer_09,cka,0.1390283607769082,98,rgb,depth
+rq1_cka_pipeline-20260428-152625,rgb-depth,layer_10,cka,0.14813261608981615,98,rgb,depth
+rq1_cka_pipeline-20260428-152625,rgb-depth,layer_11,cka,0.12958121345507578,98,rgb,depth

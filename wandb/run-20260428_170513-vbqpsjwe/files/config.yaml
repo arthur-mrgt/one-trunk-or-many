@@ -1,0 +1,156 @@
+_wandb:
+    value:
+        cli_version: 0.26.1
+        e:
+            gatw5d8luz3gi37sgdyq02crb0xkj6fw:
+                args:
+                    - data.n_scenes=1
+                    - tracking=wandb_on
+                cpu_count: 16
+                cpu_count_logical: 22
+                cudaVersion: "13.0"
+                disk:
+                    /:
+                        total: "2018621329408"
+                        used: "1821138485248"
+                email: arthur@margeat.com
+                executable: C:\Users\arthu\miniconda3\envs\trunk\python.exe
+                git:
+                    commit: 7154bd8522c78708253bfe9b51fa0294f2555080
+                    remote: https://github.com/arthur-mrgt/one-trunk-or-many.git
+                gpu: NVIDIA GeForce RTX 4080 Laptop GPU
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Ada
+                      cudaCores: 7424
+                      memoryTotal: "12878610432"
+                      name: NVIDIA GeForce RTX 4080 Laptop GPU
+                      uuid: GPU-3d5fe09e-aa1b-ad4d-dbaf-5ee06731e633
+                host: Arthur
+                memory:
+                    total: "33736024064"
+                os: Windows-10-10.0.26200-SP0
+                program: -m src.run_benchmark
+                python: CPython 3.11.15
+                root: C:\Users\arthu\Desktop\EPFL\MA2\Visual Intelligence\one-trunk-or-many
+                startedAt: "2026-04-28T15:05:13.652111Z"
+                writerId: gatw5d8luz3gi37sgdyq02crb0xkj6fw
+        m: []
+        python_version: 3.11.15
+        t:
+            "1":
+                - 1
+                - 5
+                - 11
+                - 41
+                - 49
+                - 50
+                - 51
+                - 53
+                - 80
+                - 83
+            "2":
+                - 1
+                - 5
+                - 11
+                - 41
+                - 49
+                - 50
+                - 51
+                - 53
+                - 80
+                - 83
+            "3":
+                - 2
+                - 13
+                - 15
+                - 16
+            "4": 3.11.15
+            "5": 0.26.1
+            "6": 4.48.3
+            "8":
+                - 3
+            "12": 0.26.1
+            "13": windows-amd64
+analysis:
+    value:
+        null_distribution:
+            enabled: false
+            n_mismatched_pairs: 1000
+            note: Scaffold only in this iteration.
+            sampling: random_scene
+data:
+    value:
+        modalities:
+            - rgb
+            - depth
+        n_scenes: 1
+        name: hypersim
+        root: ./resources/datasets/hypersim
+        scene_stride: 1
+        split: train
+metrics:
+    value:
+        cka:
+            center_gram: true
+            unbiased: false
+        enabled:
+            - cka
+        output:
+            save_csv: true
+            save_parquet: false
+        pairs:
+            - - rgb
+              - depth
+model:
+    value:
+        backend: fourm
+        embedding_dim: 512
+        hf_repo: EPFL-VILAB/4M-7_B_CC12M
+        input_size: 224
+        layers:
+            - layer_00
+        local_dir: ./resources/models/4m/EPFL-VILAB/4M-7_B_CC12M
+        tokenizers:
+            depth_repo: EPFL-VILAB/4M_tokenizers_depth_8k_224-448
+paths:
+    value:
+        datasets_root: ./resources/datasets
+        models_root: ./resources/models/4m
+        resources_root: ./resources
+        results_root: ./results
+        runs_root: ./results/runs
+project:
+    value:
+        name: one-trunk-or-many
+        seed: 42
+        stage: rq1_cka_pipeline
+runtime:
+    value:
+        batch_size: 1
+        device: auto
+        metrics_input_run_id: rq1_cka_pipeline-20260428-150312
+        multi_gpu_strategy: none
+        num_workers: 4
+        precision: fp32
+        save_activations: true
+slurm:
+    value:
+        cpus_per_task: 8
+        enabled: false
+        gres: gpu:1
+        job_name: cka-benchmark
+        log_dir: ./results/slurm
+        mem_gb: 64
+        partition: gpu
+        time: "04:00:00"
+tracking:
+    value:
+        wandb:
+            enabled: true
+            entity: one-trunk-or-many
+            project: one-trunk-or-many
+            run_name: null
+            tags:
+                - rq1
+                - cka

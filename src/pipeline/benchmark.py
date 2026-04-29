@@ -23,6 +23,42 @@ def _log(message: str) -> None:
     print(f"[INFO] {message}")
 
 
+def _layer_sort_key(layer_name: str) -> tuple[int, str]:
+    try:
+        return (int(str(layer_name).split("_")[-1]), str(layer_name))
+    except Exception:
+        return (10**9, str(layer_name))
+
+
+def _log_cka_plots(tracker, metric_table: pd.DataFrame) -> None:
+    cka_df = metric_table[metric_table["metric"] == "cka"].copy()
+    if cka_df.empty:
+        return
+    for pair in sorted(cka_df["pair"].unique().tolist()):
+        pair_df = cka_df[cka_df["pair"] == pair].copy()
+        if pair_df.empty:
+            continue
+        pair_df["layer"] = pair_df["layer"].astype(str)
+        pair_df["layer_order"] = pair_df["layer"].map(lambda x: _layer_sort_key(x)[0])
+        pair_df = pair_df.sort_values(["layer_order", "layer"]).reset_index(drop=True)
+        pair_df["layer_idx"] = pair_df["layer_order"].astype(int)
+        plot_df = pair_df[["layer_idx", "layer", "value"]].copy()
+        tracker.log_line_plot(
+            name=f"cka_vs_layer/{pair}",
+            table=plot_df,
+            x="layer_idx",
+            y="value",
+            title=f"CKA vs Layer ({pair})",
+        )
+        tracker.log_scatter_plot(
+            name=f"cka_vs_layer_points/{pair}",
+            table=plot_df,
+            x="layer_idx",
+            y="value",
+            title=f"CKA vs Layer Points ({pair})",
+        )
+
+
 def _resolve_run_ctx_for_metrics(cfg_dict: dict[str, Any]) -> RunContext:
     run_id = cfg_dict["runtime"].get("metrics_input_run_id")
     runs_root = Path(cfg_dict["paths"]["runs_root"])
@@ -141,6 +177,7 @@ def run_metrics_stage(cfg: DictConfig) -> RunContext:
 
     if not metric_table.empty:
         tracker.log_table("metrics_table", metric_table)
+        _log_cka_plots(tracker=tracker, metric_table=metric_table)
         tracker.log_summary({"metrics_rows": int(len(metric_table))})
     tracker.finish()
     _log(f"Metrics stage completed. rows={len(metric_table)}")

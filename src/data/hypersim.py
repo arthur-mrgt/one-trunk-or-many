@@ -21,8 +21,17 @@ def _frame_key(path: Path) -> str:
 
 
 def _list_scene_ids(root: Path) -> list[str]:
+    # Support both layouts:
+    # 1) <root>/scenes/ai_XXX_YYY/...
+    # 2) <root>/ai_XXX_YYY/...
+    scenes_root = root / "scenes"
+    if scenes_root.exists():
+        base = scenes_root
+    else:
+        base = root
+
     return sorted(
-        p.name for p in root.rglob("ai_*_*") if p.is_dir() and p.name.startswith("ai_")
+        p.name for p in base.glob("ai_*_*") if p.is_dir() and p.name.startswith("ai_")
     )
 
 
@@ -50,8 +59,10 @@ def load_pairs(
     sampled_scene_ids = scene_ids[:: max(scene_stride, 1)][:n_scenes]
     output: list[PairSample] = []
 
+    scenes_root = root / "scenes" if (root / "scenes").exists() else root
+
     for scene_id in sampled_scene_ids:
-        scene_root = root / "scenes" / scene_id
+        scene_root = scenes_root / scene_id
         if not scene_root.exists():
             continue
 

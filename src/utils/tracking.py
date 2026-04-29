@@ -15,6 +15,26 @@ class Tracker:
     def log_summary(self, payload: dict[str, Any]) -> None:
         return
 
+    def log_line_plot(
+        self,
+        name: str,
+        table: pd.DataFrame,
+        x: str,
+        y: str,
+        title: str,
+    ) -> None:
+        return
+
+    def log_scatter_plot(
+        self,
+        name: str,
+        table: pd.DataFrame,
+        x: str,
+        y: str,
+        title: str,
+    ) -> None:
+        return
+
     def finish(self) -> None:
         return
 
@@ -42,6 +62,46 @@ class WandbTracker(Tracker):
 
     def log_summary(self, payload: dict[str, Any]) -> None:
         self._wandb.log(payload)
+
+    def log_line_plot(
+        self,
+        name: str,
+        table: pd.DataFrame,
+        x: str,
+        y: str,
+        title: str,
+    ) -> None:
+        wb_table = self._wandb.Table(dataframe=table)
+        self._wandb.log(
+            {
+                name: self._wandb.plot.line(
+                    wb_table,
+                    x=x,
+                    y=y,
+                    title=title,
+                )
+            }
+        )
+
+    def log_scatter_plot(
+        self,
+        name: str,
+        table: pd.DataFrame,
+        x: str,
+        y: str,
+        title: str,
+    ) -> None:
+        wb_table = self._wandb.Table(dataframe=table)
+        self._wandb.log(
+            {
+                name: self._wandb.plot.scatter(
+                    wb_table,
+                    x=x,
+                    y=y,
+                    title=title,
+                )
+            }
+        )
 
     def finish(self) -> None:
         if self._run is not None:

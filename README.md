@@ -78,6 +78,9 @@ python -m src.run_benchmark \
 # 2b) Run with real 4M backend on GPU (if available)
 python -m src.run_benchmark model=fourm runtime.device=cuda
 
+# 2b.1) Optional: use tokenized RGB instead of pixel RGB
+python -m src.run_benchmark model=fourm model.rgb_input_mode=tokenized
+
 # 2c) Run with multi-GPU DataParallel
 python -m src.run_benchmark model=fourm runtime.device=cuda runtime.multi_gpu_strategy=data_parallel
 

@@ -1,0 +1,24 @@
+2026-04-28 17:05:13,672 INFO    MainThread:46276 [wandb_setup.py:_flush():81] Current SDK version is 0.26.1
+2026-04-28 17:05:13,677 INFO    MainThread:46276 [wandb_setup.py:_flush():81] Configure stats pid to 46276
+2026-04-28 17:05:13,677 INFO    MainThread:46276 [wandb_setup.py:_flush():81] Loading settings from environment variables
+2026-04-28 17:05:13,677 INFO    MainThread:46276 [wandb_init.py:setup_run_log_directory():723] Logging user logs to C:\Users\arthu\Desktop\EPFL\MA2\Visual Intelligence\one-trunk-or-many\wandb\run-20260428_170513-vbqpsjwe\logs\debug.log
+2026-04-28 17:05:13,677 INFO    MainThread:46276 [wandb_init.py:setup_run_log_directory():724] Logging internal logs to C:\Users\arthu\Desktop\EPFL\MA2\Visual Intelligence\one-trunk-or-many\wandb\run-20260428_170513-vbqpsjwe\logs\debug-internal.log
+2026-04-28 17:05:13,677 INFO    MainThread:46276 [wandb_init.py:init():850] calling init triggers
+2026-04-28 17:05:13,678 INFO    MainThread:46276 [wandb_init.py:init():855] wandb.init called with sweep_config: {}
+config: {'data': {'name': 'hypersim', 'root': './resources/datasets/hypersim', 'split': 'train', 'n_scenes': 1, 'scene_stride': 1, 'modalities': ['rgb', 'depth']}, 'model': {'backend': 'fourm', 'hf_repo': 'EPFL-VILAB/4M-7_B_CC12M', 'local_dir': './resources/models/4m/EPFL-VILAB/4M-7_B_CC12M', 'embedding_dim': 512, 'layers': ['layer_00'], 'tokenizers': {'depth_repo': 'EPFL-VILAB/4M_tokenizers_depth_8k_224-448'}, 'input_size': 224}, 'metrics': {'enabled': ['cka'], 'pairs': [['rgb', 'depth']], 'cka': {'center_gram': True, 'unbiased': False}, 'output': {'save_csv': True, 'save_parquet': False}}, 'tracking': {'wandb': {'enabled': True, 'project': 'one-trunk-or-many', 'entity': 'one-trunk-or-many', 'run_name': None, 'tags': ['rq1', 'cka']}}, 'runtime': {'batch_size': 1, 'num_workers': 4, 'device': 'auto', 'precision': 'fp32', 'save_activations': True, 'metrics_input_run_id': 'rq1_cka_pipeline-20260428-150312', 'multi_gpu_strategy': 'none'}, 'slurm': {'enabled': False, 'partition': 'gpu', 'gres': 'gpu:1', 'cpus_per_task': 8, 'mem_gb': 64, 'time': '04:00:00', 'job_name': 'cka-benchmark', 'log_dir': './results/slurm'}, 'project': {'name': 'one-trunk-or-many', 'stage': 'rq1_cka_pipeline', 'seed': 42}, 'paths': {'resources_root': './resources', 'datasets_root': './resources/datasets', 'models_root': './resources/models/4m', 'results_root': './results', 'runs_root': './results/runs'}, 'analysis': {'null_distribution': {'enabled': False, 'n_mismatched_pairs': 1000, 'sampling': 'random_scene', 'note': 'Scaffold only in this iteration.'}}, '_wandb': {}}
+2026-04-28 17:05:13,678 INFO    MainThread:46276 [wandb_init.py:init():898] starting backend
+2026-04-28 17:05:16,182 INFO    MainThread:46276 [wandb_init.py:init():913] sending inform_init request
+2026-04-28 17:05:17,361 INFO    MainThread:46276 [wandb_init.py:init():918] backend started and connected
+2026-04-28 17:05:17,362 INFO    MainThread:46276 [wandb_init.py:init():988] updated telemetry
+2026-04-28 17:05:17,405 INFO    MainThread:46276 [wandb_init.py:init():1011] communicating run to backend with 90.0 second timeout
+2026-04-28 17:05:18,844 INFO    MainThread:46276 [wandb_init.py:init():1056] starting run threads in backend
+2026-04-28 17:05:19,423 INFO    MainThread:46276 [wandb_run.py:_console_start():2554] atexit reg
+2026-04-28 17:05:19,423 INFO    MainThread:46276 [wandb_run.py:_redirect():2403] redirect: wrap_raw
+2026-04-28 17:05:19,424 INFO    MainThread:46276 [wandb_run.py:_redirect():2472] Wrapping output streams.
+2026-04-28 17:05:19,424 INFO    MainThread:46276 [wandb_run.py:_redirect():2495] Redirects installed.
+2026-04-28 17:05:19,426 INFO    MainThread:46276 [wandb_init.py:init():1094] run started, returning control to user process
+2026-04-28 17:05:22,022 INFO    MainThread:46276 [wandb_run.py:_finish():2321] finishing run one-trunk-or-many/one-trunk-or-many/vbqpsjwe
+2026-04-28 17:05:22,022 INFO    MainThread:46276 [wandb_run.py:_atexit_cleanup():2520] got exitcode: 0
+2026-04-28 17:05:22,022 INFO    MainThread:46276 [wandb_run.py:_restore():2502] restore
+2026-04-28 17:05:22,022 INFO    MainThread:46276 [wandb_run.py:_restore():2508] restore done
+2026-04-28 17:05:25,539 INFO    MainThread:46276 [wandb_run.py:_footer_sync_info():3889] logging synced files

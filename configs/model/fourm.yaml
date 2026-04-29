@@ -3,3 +3,8 @@ hf_repo: EPFL-VILAB/4M-7_B_CC12M
 local_dir: ${paths.models_root}/EPFL-VILAB/4M-7_B_CC12M
 embedding_dim: 512
 layers: all
+rgb_input_mode: pixel
+tokenizers:
+  rgb_repo: EPFL-VILAB/4M_tokenizers_rgb_16k_224-448
+  depth_repo: EPFL-VILAB/4M_tokenizers_depth_8k_224-448
+input_size: 224
