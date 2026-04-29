@@ -1,3 +1,0 @@
-- data.n_scenes=1
-- tracking=wandb_off
-- model.rgb_input_mode=tokenized
