@@ -1,3 +1,5 @@
+"""Orchestrate extraction and metric stages for benchmark runs."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -16,14 +18,17 @@ from src.utils.tracking import build_tracker
 
 
 def _list_activation_index_files(run_ctx: RunContext) -> list[Path]:
+    """List activation index CSV files for a run."""
     return sorted(run_ctx.artifacts_dir.glob("activation_index_*.csv"))
 
 
 def _log(message: str) -> None:
+    """Print a standardized info log line."""
     print(f"[INFO] {message}")
 
 
 def _layer_sort_key(layer_name: str) -> tuple[int, str]:
+    """Build a stable sort key from layer naming."""
     try:
         return (int(str(layer_name).split("_")[-1]), str(layer_name))
     except Exception:
@@ -31,6 +36,7 @@ def _layer_sort_key(layer_name: str) -> tuple[int, str]:
 
 
 def _log_cka_plots(tracker, metric_table: pd.DataFrame) -> None:
+    """Log CKA-vs-layer plots to the tracker."""
     cka_df = metric_table[metric_table["metric"] == "cka"].copy()
     if cka_df.empty:
         return
@@ -60,6 +66,7 @@ def _log_cka_plots(tracker, metric_table: pd.DataFrame) -> None:
 
 
 def _resolve_run_ctx_for_metrics(cfg_dict: dict[str, Any]) -> RunContext:
+    """Resolve which run directory to use for metrics stage."""
     run_id = cfg_dict["runtime"].get("metrics_input_run_id")
     runs_root = Path(cfg_dict["paths"]["runs_root"])
     if run_id:
@@ -82,6 +89,7 @@ def _resolve_run_ctx_for_metrics(cfg_dict: dict[str, Any]) -> RunContext:
 
 
 def run_extraction_stage(cfg: DictConfig) -> RunContext:
+    """Run extraction for all configured modality pairs."""
     cfg_dict = cfg_to_container(cfg)
     run_ctx = make_run_context(cfg)
     _log(f"Starting extraction stage: run_id={run_ctx.run_id}")
@@ -125,6 +133,7 @@ def run_extraction_stage(cfg: DictConfig) -> RunContext:
 
 
 def run_metrics_stage(cfg: DictConfig) -> RunContext:
+    """Run metrics using saved activation indices."""
     cfg_dict = cfg_to_container(cfg)
     run_ctx = _resolve_run_ctx_for_metrics(cfg_dict)
     _log(f"Starting metrics stage for run_id={run_ctx.run_id}")
@@ -185,6 +194,7 @@ def run_metrics_stage(cfg: DictConfig) -> RunContext:
 
 
 def run_benchmark(cfg: DictConfig) -> RunContext:
+    """Run extraction then metrics as one benchmark workflow."""
     run_ctx = run_extraction_stage(cfg)
     cfg_dict = cfg_to_container(cfg)
     cfg_dict["runtime"]["metrics_input_run_id"] = run_ctx.run_id

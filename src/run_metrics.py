@@ -1,3 +1,5 @@
+"""Hydra entrypoint for metrics-only execution."""
+
 from __future__ import annotations
 
 import hydra
@@ -11,6 +13,7 @@ register_hydra_resolvers()
 
 @hydra.main(version_base=None, config_path="../configs", config_name="default")
 def main(cfg: DictConfig) -> None:
+    """Run only the metrics stage."""
     run_ctx = run_metrics_stage(cfg)
     print(f"[DONE] Metrics completed for run: {run_ctx.run_id}")
     print(f"[DONE] Metrics dir: {run_ctx.metrics_dir}")

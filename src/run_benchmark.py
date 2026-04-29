@@ -1,3 +1,5 @@
+"""Hydra entrypoint for full benchmark execution."""
+
 from __future__ import annotations
 
 import hydra
@@ -11,6 +13,7 @@ register_hydra_resolvers()
 
 @hydra.main(version_base=None, config_path="../configs", config_name="default")
 def main(cfg: DictConfig) -> None:
+    """Run extraction and metrics stages in sequence."""
     run_ctx = run_benchmark(cfg)
     print(f"[DONE] Run completed: {run_ctx.run_id}")
     print(f"[DONE] Results directory: {run_ctx.run_dir}")

@@ -1,15 +1,19 @@
+"""Linear CKA metric implementation."""
+
 from __future__ import annotations
 
 import numpy as np
 
 
 def _center_gram(gram: np.ndarray) -> np.ndarray:
+    """Center a Gram matrix in feature space."""
     n = gram.shape[0]
     unit = np.ones((n, n), dtype=gram.dtype) / n
     return gram - unit @ gram - gram @ unit + unit @ gram @ unit
 
 
 def linear_cka(x: np.ndarray, y: np.ndarray, center_gram: bool = True) -> float:
+    """Compute linear CKA between two activation matrices."""
     if x.shape[0] != y.shape[0]:
         raise ValueError("CKA requires same number of samples in x and y.")
 

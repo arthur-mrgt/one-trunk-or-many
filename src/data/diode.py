@@ -1,3 +1,5 @@
+"""DIODE dataset adapter scaffold."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -9,6 +11,7 @@ def load_pairs(
     n_scenes: int,
     scene_stride: int,
 ) -> list[dict]:
+    """Load aligned modality pairs from DIODE."""
     raise NotImplementedError(
         "DIODE adapter scaffold is in place but not implemented yet. "
         "Use data.name=hypersim for now."

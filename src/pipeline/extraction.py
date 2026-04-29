@@ -1,3 +1,5 @@
+"""Activation extraction stage implementation."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -17,6 +19,7 @@ def run_extraction(
     out_dir: Path,
     show_progress: bool = True,
 ) -> pd.DataFrame:
+    """Extract vectors for each sample, modality, and layer."""
     records: list[dict[str, Any]] = []
     columns = [
         "run_id",

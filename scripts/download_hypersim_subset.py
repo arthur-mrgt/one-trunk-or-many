@@ -1,13 +1,5 @@
 #!/usr/bin/env python
-"""
-Download Hypersim data with Apple contrib/99991 downloader.
-
-Default behavior downloads the full dataset.
-Passing scene/modality filters enables subset download.
-
-Reference:
-https://github.com/apple/ml-hypersim/tree/main/contrib/99991
-"""
+"""Download full or subset Hypersim data with Apple contrib downloader."""
 
 from __future__ import annotations
 
@@ -21,11 +13,13 @@ from pathlib import Path
 
 
 def run(cmd: list[str]) -> None:
+    """Run a subprocess command and fail on errors."""
     print("[CMD]", " ".join(cmd))
     subprocess.run(cmd, check=True)
 
 
 def _scene_zip_url(scene_id: str) -> str:
+    """Build the download URL for one scene archive."""
     return (
         "https://docs-assets.developer.apple.com/ml-research/datasets/"
         f"hypersim/v1/scenes/{scene_id}.zip"
@@ -33,6 +27,7 @@ def _scene_zip_url(scene_id: str) -> str:
 
 
 def _download_scene_zip(scene_id: str, downloads_dir: Path) -> Path:
+    """Download a scene zip if missing and return its path."""
     downloads_dir.mkdir(parents=True, exist_ok=True)
     zip_path = downloads_dir / f"{scene_id}.zip"
     if zip_path.exists():
@@ -44,6 +39,7 @@ def _download_scene_zip(scene_id: str, downloads_dir: Path) -> Path:
 
 
 def _should_extract(member: str, scene_id: str, args: argparse.Namespace) -> bool:
+    """Return whether a zip member matches requested filters."""
     if not member.startswith(f"{scene_id}/"):
         return False
     if member.endswith("/"):
@@ -85,6 +81,7 @@ def _extract_scene_subset(
     out_dir: Path,
     args: argparse.Namespace,
 ) -> None:
+    """Extract only selected files from one scene archive."""
     print(f"[INFO] Extracting selected files from {zip_path.name}")
     with zipfile.ZipFile(zip_path, "r") as zf:
         members = [m for m in zf.namelist() if _should_extract(m, scene_id, args)]
@@ -93,6 +90,7 @@ def _extract_scene_subset(
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments for subset download."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--resources-root",
@@ -139,6 +137,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    """Execute download workflow and return process exit code."""
     args = parse_args()
 
     has_modality_filter = any(

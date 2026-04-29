@@ -1,3 +1,5 @@
+"""I/O helpers for tables, JSON, and vectors."""
+
 from __future__ import annotations
 
 import json
@@ -9,16 +11,19 @@ import pandas as pd
 
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
+    """Write a JSON payload to disk with indentation."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
 def write_table(path: Path, table: pd.DataFrame) -> None:
+    """Write a dataframe to CSV."""
     path.parent.mkdir(parents=True, exist_ok=True)
     table.to_csv(path, index=False)
 
 
 def write_optional_parquet(path: Path, table: pd.DataFrame, enabled: bool) -> None:
+    """Write a dataframe to Parquet when enabled."""
     if not enabled:
         return
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -26,5 +31,6 @@ def write_optional_parquet(path: Path, table: pd.DataFrame, enabled: bool) -> No
 
 
 def save_vector(path: Path, vector: np.ndarray) -> None:
+    """Save an activation vector as NPY."""
     path.parent.mkdir(parents=True, exist_ok=True)
     np.save(path, vector)

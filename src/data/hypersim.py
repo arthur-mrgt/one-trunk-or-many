@@ -1,3 +1,5 @@
+"""Hypersim adapter for aligned modality pair sampling."""
+
 from __future__ import annotations
 
 import re
@@ -7,12 +9,15 @@ from pathlib import Path
 
 @dataclass
 class PairSample:
+    """Container for one aligned multimodal sample."""
+
     scene_id: str
     sample_key: str
     modality_paths: dict[str, Path]
 
 
 def _frame_key(path: Path) -> str:
+    """Build a stable key from camera and frame id."""
     cam_match = re.search(r"scene_(cam_\d+)_", path.as_posix())
     frame_match = re.search(r"frame\.(\d+)", path.name)
     cam = cam_match.group(1) if cam_match else "cam_unknown"
@@ -21,6 +26,7 @@ def _frame_key(path: Path) -> str:
 
 
 def _list_scene_ids(root: Path) -> list[str]:
+    """List available Hypersim scene ids under supported layouts."""
     # Support both layouts:
     # 1) <root>/scenes/ai_XXX_YYY/...
     # 2) <root>/ai_XXX_YYY/...
@@ -36,6 +42,7 @@ def _list_scene_ids(root: Path) -> list[str]:
 
 
 def _index_scene_files(scene_root: Path, modality: str) -> dict[str, Path]:
+    """Index files for one modality by frame key."""
     if modality == "rgb":
         pattern = "images/scene_cam_*_final_hdf5/frame.*.color.hdf5"
     elif modality == "depth":
@@ -55,6 +62,7 @@ def load_pairs(
     n_scenes: int,
     scene_stride: int,
 ) -> list[PairSample]:
+    """Load aligned pair samples for the requested modalities."""
     scene_ids = _list_scene_ids(root)
     sampled_scene_ids = scene_ids[:: max(scene_stride, 1)][:n_scenes]
     output: list[PairSample] = []

@@ -1,3 +1,5 @@
+"""Metrics stage implementation over saved activations."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -11,6 +13,7 @@ from src.metrics.registry import build_metric
 
 
 def _stack_vectors(paths: list[str]) -> np.ndarray:
+    """Load and stack vectors from NPY files."""
     return np.stack([np.load(Path(p)) for p in paths], axis=0)
 
 
@@ -21,6 +24,7 @@ def run_metrics(
     pair_modalities: tuple[str, str],
     show_progress: bool = True,
 ) -> pd.DataFrame:
+    """Compute one metric per layer for a modality pair."""
     if activation_index.empty:
         return pd.DataFrame(
             columns=[
