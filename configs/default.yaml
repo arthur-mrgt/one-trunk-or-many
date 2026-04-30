@@ -22,9 +22,14 @@ paths:
 analysis:
   null_distribution:
     enabled: false
-    n_mismatched_pairs: 1000
-    sampling: random_scene
-    note: "Scaffold only in this iteration."
+    n_draws: 1000
+    sampling: cross_scene_type_random
+    metadata_path: ${paths.datasets_root}/hypersim/metadata_camera_trajectories.csv
+    seed: 42
+    replace: true
+    artifact_dir: ${paths.runs_root}/null_distributions
+    reuse_if_exists: true
+    min_scenes: 2
 
 hydra:
   run:

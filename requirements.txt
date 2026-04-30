@@ -1,9 +1,37 @@
-hydra-core
-omegaconf
-numpy
-pandas
-wandb
-pyarrow
-torch
-h5py
-tqdm
+# Deep learning
+torch==2.1.2
+torchvision==0.16.2
+timm==0.9.16
+einops==0.7.0
+
+# HuggingFace — pinned for fourm + diffusers==0.20.0 compatibility
+# fourm requires: diffusers==0.20.0, huggingface_hub>=0.20.0,<=0.24.0
+huggingface-hub==0.23.4
+diffusers==0.20.0
+transformers==4.38.2
+tokenizers==0.15.2
+safetensors==0.4.3
+accelerate==0.27.2
+
+# Configuration
+hydra-core==1.3.2
+omegaconf==2.3.0
+
+# Data
+numpy==1.26.4
+pandas==2.2.2
+pyarrow==15.0.2
+h5py==3.11.0
+tqdm==4.66.4
+
+# Experiment tracking
+wandb==0.16.6
+
+# Required by fourm
+albumentations==1.4.0
+opencv-python-headless==4.9.0.80
+scikit-learn==1.4.2
+matplotlib==3.8.4
+
+# 4M model library (install separately):
+# pip install git+https://github.com/apple/ml-4m.git

@@ -16,13 +16,13 @@ DIODE_DIR="${RESOURCES_ROOT}/datasets/diode"
 
 mkdir -p "${MODEL_DIR}" "${HYPERSIM_DIR}" "${DIODE_DIR}"
 
-if ! command -v huggingface-cli >/dev/null 2>&1; then
+if ! command -v hf >/dev/null 2>&1; then
   echo "[INFO] Installing huggingface_hub CLI..."
   python -m pip install -U "huggingface_hub[cli]"
 fi
 
 echo "[INFO] Downloading model snapshot to ${MODEL_DIR}"
-huggingface-cli download "${MODEL_REPO}" --local-dir "${MODEL_DIR}"
+hf download "${MODEL_REPO}" --local-dir "${MODEL_DIR}"
 
 echo ""
 echo "[DONE] Base setup complete."

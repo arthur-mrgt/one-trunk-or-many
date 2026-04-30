@@ -2,19 +2,24 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 from omegaconf import DictConfig
 
+from src.analysis.significance import compute_p_value
 from src.data.registry import load_dataset_pairs
 from src.models.registry import build_model
 from src.pipeline.extraction import run_extraction
 from src.pipeline.metrics import run_metrics
 from src.utils.config import RunContext, cfg_to_container, ensure_dir, make_run_context
-from src.utils.io import write_json, write_optional_parquet, write_table
+from src.utils.io import read_null_distribution, write_json, write_optional_parquet, write_table
 from src.utils.tracking import build_tracker
+
+log = logging.getLogger(__name__)
 
 
 def _list_activation_index_files(run_ctx: RunContext) -> list[Path]:
@@ -35,19 +40,25 @@ def _layer_sort_key(layer_name: str) -> tuple[int, str]:
         return (10**9, str(layer_name))
 
 
+def _sorted_layer_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Add ``layer_order`` and ``layer_idx`` columns, return sorted copy."""
+    df = df.copy()
+    df["layer"] = df["layer"].astype(str)
+    df["layer_order"] = df["layer"].map(lambda x: _layer_sort_key(x)[0])
+    df = df.sort_values(["layer_order", "layer"]).reset_index(drop=True)
+    df["layer_idx"] = df["layer_order"].astype(int)
+    return df
+
+
 def _log_cka_plots(tracker, metric_table: pd.DataFrame) -> None:
     """Log CKA-vs-layer plots to the tracker."""
     cka_df = metric_table[metric_table["metric"] == "cka"].copy()
     if cka_df.empty:
         return
     for pair in sorted(cka_df["pair"].unique().tolist()):
-        pair_df = cka_df[cka_df["pair"] == pair].copy()
+        pair_df = _sorted_layer_df(cka_df[cka_df["pair"] == pair])
         if pair_df.empty:
             continue
-        pair_df["layer"] = pair_df["layer"].astype(str)
-        pair_df["layer_order"] = pair_df["layer"].map(lambda x: _layer_sort_key(x)[0])
-        pair_df = pair_df.sort_values(["layer_order", "layer"]).reset_index(drop=True)
-        pair_df["layer_idx"] = pair_df["layer_order"].astype(int)
         plot_df = pair_df[["layer_idx", "layer", "value"]].copy()
         tracker.log_line_plot(
             name=f"cka_vs_layer/{pair}",
@@ -63,6 +74,111 @@ def _log_cka_plots(tracker, metric_table: pd.DataFrame) -> None:
             y="value",
             title=f"CKA vs Layer Points ({pair})",
         )
+
+
+def _log_significance_plots(tracker, metric_table: pd.DataFrame) -> None:
+    """Log p-value and delta-vs-null-mean charts to the tracker.
+
+    Produces two line plots per modality pair:
+    - ``pvalue_vs_layer/<pair>``:        empirical p-value per layer
+    - ``delta_vs_null_mean/<pair>``:  observed − null_mean per layer
+    """
+    needed = {"p_value", "delta_vs_null_mean", "pair", "layer", "metric"}
+    if not needed.issubset(metric_table.columns):
+        return
+
+    sig_df = metric_table.dropna(subset=["p_value"]).copy()
+    if sig_df.empty:
+        return
+
+    for pair in sorted(sig_df["pair"].unique().tolist()):
+        pair_df = _sorted_layer_df(sig_df[sig_df["pair"] == pair])
+        if pair_df.empty:
+            continue
+
+        p_plot = pair_df[["layer_idx", "layer", "p_value"]].copy()
+        tracker.log_line_plot(
+            name=f"pvalue_vs_layer/{pair}",
+            table=p_plot,
+            x="layer_idx",
+            y="p_value",
+            title=f"p-value vs Layer ({pair})",
+        )
+
+        delta_plot = pair_df[["layer_idx", "layer", "delta_vs_null_mean"]].copy()
+        tracker.log_line_plot(
+            name=f"delta_vs_null_mean/{pair}",
+            table=delta_plot,
+            x="layer_idx",
+            y="delta_vs_null_mean",
+            title=f"CKA − null_mean vs Layer ({pair})",
+        )
+
+
+def _resolve_null_artifact_path(cfg_dict: dict[str, Any]) -> Path | None:
+    """Return the path to a precomputed null distribution CSV, or None."""
+    null_run_id = cfg_dict.get("runtime", {}).get("null_input_run_id")
+    if not null_run_id:
+        return None
+    artifact_dir = Path(
+        cfg_dict.get("analysis", {})
+        .get("null_distribution", {})
+        .get("artifact_dir", "")
+    )
+    if not artifact_dir:
+        return None
+    # Prefer per-run subdirectory, fall back to artifact root.
+    for candidate in [
+        artifact_dir / str(null_run_id) / "null_distribution.csv",
+        artifact_dir / "null_distribution.csv",
+    ]:
+        if candidate.exists():
+            return candidate
+    return artifact_dir / str(null_run_id) / "null_distribution.csv"
+
+
+def _enrich_with_significance(
+    metric_table: pd.DataFrame,
+    null_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """Join observed metrics with null distribution and add significance columns.
+
+    Added columns: ``p_value``, ``null_mean``, ``null_std``,
+    ``delta_vs_null_mean``, ``z_score``.
+    Rows without a matching null entry receive ``NaN`` for all new fields.
+    """
+    sig_cols = ["p_value", "null_mean", "null_std", "delta_vs_null_mean", "z_score"]
+    for col in sig_cols:
+        metric_table[col] = float("nan")
+
+    if null_df.empty:
+        return metric_table
+
+    for idx, row in metric_table.iterrows():
+        mask = (
+            (null_df["pair"] == row["pair"])
+            & (null_df["layer"].astype(str) == str(row["layer"]))
+            & (null_df["metric"] == row["metric"])
+        )
+        null_values = null_df.loc[mask, "null_value"].to_numpy(dtype=float)
+        if len(null_values) == 0:
+            continue
+
+        observed = float(row["value"])
+        null_mean = float(np.mean(null_values))
+        null_std = float(np.std(null_values))
+
+        metric_table.at[idx, "p_value"] = compute_p_value(
+            observed, null_values, side="greater"
+        )
+        metric_table.at[idx, "null_mean"] = null_mean
+        metric_table.at[idx, "null_std"] = null_std
+        metric_table.at[idx, "delta_vs_null_mean"] = observed - null_mean
+        metric_table.at[idx, "z_score"] = (
+            (observed - null_mean) / null_std if null_std > 0 else float("nan")
+        )
+
+    return metric_table
 
 
 def _resolve_run_ctx_for_metrics(cfg_dict: dict[str, Any]) -> RunContext:
@@ -164,6 +280,34 @@ def run_metrics_stage(cfg: DictConfig) -> RunContext:
     else:
         metric_table = pd.DataFrame()
 
+    # ------------------------------------------------------------------
+    # Optional: enrich with null-distribution significance stats
+    # ------------------------------------------------------------------
+    null_missing_behavior: str = str(
+        cfg_dict.get("runtime", {}).get("null_missing_behavior", "warn_and_skip")
+    )
+    null_artifact_path = _resolve_null_artifact_path(cfg_dict)
+    has_significance = False
+
+    if null_artifact_path is not None:
+        _log(f"Loading null distribution from: {null_artifact_path}")
+        null_df = read_null_distribution(null_artifact_path)
+        if null_df.empty:
+            msg = (
+                f"Null artifact not found or empty at '{null_artifact_path}'. "
+                "Significance stats will be omitted."
+            )
+            if null_missing_behavior == "error":
+                raise FileNotFoundError(msg)
+            log.warning(msg)
+        else:
+            _log(f"Null distribution loaded: {len(null_df)} rows. Enriching metrics...")
+            if not metric_table.empty:
+                metric_table = _enrich_with_significance(metric_table, null_df)
+                has_significance = True
+                _log("Significance columns added: p_value, null_mean, null_std, "
+                     "delta_vs_null_mean, z_score")
+
     csv_path = run_ctx.metrics_dir / "metrics.csv"
     write_table(csv_path, metric_table)
     write_optional_parquet(
@@ -179,6 +323,7 @@ def run_metrics_stage(cfg: DictConfig) -> RunContext:
             "dataset": cfg_dict["data"]["name"],
             "metrics": cfg_dict["metrics"]["enabled"],
             "n_rows_metrics": int(len(metric_table)),
+            "has_significance": has_significance,
             "stage": "metrics",
         },
     )
@@ -187,7 +332,17 @@ def run_metrics_stage(cfg: DictConfig) -> RunContext:
     if not metric_table.empty:
         tracker.log_table("metrics_table", metric_table)
         _log_cka_plots(tracker=tracker, metric_table=metric_table)
-        tracker.log_summary({"metrics_rows": int(len(metric_table))})
+        if has_significance:
+            _log_significance_plots(tracker=tracker, metric_table=metric_table)
+        summary: dict[str, Any] = {"metrics_rows": int(len(metric_table))}
+        if has_significance:
+            sig_rows = metric_table.dropna(subset=["p_value"])
+            if not sig_rows.empty:
+                summary["n_significant_p05"] = int(
+                    (sig_rows["p_value"] <= 0.05).sum()
+                )
+                summary["mean_p_value"] = float(sig_rows["p_value"].mean())
+        tracker.log_summary(summary)
     tracker.finish()
     _log(f"Metrics stage completed. rows={len(metric_table)}")
     return run_ctx

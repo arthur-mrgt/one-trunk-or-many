@@ -5,3 +5,5 @@ precision: fp32
 save_activations: true
 metrics_input_run_id: null
 multi_gpu_strategy: none
+null_input_run_id: null
+null_missing_behavior: warn_and_skip
