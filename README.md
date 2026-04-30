@@ -79,6 +79,18 @@ bash scripts/download_hypersim_subset.sh \
   --include-rgb --include-depth --include-metadata
 ```
 
+```bash
+bash scripts/download_hypersim_subset.sh \
+  --scenes ai_024_010 ai_001_001 ai_001_006 ai_009_001 ai_005_010 ai_023_004 ai_013_002 ai_027_005 ai_001_005 ai_053_001 ai_016_009 ai_001_004 \
+  --include-rgb --include-depth --include-metadata
+```
+
+```bash
+bash scripts/download_hypersim_subset.sh \
+  --scenes ai_024_010 ai_001_001 ai_001_006 ai_009_001 ai_005_010 ai_023_004 ai_013_002 ai_027_005 ai_001_005 ai_053_001 ai_016_009 ai_001_004 ai_001_002 ai_005_003 ai_047_002 ai_008_001 ai_006_006 ai_002_007 ai_006_002 ai_005_005 \
+  --include-rgb --include-depth --include-metadata
+```
+
 Windows PowerShell:
 
 ```powershell

@@ -116,7 +116,15 @@ def _log_significance_plots(tracker, metric_table: pd.DataFrame) -> None:
 
 
 def _resolve_null_artifact_path(cfg_dict: dict[str, Any]) -> Path | None:
-    """Return the path to a precomputed null distribution CSV, or None."""
+    """Return the path to a precomputed null distribution CSV, or None.
+
+    Resolution order:
+    1. ``runtime.null_input_filename`` (exact versioned name, e.g.
+       ``null_distribution_10scenes_2000draws.csv``) inside the run subdirectory.
+    2. The latest versioned file matching
+       ``null_distribution_*scenes_*draws.csv`` (most draws wins).
+    3. Legacy fallback: ``null_distribution.csv``.
+    """
     null_run_id = cfg_dict.get("runtime", {}).get("null_input_run_id")
     if not null_run_id:
         return None
@@ -127,14 +135,36 @@ def _resolve_null_artifact_path(cfg_dict: dict[str, Any]) -> Path | None:
     )
     if not artifact_dir:
         return None
-    # Prefer per-run subdirectory, fall back to artifact root.
+
+    run_dir = artifact_dir / str(null_run_id)
+
+    # 1. Explicit filename override
+    explicit = cfg_dict.get("runtime", {}).get("null_input_filename")
+    if explicit:
+        candidate = run_dir / str(explicit)
+        if candidate.exists():
+            return candidate
+
+    # 2. Latest versioned file (prefer most draws for stability)
+    versioned = sorted(run_dir.glob("null_distribution_*scenes_*draws.csv"))
+    if versioned:
+        # Sort by n_draws (last numeric token before "draws")
+        def _draws(p: Path) -> int:
+            try:
+                return int(p.stem.split("draws")[0].split("_")[-1])
+            except ValueError:
+                return 0
+        return max(versioned, key=_draws)
+
+    # 3. Legacy fallback
     for candidate in [
-        artifact_dir / str(null_run_id) / "null_distribution.csv",
+        run_dir / "null_distribution.csv",
         artifact_dir / "null_distribution.csv",
     ]:
         if candidate.exists():
             return candidate
-    return artifact_dir / str(null_run_id) / "null_distribution.csv"
+
+    return run_dir / "null_distribution.csv"
 
 
 def _enrich_with_significance(

@@ -17,4 +17,7 @@ __pycache__/
 # Benchmark outputs not meant for git
 results/**/activations/
 results/**/artifacts/
+results/runs/
 wandb/
+
+.DS_Store

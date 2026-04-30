@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +29,7 @@ def compute_null_distribution(
     metrics_cfg: dict[str, Any],
     run_id: str,
     out_dir: Path,
+    out_filename: str = "null_distribution.csv",
 ) -> pd.DataFrame:
     """Compute null CKA distributions via cross-scene mismatched sampling.
 
@@ -91,13 +94,14 @@ def compute_null_distribution(
             )
             continue
 
+        n_workers = min(len(layers), os.cpu_count() or 4)
         log.info(
-            "Null distribution: pair=%s | %d scenes | %d layers | %d draws each.",
-            pair, len(scenes), len(layers), n_draws,
+            "Null distribution: pair=%s | %d scenes | %d layers | %d draws each "
+            "| %d parallel workers.",
+            pair, len(scenes), len(layers), n_draws, n_workers,
         )
 
-        layer_iter = tqdm(layers, desc=f"Null[{pair}]", unit="layer")
-        for layer in layer_iter:
+        def _process_layer(layer: str, layer_seed: int) -> list[dict[str, Any]]:
             left_pool = pair_idx[
                 (pair_idx["layer"] == layer) & (pair_idx["modality"] == left_mod)
             ].reset_index(drop=True)
@@ -106,36 +110,56 @@ def compute_null_distribution(
             ].reset_index(drop=True)
 
             if left_pool.empty or right_pool.empty:
-                continue
+                return []
 
+            layer_rng = np.random.default_rng(layer_seed)
+            rows: list[dict[str, Any]] = []
             for metric_name in metric_names:
                 metric_fn = build_metric(metric_name=metric_name, cka_cfg=cka_cfg)
-                null_values = _draw_mismatched_cka(
+                draw_rows = _draw_mismatched_cka(
                     left_pool=left_pool,
                     right_pool=right_pool,
                     metric_fn=metric_fn,
                     n_draws=n_draws,
                     replace=replace,
-                    rng=rng,
+                    rng=layer_rng,
                     scene_type_map=scene_type_map if use_type_constraint else {},
                 )
-                for draw_id, val in enumerate(null_values):
-                    all_rows.append({
-                        "run_id": run_id,
-                        "pair": pair,
-                        "layer": layer,
-                        "metric": metric_name,
-                        "draw_id": draw_id,
-                        "null_value": float(val),
-                        "n_samples": len(null_values),
-                        "sampling": sampling,
-                        "seed": seed,
-                    })
+                for row in draw_rows:
+                    row.update(
+                        {
+                            "run_id": run_id,
+                            "pair": pair,
+                            "layer": layer,
+                            "metric": metric_name,
+                            "sampling": sampling,
+                            "seed": seed,
+                            "n_samples": len(draw_rows),
+                        }
+                    )
+                rows.extend(draw_rows)
+            return rows
+
+        # Each layer gets a deterministic child seed derived from the master seed
+        layer_seeds = [
+            int(rng.integers(0, 2**31)) for _ in layers
+        ]
+
+        with tqdm(total=len(layers), desc=f"Null[{pair}]", unit="layer") as pbar:
+            with ThreadPoolExecutor(max_workers=n_workers) as executor:
+                futures = {
+                    executor.submit(_process_layer, layer, lseed): layer
+                    for layer, lseed in zip(layers, layer_seeds)
+                }
+                for future in as_completed(futures):
+                    all_rows.extend(future.result())
+                    pbar.update(1)
 
     null_df = pd.DataFrame.from_records(all_rows) if all_rows else pd.DataFrame()
-    csv_path = out_dir / "null_distribution.csv"
+    stem = Path(out_filename).stem
+    csv_path = out_dir / out_filename
     write_table(csv_path, null_df)
-    write_optional_parquet(out_dir / "null_distribution.parquet", null_df,
+    write_optional_parquet(out_dir / f"{stem}.parquet", null_df,
                            enabled=save_parquet)
     log.info("Null distribution saved: %d rows → %s", len(null_df), csv_path)
     return null_df
@@ -188,6 +212,18 @@ def _load_scene_type_map(null_cfg: dict[str, Any]) -> dict[str, str]:
 # ---------------------------------------------------------------------------
 
 
+def _cache_scene_vectors(pool: pd.DataFrame) -> dict[str, np.ndarray | None]:
+    """Pre-load all activation vectors per scene into memory.
+
+    Eliminates repeated disk I/O inside the draw loop — each .npy file is
+    read exactly once per layer instead of once per draw.
+    """
+    cache: dict[str, np.ndarray | None] = {}
+    for scene_id, group in pool.groupby("scene_id"):
+        cache[str(scene_id)] = _load_vectors(group["activation_path"].tolist())
+    return cache
+
+
 def _draw_mismatched_cka(
     left_pool: pd.DataFrame,
     right_pool: pd.DataFrame,
@@ -196,7 +232,7 @@ def _draw_mismatched_cka(
     replace: bool,
     rng: np.random.Generator,
     scene_type_map: dict[str, str],
-) -> list[float]:
+) -> list[dict[str, Any]]:
     """Draw n_draws mismatched CKA values.
 
     Each draw picks a left scene and a right scene that:
@@ -204,14 +240,20 @@ def _draw_mismatched_cka(
       2. Have different scene types (enforced when scene_type_map is provided).
 
     Falls back to cross-scene-only mismatching if no cross-type pair exists.
+    Activations are pre-loaded into memory once per layer to avoid repeated
+    disk reads across draws.
     """
-    null_values: list[float] = []
-    left_scenes = np.array(sorted(left_pool["scene_id"].unique()))
-    right_scenes = np.array(sorted(right_pool["scene_id"].unique()))
+    # Pre-cache all activations into RAM — avoids per-draw disk I/O
+    left_cache = _cache_scene_vectors(left_pool)
+    right_cache = _cache_scene_vectors(right_pool)
+
+    draw_rows: list[dict[str, Any]] = []
+    left_scenes = np.array(sorted(left_cache.keys()))
+    right_scenes = np.array(sorted(right_cache.keys()))
     attempts = 0
     max_attempts = n_draws * 10
 
-    while len(null_values) < n_draws and attempts < max_attempts:
+    while len(draw_rows) < n_draws and attempts < max_attempts:
         attempts += 1
 
         left_scene = rng.choice(left_scenes)
@@ -239,35 +281,46 @@ def _draw_mismatched_cka(
             break
 
         right_scene = rng.choice(candidates)
+        right_type = scene_type_map.get(right_scene)
 
-        left_rows = left_pool[left_pool["scene_id"] == left_scene]
-        right_rows = right_pool[right_pool["scene_id"] == right_scene]
-        if left_rows.empty or right_rows.empty:
-            continue
-
-        x = _load_vectors(left_rows["activation_path"].tolist())
-        y = _load_vectors(right_rows["activation_path"].tolist())
+        x = left_cache.get(left_scene)
+        y = right_cache.get(right_scene)
         if x is None or y is None:
             continue
 
         # CKA requires equal sample counts; truncate to the shorter scene.
         if x.shape[0] != y.shape[0]:
             n = min(x.shape[0], y.shape[0])
-            rng.shuffle(x)
-            rng.shuffle(y)
-            x, y = x[:n], y[:n]
+            idx_x = rng.permutation(x.shape[0])[:n]
+            idx_y = rng.permutation(y.shape[0])[:n]
+            x, y = x[idx_x], y[idx_y]
 
         try:
-            null_values.append(float(metric_fn(x, y)))
+            draw_rows.append(
+                {
+                    "draw_id": len(draw_rows),
+                    "null_value": float(metric_fn(x, y)),
+                    "left_scene_id": str(left_scene),
+                    "left_scene_type": left_type if left_type else "unknown",
+                    "right_scene_id": str(right_scene),
+                    "right_scene_type": right_type if right_type else "unknown",
+                    "is_cross_scene": bool(left_scene != right_scene),
+                    "is_cross_type": (
+                        (left_type is not None)
+                        and (right_type is not None)
+                        and (left_type != right_type)
+                    ),
+                }
+            )
         except Exception as exc:
             log.debug("Metric failed for a null draw: %s", exc)
 
-    if len(null_values) < n_draws:
+    if len(draw_rows) < n_draws:
         log.warning(
             "Only obtained %d / %d null draws after %d attempts.",
-            len(null_values), n_draws, attempts,
+            len(draw_rows), n_draws, attempts,
         )
-    return null_values
+    return draw_rows
 
 
 def _load_vectors(paths: list[str]) -> np.ndarray | None:

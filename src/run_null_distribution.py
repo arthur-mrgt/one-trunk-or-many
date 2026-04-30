@@ -17,7 +17,7 @@ Typical usage
         analysis.null_distribution.n_draws=500
 
 The null distribution is saved under:
-    {analysis.null_distribution.artifact_dir}/{run_id}/null_distribution.csv
+    {analysis.null_distribution.artifact_dir}/{run_id}/null_distribution_<n_scenes>scenes_<n_draws>draws.csv
 """
 
 from __future__ import annotations
@@ -85,8 +85,13 @@ def main(cfg: DictConfig) -> None:
     artifact_dir = Path(null_cfg.get("artifact_dir", "results/runs/null_distributions"))
     out_dir = ensure_dir(artifact_dir / run_ctx.run_id)
 
+    # Build versioned filename:  null_distribution_<n_scenes>scenes_<n_draws>draws.csv
+    n_draws: int = int(null_cfg.get("n_draws", 1000))
+    n_scenes: int = activation_index["scene_id"].nunique()
+    out_filename = f"null_distribution_{n_scenes}scenes_{n_draws}draws.csv"
+
     # Reuse guard
-    csv_out = out_dir / "null_distribution.csv"
+    csv_out = out_dir / out_filename
     if csv_out.exists() and null_cfg.get("reuse_if_exists", True):
         print(f"[INFO] Null artifact already exists at '{csv_out}'. Skipping.")
         print(f"[INFO] Set analysis.null_distribution.reuse_if_exists=false to recompute.")
@@ -102,6 +107,7 @@ def main(cfg: DictConfig) -> None:
         metrics_cfg=metrics_cfg,
         run_id=run_ctx.run_id,
         out_dir=out_dir,
+        out_filename=out_filename,
     )
 
     print(f"[DONE] Null distribution: {len(null_df)} rows → {csv_out}")
