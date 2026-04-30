@@ -61,9 +61,20 @@ def load_pairs(
     modalities: tuple[str, str],
     n_scenes: int,
     scene_stride: int,
+    exclude_scenes: list[str] | None = None,
 ) -> list[PairSample]:
-    """Load aligned pair samples for the requested modalities."""
-    scene_ids = _list_scene_ids(root)
+    """Load aligned pair samples for the requested modalities.
+
+    Parameters
+    ----------
+    exclude_scenes:
+        Optional list of scene IDs to skip, e.g. ``["ai_002_007"]``.
+        Exclusion is applied before the ``n_scenes`` cap, so you always
+        get exactly ``n_scenes`` valid scenes (or fewer if not enough are
+        available after exclusion).
+    """
+    excluded = set(exclude_scenes or [])
+    scene_ids = [s for s in _list_scene_ids(root) if s not in excluded]
     sampled_scene_ids = scene_ids[:: max(scene_stride, 1)][:n_scenes]
     output: list[PairSample] = []
 

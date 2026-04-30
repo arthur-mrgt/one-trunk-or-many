@@ -101,24 +101,57 @@ def compute_null_distribution(
             pair, len(scenes), len(layers), n_draws, n_workers,
         )
 
-        def _process_layer(layer: str, layer_seed: int) -> list[dict[str, Any]]:
-            left_pool = pair_idx[
+        # Build a metrics_cfg variant with PCA disabled for null draws.
+        # PCA is applied once per layer via _preproject_caches instead.
+        null_metrics_cfg = dict(metrics_cfg)
+        for mkey in ("pwcca", "knn_overlap"):
+            entry = dict(null_metrics_cfg.get(mkey, {}))
+            entry["pca"] = {"enabled": False}
+            null_metrics_cfg[mkey] = entry
+
+        orig_pca_cfg = metrics_cfg.get("pwcca", {}).get("pca", {})
+        pca_enabled = orig_pca_cfg.get("enabled", True)
+        pca_n_components = int(orig_pca_cfg.get("n_components", 64))
+
+        # Pre-compute per-layer activation caches and PCA projections
+        # sequentially (before spawning threads) to avoid BLAS oversubscription.
+        # SVD only runs once per layer here; threads only do cheap draw loops.
+        layer_data: dict[str, tuple[
+            dict[str, np.ndarray | None],
+            dict[str, np.ndarray | None],
+        ]] = {}
+        for layer in layers:
+            lp = pair_idx[
                 (pair_idx["layer"] == layer) & (pair_idx["modality"] == left_mod)
             ].reset_index(drop=True)
-            right_pool = pair_idx[
+            rp = pair_idx[
                 (pair_idx["layer"] == layer) & (pair_idx["modality"] == right_mod)
             ].reset_index(drop=True)
+            if lp.empty or rp.empty:
+                layer_data[layer] = ({}, {})
+                continue
+            lc = _cache_scene_vectors(lp)
+            rc = _cache_scene_vectors(rp)
+            if pca_enabled:
+                lc, rc = _preproject_caches(lc, rc, n_components=pca_n_components)
+            layer_data[layer] = (lc, rc)
 
-            if left_pool.empty or right_pool.empty:
+        def _process_layer(layer: str, layer_seed: int) -> list[dict[str, Any]]:
+            left_cache, right_cache = layer_data[layer]
+            if not left_cache or not right_cache:
                 return []
 
             layer_rng = np.random.default_rng(layer_seed)
             rows: list[dict[str, Any]] = []
             for metric_name in metric_names:
-                metric_fn = build_metric(metric_name=metric_name, cka_cfg=cka_cfg)
+                metric_fn = build_metric(
+                    metric_name=metric_name,
+                    cka_cfg=cka_cfg,
+                    metrics_cfg=null_metrics_cfg,
+                )
                 draw_rows = _draw_mismatched_cka(
-                    left_pool=left_pool,
-                    right_pool=right_pool,
+                    left_cache=left_cache,
+                    right_cache=right_cache,
                     metric_fn=metric_fn,
                     n_draws=n_draws,
                     replace=replace,
@@ -224,29 +257,64 @@ def _cache_scene_vectors(pool: pd.DataFrame) -> dict[str, np.ndarray | None]:
     return cache
 
 
+def _preproject_caches(
+    left_cache: dict[str, np.ndarray | None],
+    right_cache: dict[str, np.ndarray | None],
+    n_components: int = 64,
+) -> tuple[dict[str, np.ndarray | None], dict[str, np.ndarray | None]]:
+    """Fit one PCA basis on all scene activations and return projected caches.
+
+    This replaces the per-draw SVD (1000 × expensive) with a single SVD per
+    layer followed by cheap matrix multiplications for every draw.
+
+    The PCA is fit on the concatenation of ALL left and right scenes so that
+    both sides share a common projection basis.
+    """
+    all_arrays = [
+        v for v in list(left_cache.values()) + list(right_cache.values())
+        if v is not None
+    ]
+    if not all_arrays:
+        return left_cache, right_cache
+
+    stacked = np.concatenate(all_arrays, axis=0).astype(np.float64)
+    n_total, d = stacked.shape
+    k = min(n_components, n_total - 1, d)
+    if k <= 0:
+        return left_cache, right_cache
+
+    mean = stacked.mean(axis=0)
+    _, _, vt = np.linalg.svd(stacked - mean, full_matrices=False)
+    components = vt[:k]   # (k, d) — projection matrix
+
+    def _project(cache: dict[str, np.ndarray | None]) -> dict[str, np.ndarray | None]:
+        return {
+            sid: ((arr.astype(np.float64) - mean) @ components.T
+                  if arr is not None else None)
+            for sid, arr in cache.items()
+        }
+
+    return _project(left_cache), _project(right_cache)
+
+
 def _draw_mismatched_cka(
-    left_pool: pd.DataFrame,
-    right_pool: pd.DataFrame,
+    left_cache: dict[str, np.ndarray | None],
+    right_cache: dict[str, np.ndarray | None],
     metric_fn: Any,
     n_draws: int,
     replace: bool,
     rng: np.random.Generator,
     scene_type_map: dict[str, str],
 ) -> list[dict[str, Any]]:
-    """Draw n_draws mismatched CKA values.
+    """Draw n_draws mismatched metric values.
 
     Each draw picks a left scene and a right scene that:
       1. Have different scene IDs (always enforced).
       2. Have different scene types (enforced when scene_type_map is provided).
 
     Falls back to cross-scene-only mismatching if no cross-type pair exists.
-    Activations are pre-loaded into memory once per layer to avoid repeated
-    disk reads across draws.
+    Expects pre-built and optionally pre-projected activation caches.
     """
-    # Pre-cache all activations into RAM — avoids per-draw disk I/O
-    left_cache = _cache_scene_vectors(left_pool)
-    right_cache = _cache_scene_vectors(right_pool)
-
     draw_rows: list[dict[str, Any]] = []
     left_scenes = np.array(sorted(left_cache.keys()))
     right_scenes = np.array(sorted(right_cache.keys()))

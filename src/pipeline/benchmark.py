@@ -50,38 +50,40 @@ def _sorted_layer_df(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def _log_cka_plots(tracker, metric_table: pd.DataFrame) -> None:
-    """Log CKA-vs-layer plots to the tracker."""
-    cka_df = metric_table[metric_table["metric"] == "cka"].copy()
-    if cka_df.empty:
+def _log_metric_plots(tracker, metric_table: pd.DataFrame) -> None:
+    """Log value-vs-layer line plots for every (metric, pair) combination."""
+    if metric_table.empty:
         return
-    for pair in sorted(cka_df["pair"].unique().tolist()):
-        pair_df = _sorted_layer_df(cka_df[cka_df["pair"] == pair])
-        if pair_df.empty:
-            continue
-        plot_df = pair_df[["layer_idx", "layer", "value"]].copy()
-        tracker.log_line_plot(
-            name=f"cka_vs_layer/{pair}",
-            table=plot_df,
-            x="layer_idx",
-            y="value",
-            title=f"CKA vs Layer ({pair})",
-        )
-        tracker.log_scatter_plot(
-            name=f"cka_vs_layer_points/{pair}",
-            table=plot_df,
-            x="layer_idx",
-            y="value",
-            title=f"CKA vs Layer Points ({pair})",
-        )
+    for metric_name in sorted(metric_table["metric"].unique().tolist()):
+        m_df = metric_table[metric_table["metric"] == metric_name].copy()
+        for pair in sorted(m_df["pair"].unique().tolist()):
+            pair_df = _sorted_layer_df(m_df[m_df["pair"] == pair])
+            if pair_df.empty:
+                continue
+            plot_df = pair_df[["layer_idx", "layer", "value"]].copy()
+            tracker.log_line_plot(
+                name=f"{metric_name}_vs_layer/{pair}",
+                table=plot_df,
+                x="layer_idx",
+                y="value",
+                title=f"{metric_name.upper()} vs Layer ({pair})",
+            )
+            tracker.log_scatter_plot(
+                name=f"{metric_name}_vs_layer_points/{pair}",
+                table=plot_df,
+                x="layer_idx",
+                y="value",
+                title=f"{metric_name.upper()} vs Layer Points ({pair})",
+            )
 
 
 def _log_significance_plots(tracker, metric_table: pd.DataFrame) -> None:
-    """Log p-value and delta-vs-null-mean charts to the tracker.
+    """Log p-value and delta-vs-null-mean charts per (metric, pair).
 
-    Produces two line plots per modality pair:
-    - ``pvalue_vs_layer/<pair>``:        empirical p-value per layer
-    - ``delta_vs_null_mean/<pair>``:  observed − null_mean per layer
+    Produces per-metric, per-pair line plots:
+    - ``pvalue_vs_layer/<metric>/<pair>``
+    - ``delta_vs_null_mean/<metric>/<pair>``
+    - ``z_score_vs_layer/<metric>/<pair>``
     """
     needed = {"p_value", "delta_vs_null_mean", "pair", "layer", "metric"}
     if not needed.issubset(metric_table.columns):
@@ -91,28 +93,35 @@ def _log_significance_plots(tracker, metric_table: pd.DataFrame) -> None:
     if sig_df.empty:
         return
 
-    for pair in sorted(sig_df["pair"].unique().tolist()):
-        pair_df = _sorted_layer_df(sig_df[sig_df["pair"] == pair])
-        if pair_df.empty:
-            continue
+    for metric_name in sorted(sig_df["metric"].unique().tolist()):
+        m_df = sig_df[sig_df["metric"] == metric_name]
+        for pair in sorted(m_df["pair"].unique().tolist()):
+            pair_df = _sorted_layer_df(m_df[m_df["pair"] == pair])
+            if pair_df.empty:
+                continue
 
-        p_plot = pair_df[["layer_idx", "layer", "p_value"]].copy()
-        tracker.log_line_plot(
-            name=f"pvalue_vs_layer/{pair}",
-            table=p_plot,
-            x="layer_idx",
-            y="p_value",
-            title=f"p-value vs Layer ({pair})",
-        )
-
-        delta_plot = pair_df[["layer_idx", "layer", "delta_vs_null_mean"]].copy()
-        tracker.log_line_plot(
-            name=f"delta_vs_null_mean/{pair}",
-            table=delta_plot,
-            x="layer_idx",
-            y="delta_vs_null_mean",
-            title=f"CKA − null_mean vs Layer ({pair})",
-        )
+            tracker.log_line_plot(
+                name=f"pvalue_vs_layer/{metric_name}/{pair}",
+                table=pair_df[["layer_idx", "layer", "p_value"]].copy(),
+                x="layer_idx",
+                y="p_value",
+                title=f"p-value vs Layer — {metric_name.upper()} ({pair})",
+            )
+            tracker.log_line_plot(
+                name=f"delta_vs_null_mean/{metric_name}/{pair}",
+                table=pair_df[["layer_idx", "layer", "delta_vs_null_mean"]].copy(),
+                x="layer_idx",
+                y="delta_vs_null_mean",
+                title=f"{metric_name.upper()} − null_mean vs Layer ({pair})",
+            )
+            if "z_score" in pair_df.columns:
+                tracker.log_line_plot(
+                    name=f"z_score_vs_layer/{metric_name}/{pair}",
+                    table=pair_df[["layer_idx", "layer", "z_score"]].copy(),
+                    x="layer_idx",
+                    y="z_score",
+                    title=f"z-score vs Layer — {metric_name.upper()} ({pair})",
+                )
 
 
 def _resolve_null_artifact_path(cfg_dict: dict[str, Any]) -> Path | None:
@@ -251,6 +260,7 @@ def run_extraction_stage(cfg: DictConfig) -> RunContext:
             modalities=(left_mod, right_mod),
             n_scenes=int(cfg_dict["data"]["n_scenes"]),
             scene_stride=int(cfg_dict["data"]["scene_stride"]),
+            exclude_scenes=list(cfg_dict["data"].get("exclude_scenes") or []),
         )
 
         activation_index = run_extraction(
@@ -295,15 +305,14 @@ def run_metrics_stage(cfg: DictConfig) -> RunContext:
             left_mod, right_mod = tuple(pair_name.split("-", 1))
         except ValueError:
             continue
-        for metric_name in cfg_dict["metrics"]["enabled"]:
-            metric_df = run_metrics(
-                activation_index=activation_index,
-                metric_name=metric_name,
-                cka_cfg=cfg_dict["metrics"]["cka"],
-                pair_modalities=(left_mod, right_mod),
-                show_progress=True,
-            )
-            all_metric_frames.append(metric_df)
+        metric_df = run_metrics(
+            activation_index=activation_index,
+            metric_names=list(cfg_dict["metrics"]["enabled"]),
+            metrics_cfg=cfg_dict["metrics"],
+            pair_modalities=(left_mod, right_mod),
+            show_progress=True,
+        )
+        all_metric_frames.append(metric_df)
 
     if all_metric_frames:
         metric_table = pd.concat(all_metric_frames, ignore_index=True)
@@ -361,17 +370,30 @@ def run_metrics_stage(cfg: DictConfig) -> RunContext:
 
     if not metric_table.empty:
         tracker.log_table("metrics_table", metric_table)
-        _log_cka_plots(tracker=tracker, metric_table=metric_table)
+        _log_metric_plots(tracker=tracker, metric_table=metric_table)
         if has_significance:
             _log_significance_plots(tracker=tracker, metric_table=metric_table)
         summary: dict[str, Any] = {"metrics_rows": int(len(metric_table))}
         if has_significance:
             sig_rows = metric_table.dropna(subset=["p_value"])
             if not sig_rows.empty:
+                # Overall summary
                 summary["n_significant_p05"] = int(
                     (sig_rows["p_value"] <= 0.05).sum()
                 )
                 summary["mean_p_value"] = float(sig_rows["p_value"].mean())
+                # Per-metric breakdown
+                for metric_name, grp in sig_rows.groupby("metric"):
+                    prefix = str(metric_name)
+                    summary[f"{prefix}/n_significant_p05"] = int(
+                        (grp["p_value"] <= 0.05).sum()
+                    )
+                    summary[f"{prefix}/mean_p_value"] = float(grp["p_value"].mean())
+                    summary[f"{prefix}/mean_value"] = float(grp["value"].mean())
+                    if "z_score" in grp.columns:
+                        summary[f"{prefix}/mean_z_score"] = float(
+                            grp["z_score"].dropna().mean()
+                        )
         tracker.log_summary(summary)
     tracker.finish()
     _log(f"Metrics stage completed. rows={len(metric_table)}")

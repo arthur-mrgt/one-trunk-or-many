@@ -14,6 +14,7 @@ def load_dataset_pairs(
     modalities: tuple[str, str],
     n_scenes: int,
     scene_stride: int,
+    exclude_scenes: list[str] | None = None,
 ) -> list[Any]:
     """Dispatch pair loading to the selected dataset adapter."""
     if dataset_name == "hypersim":
@@ -22,6 +23,7 @@ def load_dataset_pairs(
             modalities=modalities,
             n_scenes=n_scenes,
             scene_stride=scene_stride,
+            exclude_scenes=exclude_scenes,
         )
     if dataset_name == "diode":
         return diode.load_pairs(

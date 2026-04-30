@@ -3,6 +3,7 @@ root: ${paths.datasets_root}/hypersim
 split: train
 n_scenes: 5
 scene_stride: 1
+exclude_scenes: []
 modalities:
   - rgb
   - depth

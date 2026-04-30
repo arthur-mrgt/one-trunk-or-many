@@ -19,69 +19,95 @@ def _stack_vectors(paths: list[str]) -> np.ndarray:
 
 def run_metrics(
     activation_index: pd.DataFrame,
-    metric_name: str,
-    cka_cfg: dict[str, Any],
+    metric_names: list[str],
+    metrics_cfg: dict[str, Any],
     pair_modalities: tuple[str, str],
     show_progress: bool = True,
 ) -> pd.DataFrame:
-    """Compute one metric per layer for a modality pair."""
+    """Compute all enabled metrics per layer for a modality pair.
+
+    Parameters
+    ----------
+    activation_index:
+        Index DataFrame produced by the extraction stage.
+    metric_names:
+        List of metric names to compute, e.g. ``["cka", "pwcca", "knn_overlap"]``.
+    metrics_cfg:
+        Full metrics config dict (contains sub-configs for each metric).
+    pair_modalities:
+        ``(left_modality, right_modality)`` tuple, e.g. ``("rgb", "depth")``.
+    show_progress:
+        Whether to show a tqdm progress bar.
+    """
     if activation_index.empty:
         return pd.DataFrame(
             columns=[
-                "run_id",
-                "pair",
-                "layer",
-                "metric",
-                "value",
-                "n_samples",
-                "left_modality",
-                "right_modality",
+                "run_id", "pair", "layer", "metric",
+                "value", "n_samples", "left_modality", "right_modality",
             ]
         )
 
-    metric_fn = build_metric(metric_name=metric_name, cka_cfg=cka_cfg)
+    cka_cfg: dict = metrics_cfg.get("cka", {})
     left_mod, right_mod = pair_modalities
-
-    rows: list[dict[str, Any]] = []
     layers = sorted(activation_index["layer"].unique().tolist())
 
-    layer_iter = tqdm(
-        layers,
-        desc=f"Metric[{metric_name}][{left_mod}-{right_mod}]",
-        unit="layer",
-        disable=not show_progress,
-    )
-    for layer in layer_iter:
-        left_df = activation_index[
-            (activation_index["layer"] == layer) & (activation_index["modality"] == left_mod)
-        ]
-        right_df = activation_index[
-            (activation_index["layer"] == layer) & (activation_index["modality"] == right_mod)
-        ]
-        merged = left_df.merge(
-            right_df,
-            on=["run_id", "pair", "scene_id", "sample_key", "layer"],
-            suffixes=("_left", "_right"),
-        )
-        if merged.empty:
-            continue
+    rows: list[dict[str, Any]] = []
 
-        x = _stack_vectors(merged["activation_path_left"].tolist())
-        y = _stack_vectors(merged["activation_path_right"].tolist())
-        value = metric_fn(x, y)
-        rows.append(
-            {
-                "run_id": merged.iloc[0]["run_id"],
-                "pair": merged.iloc[0]["pair"],
-                "layer": layer,
-                "metric": metric_name,
-                "value": value,
-                "n_samples": int(len(merged)),
-                "left_modality": left_mod,
-                "right_modality": right_mod,
-            }
+    for metric_name in metric_names:
+        metric_fn = build_metric(
+            metric_name=metric_name,
+            cka_cfg=cka_cfg,
+            metrics_cfg=metrics_cfg,
         )
-        if show_progress:
-            layer_iter.set_postfix_str(f"n={len(merged)}")
+
+        layer_iter = tqdm(
+            layers,
+            desc=f"Metric[{metric_name}][{left_mod}-{right_mod}]",
+            unit="layer",
+            disable=not show_progress,
+        )
+        for layer in layer_iter:
+            left_df = activation_index[
+                (activation_index["layer"] == layer)
+                & (activation_index["modality"] == left_mod)
+            ]
+            right_df = activation_index[
+                (activation_index["layer"] == layer)
+                & (activation_index["modality"] == right_mod)
+            ]
+            merged = left_df.merge(
+                right_df,
+                on=["run_id", "pair", "scene_id", "sample_key", "layer"],
+                suffixes=("_left", "_right"),
+            )
+            if merged.empty:
+                continue
+
+            x = _stack_vectors(merged["activation_path_left"].tolist())
+            y = _stack_vectors(merged["activation_path_right"].tolist())
+
+            try:
+                value = metric_fn(x, y)
+            except Exception as exc:
+                value = float("nan")
+                if show_progress:
+                    tqdm.write(
+                        f"[WARN] {metric_name} failed for layer {layer}: {exc}"
+                    )
+
+            rows.append(
+                {
+                    "run_id": merged.iloc[0]["run_id"],
+                    "pair": merged.iloc[0]["pair"],
+                    "layer": layer,
+                    "metric": metric_name,
+                    "value": value,
+                    "n_samples": int(len(merged)),
+                    "left_modality": left_mod,
+                    "right_modality": right_mod,
+                }
+            )
+            if show_progress:
+                layer_iter.set_postfix_str(f"n={len(merged)}")
 
     return pd.DataFrame.from_records(rows)

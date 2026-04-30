@@ -7,10 +7,11 @@ set -euo pipefail
 # 3) re-run metrics with null enrichment
 #
 # Usage:
-#   bash scripts/run_null_pipeline.sh [n_scenes] [n_draws] [tracking] [run_id] [reuse_if_exists] [name]
+#   bash scripts/run_null_pipeline.sh [n_scenes] [n_draws] [tracking] [run_id] [reuse_if_exists] [name] [extra_hydra_overrides]
 # Examples:
 #   bash scripts/run_null_pipeline.sh 10 500 wandb_on "" true "B"
 #   bash scripts/run_null_pipeline.sh 10 500 wandb_off rq1_cka_pipeline-20260430-103348 false "A_rerun"
+#   bash scripts/run_null_pipeline.sh 10 1000 wandb_on "" false "F" "data.exclude_scenes=[ai_002_007]"
 
 N_SCENES="${1:-2}"
 N_DRAWS="${2:-200}"
@@ -18,10 +19,11 @@ TRACKING="${3:-wandb_off}"
 RUN_ID="${4:-}"
 REUSE_IF_EXISTS="${5:-true}"
 RUN_NAME="${6:-}"
+EXTRA_OVERRIDES="${7:-}"
 
 if [[ -z "${RUN_ID}" ]]; then
   echo "[INFO] Step 1/3: running benchmark (n_scenes=${N_SCENES}, tracking=${TRACKING})"
-  python -m src.run_benchmark "data.n_scenes=${N_SCENES}" "tracking=${TRACKING}"
+  python -m src.run_benchmark "data.n_scenes=${N_SCENES}" "tracking=${TRACKING}" ${EXTRA_OVERRIDES}
 
   RUN_ID="$(ls -1t results/runs | grep -v null_distributions | grep -v hydra | head -n 1)"
   if [[ -z "${RUN_ID}" ]]; then

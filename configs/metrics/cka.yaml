@@ -1,11 +1,28 @@
 enabled:
   - cka
+  - pwcca
+  - knn_overlap
+
 pairs:
   - [rgb, depth]
 
 cka:
   center_gram: true
   unbiased: false
+
+pwcca:
+  eps: 1.0e-10
+  pca:
+    enabled: true
+    n_components: 64
+    seed: 0
+
+knn_overlap:
+  k: 10
+  pca:
+    enabled: true
+    n_components: 64
+    seed: 0
 
 output:
   save_csv: true
