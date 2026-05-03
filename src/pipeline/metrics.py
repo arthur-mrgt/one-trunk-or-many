@@ -17,6 +17,25 @@ def _stack_vectors(paths: list[str]) -> np.ndarray:
     return np.stack([np.load(Path(p)) for p in paths], axis=0)
 
 
+def _metric_metadata(metric_name: str, metrics_cfg: dict[str, Any]) -> dict[str, Any]:
+    """Return metric-specific metadata fields for output rows."""
+    reduction_used = False
+    k = float("nan")
+
+    metric_cfg = metrics_cfg.get(metric_name, {})
+    pca_cfg = metric_cfg.get("pca", {})
+    if isinstance(pca_cfg, dict):
+        reduction_used = bool(pca_cfg.get("enabled", False))
+
+    if metric_name == "knn_overlap":
+        k = int(metric_cfg.get("k", 10))
+
+    return {
+        "reduction_used": reduction_used,
+        "k": k,
+    }
+
+
 def run_metrics(
     activation_index: pd.DataFrame,
     metric_names: list[str],
@@ -44,6 +63,7 @@ def run_metrics(
             columns=[
                 "run_id", "pair", "layer", "metric",
                 "value", "n_samples", "left_modality", "right_modality",
+                "reduction_used", "k",
             ]
         )
 
@@ -54,6 +74,7 @@ def run_metrics(
     rows: list[dict[str, Any]] = []
 
     for metric_name in metric_names:
+        metric_meta = _metric_metadata(metric_name, metrics_cfg)
         metric_fn = build_metric(
             metric_name=metric_name,
             cka_cfg=cka_cfg,
@@ -105,6 +126,8 @@ def run_metrics(
                     "n_samples": int(len(merged)),
                     "left_modality": left_mod,
                     "right_modality": right_mod,
+                    "reduction_used": metric_meta["reduction_used"],
+                    "k": metric_meta["k"],
                 }
             )
             if show_progress:

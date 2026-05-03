@@ -18,6 +18,8 @@ __pycache__/
 results/**/activations/
 results/**/artifacts/
 results/runs/
+results/diagnostics/
+
 wandb/
 
 .DS_Store

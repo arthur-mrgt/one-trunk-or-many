@@ -105,7 +105,7 @@ Windows:
 powershell -ExecutionPolicy Bypass -File scripts/setup_base.ps1 -ModelRepo EPFL-VILAB/4M-7_B_CC12M
 ```
 
-### 4.2 DIODE dataset (optional)
+### 4.2 DIODE dataset
 
 Linux/SCITAS:
 

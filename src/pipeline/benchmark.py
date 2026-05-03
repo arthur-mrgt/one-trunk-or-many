@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from itertools import combinations
 import logging
 from pathlib import Path
 from typing import Any
@@ -30,6 +31,58 @@ def _list_activation_index_files(run_ctx: RunContext) -> list[Path]:
 def _log(message: str) -> None:
     """Print a standardized info log line."""
     print(f"[INFO] {message}")
+
+
+def _normalize_pair(pair: Any) -> list[str]:
+    """Validate one modality pair and return ``[left, right]``."""
+    if not isinstance(pair, (list, tuple)) or len(pair) != 2:
+        raise ValueError(
+            f"Invalid modality pair: {pair!r}. Expected two entries, e.g. [rgb, depth]."
+        )
+    left, right = str(pair[0]), str(pair[1])
+    if left == right:
+        raise ValueError(f"Invalid modality pair: {pair!r}. Modalities must differ.")
+    return [left, right]
+
+
+def _resolve_metric_pairs(metrics_cfg: dict[str, Any]) -> list[list[str]]:
+    """Resolve benchmark modality pairs from metrics config.
+
+    Supports two modes:
+    - ``explicit``: use ``metrics.pairs`` as provided.
+    - ``all_combinations``: build all unordered pairs from ``metrics.modalities``.
+    """
+    pairs_mode = str(metrics_cfg.get("pairs_mode", "explicit"))
+    explicit_pairs = metrics_cfg.get("pairs", []) or []
+
+    if pairs_mode == "explicit":
+        if not explicit_pairs:
+            raise ValueError("metrics.pairs is empty while metrics.pairs_mode=explicit.")
+        normalized = [_normalize_pair(p) for p in explicit_pairs]
+    elif pairs_mode == "all_combinations":
+        modalities_raw = metrics_cfg.get("modalities", []) or []
+        modalities = list(dict.fromkeys(str(m) for m in modalities_raw))
+        if len(modalities) < 2:
+            raise ValueError(
+                "metrics.modalities must contain at least two unique entries when "
+                "metrics.pairs_mode=all_combinations."
+            )
+        normalized = [[left, right] for left, right in combinations(modalities, 2)]
+    else:
+        raise ValueError(
+            f"Unknown metrics.pairs_mode='{pairs_mode}'. "
+            "Supported values: explicit, all_combinations."
+        )
+
+    seen: set[tuple[str, str]] = set()
+    resolved: list[list[str]] = []
+    for left, right in normalized:
+        key = (left, right)
+        if key in seen:
+            continue
+        seen.add(key)
+        resolved.append([left, right])
+    return resolved
 
 
 def _layer_sort_key(layer_name: str) -> tuple[int, str]:
@@ -246,11 +299,13 @@ def _resolve_run_ctx_for_metrics(cfg_dict: dict[str, Any]) -> RunContext:
 def run_extraction_stage(cfg: DictConfig) -> RunContext:
     """Run extraction for all configured modality pairs."""
     cfg_dict = cfg_to_container(cfg)
+    resolved_pairs = _resolve_metric_pairs(cfg_dict["metrics"])
+    cfg_dict["metrics"]["resolved_pairs"] = resolved_pairs
     run_ctx = make_run_context(cfg)
     _log(f"Starting extraction stage: run_id={run_ctx.run_id}")
     model = build_model(cfg_dict["model"], cfg_dict["runtime"])
 
-    for pair in cfg_dict["metrics"]["pairs"]:
+    for pair in resolved_pairs:
         left_mod, right_mod = pair[0], pair[1]
         pair_name = f"{left_mod}-{right_mod}"
         _log(f"Loading samples for pair {pair_name}")
@@ -279,7 +334,8 @@ def run_extraction_stage(cfg: DictConfig) -> RunContext:
         {
             "run_id": run_ctx.run_id,
             "dataset": cfg_dict["data"]["name"],
-            "pairs": cfg_dict["metrics"]["pairs"],
+            "pairs_mode": cfg_dict["metrics"].get("pairs_mode", "explicit"),
+            "pairs": resolved_pairs,
             "stage": "extraction",
             "activation_indices": [str(p) for p in _list_activation_index_files(run_ctx)],
         },
@@ -291,6 +347,11 @@ def run_extraction_stage(cfg: DictConfig) -> RunContext:
 def run_metrics_stage(cfg: DictConfig) -> RunContext:
     """Run metrics using saved activation indices."""
     cfg_dict = cfg_to_container(cfg)
+    try:
+        cfg_dict["metrics"]["resolved_pairs"] = _resolve_metric_pairs(cfg_dict["metrics"])
+    except Exception:
+        # metrics-only runs may rely on already-materialized activation indices
+        pass
     run_ctx = _resolve_run_ctx_for_metrics(cfg_dict)
     _log(f"Starting metrics stage for run_id={run_ctx.run_id}")
     tracker = build_tracker(cfg=cfg_dict, run_id=run_ctx.run_id)
@@ -361,6 +422,8 @@ def run_metrics_stage(cfg: DictConfig) -> RunContext:
             "run_id": run_ctx.run_id,
             "dataset": cfg_dict["data"]["name"],
             "metrics": cfg_dict["metrics"]["enabled"],
+            "pairs_mode": cfg_dict["metrics"].get("pairs_mode", "explicit"),
+            "pairs": sorted(metric_table["pair"].unique().tolist()) if not metric_table.empty else [],
             "n_rows_metrics": int(len(metric_table)),
             "has_significance": has_significance,
             "stage": "metrics",

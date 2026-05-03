@@ -3,6 +3,11 @@ enabled:
   - pwcca
   - knn_overlap
 
+pairs_mode: explicit
+modalities:
+  - rgb
+  - depth
+
 pairs:
   - [rgb, depth]
 

@@ -33,39 +33,86 @@ def _cca(
     y: np.ndarray,
     eps: float = 1e-10,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Compute CCA between x and y via SVD of the cross-covariance.
+    """Compute CCA in a numerically stable way using thin SVD factors.
 
     Returns
     -------
     correlations : (k,) canonical correlation values rho_i in [0, 1]
-    u            : (d1, k) left canonical directions (in x-space)
-    v            : (d2, k) right canonical directions (in y-space)
+    a            : (d1, k) left canonical directions (in x-space)
+    b            : (d2, k) right canonical directions (in y-space)
     """
-    n = x.shape[0]
-    # Centre
     x = x - x.mean(axis=0)
     y = y - y.mean(axis=0)
 
-    # Whitening: X_w = X @ Sx^{-1/2}
-    def _whiten(m: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-        """Return whitened matrix and the whitening matrix W s.t. m @ W = m_w."""
-        cov = (m.T @ m) / (n - 1) + eps * np.eye(m.shape[1])
-        vals, vecs = np.linalg.eigh(cov)
-        vals = np.maximum(vals, eps)
-        W = vecs @ np.diag(1.0 / np.sqrt(vals)) @ vecs.T
-        return m @ W, W
+    # X = Ux Sx Vx^T, Y = Uy Sy Vy^T
+    ux, sx, vtx = np.linalg.svd(x, full_matrices=False)
+    uy, sy, vty = np.linalg.svd(y, full_matrices=False)
 
-    x_w, wx = _whiten(x)
-    y_w, wy = _whiten(y)
+    # Keep only well-conditioned singular directions.
+    mask_x = sx > eps
+    mask_y = sy > eps
+    if not np.any(mask_x) or not np.any(mask_y):
+        return (
+            np.array([], dtype=float),
+            np.empty((x.shape[1], 0)),
+            np.empty((y.shape[1], 0)),
+        )
 
-    # SVD of cross-covariance of whitened matrices
-    cross = (x_w.T @ y_w) / (n - 1)
-    u_w, rho, vt_w = np.linalg.svd(cross, full_matrices=False)
+    ux = ux[:, mask_x]
+    sx = sx[mask_x]
+    vx = vtx[mask_x, :].T
 
-    # Map back to original (non-whitened) space
-    u = wx @ u_w          # (d1, k)
-    v = wy @ vt_w.T       # (d2, k)
-    return rho, u, v
+    uy = uy[:, mask_y]
+    sy = sy[mask_y]
+    vy = vty[mask_y, :].T
+
+    # Canonical correlations are cosines of principal angles between subspaces.
+    m = ux.T @ uy
+    p, rho, qt = np.linalg.svd(m, full_matrices=False)
+    rho = np.clip(rho, 0.0, 1.0)
+
+    # Map canonical directions back to feature spaces.
+    a = vx @ (p / sx[:, None])
+    b = vy @ (qt.T / sy[:, None])
+    return rho, a, b
+
+
+def _pwcca_one_side(
+    centered: np.ndarray,
+    dirs: np.ndarray,
+    rho: np.ndarray,
+    eps: float,
+) -> float:
+    """Compute one-sided PWCCA score from canonical variates.
+
+    Uses projection-weight idea:
+      H = X A
+      solve H C ~= X
+      w_i = ||row_i(C)||_1
+    """
+    if len(rho) == 0 or dirs.shape[1] == 0:
+        return 0.0
+
+    h = centered @ dirs  # (N, k)
+    if h.size == 0:
+        return 0.0
+
+    try:
+        coeff = np.linalg.lstsq(h, centered, rcond=None)[0]  # (k, d)
+        weights = np.sum(np.abs(coeff), axis=1)
+    except np.linalg.LinAlgError:
+        # Conservative fallback if lstsq is ill-conditioned.
+        weights = np.sum(np.abs(h), axis=0)
+
+    total_weight = float(np.sum(weights))
+    if not np.isfinite(total_weight) or total_weight < eps:
+        return float(np.mean(rho))
+
+    weights = np.asarray(weights, dtype=float) / total_weight
+    score = float(np.sum(weights * rho))
+    if not np.isfinite(score):
+        return float(np.mean(rho))
+    return score
 
 
 def pwcca(
@@ -106,15 +153,19 @@ def pwcca(
     if x_r.shape[1] == 0 or y_r.shape[1] == 0:
         return 0.0
 
-    rho, u, _ = _cca(x_r, y_r, eps=eps)
+    rho, a, b = _cca(x_r, y_r, eps=eps)
 
     if len(rho) == 0:
         return 0.0
 
-    # Projection weights: how much variance each canonical dir captures in x
-    weights = np.abs(x_r @ u).sum(axis=0)   # (k,)
-    total_weight = weights.sum()
-    if total_weight < eps:
-        return float(rho.mean())
+    x_c = x_r - x_r.mean(axis=0)
+    y_c = y_r - y_r.mean(axis=0)
 
-    return float((weights * rho).sum() / total_weight)
+    # Symmetric PWCCA by averaging both directions.
+    left = _pwcca_one_side(x_c, a, rho, eps=eps)
+    right = _pwcca_one_side(y_c, b, rho, eps=eps)
+    score = 0.5 * (left + right)
+
+    if not np.isfinite(score):
+        return float(np.mean(rho))
+    return float(np.clip(score, 0.0, 1.0))

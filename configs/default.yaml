@@ -1,7 +1,7 @@
 defaults:
   - data: hypersim
   - model: fourm
-  - metrics: cka
+  - metrics: rq1
   - tracking: wandb_off
   - runtime: local
   - slurm: izar
@@ -9,7 +9,7 @@ defaults:
 
 project:
   name: one-trunk-or-many
-  stage: rq1_cka_pipeline
+  stage: rq1_full_pipeline
   seed: 42
 
 paths:
