@@ -5,9 +5,10 @@ Measuring representational convergence in any-to-any vision models.
 This repository currently provides a Hydra-driven RQ1 pipeline around 4M-7B (`EPFL-VILAB/4M-7_B_CC12M`) with:
 
 - layer-wise activation extraction
-- CKA computation per layer and modality pair
+- CKA, PWCCA, and k-NN overlap computation per layer and modality pair
+- adaptive null-distribution estimation with p-value enrichment
 - run-scoped outputs in `results/runs/<run_id>/`
-- optional Weights and Biases tracking, including CKA-vs-layer plots
+- optional Weights and Biases tracking, including metric-vs-layer and significance plots
 
 Project proposal: [`docs/proposal.pdf`](docs/proposal.pdf)
 
@@ -131,6 +132,12 @@ POC example with W&B:
 python -m src.run_benchmark data.n_scenes=1 tracking=wandb_on
 ```
 
+Final run (20 scenes, rgb-depth, null from scratch, 3 metrics) with W&B:
+
+```bash
+python -m src.run_benchmark tracking=wandb_on
+```
+
 Useful overrides:
 
 ```bash
@@ -158,7 +165,11 @@ With `tracking=wandb_on`, the pipeline logs:
 
 - metrics table
 - summary values
-- CKA-vs-layer visualizations for each modality pair
+- metric-vs-layer (line and scatter) per `(metric, pair)`
+- significance plots when null is available:
+  - `pvalue_vs_layer`
+  - `pvalue_adjusted_vs_layer`
+  - `delta_vs_null_mean`
 
 ## Configuration model (Hydra)
 
@@ -166,7 +177,7 @@ Main composition lives in `configs/default.yaml`:
 
 - `data: hypersim`
 - `model: fourm`
-- `metrics: cka`
+- `metrics: rq1`
 - `tracking: wandb_off`
 - `runtime: local`
 - `slurm: izar`
@@ -182,6 +193,12 @@ python -m src.run_benchmark "metrics.pairs=[[rgb,depth]]"
 
 # Enable W&B
 python -m src.run_benchmark tracking=wandb_on
+
+# Force null recomputation from scratch
+python -m src.run_benchmark runtime.reuse.null_distribution=false
+
+# Reuse activations from a specific run
+python -m src.run_benchmark runtime.activation_input_run_id=<run_id> runtime.reuse.activations=true
 ```
 
 ## Repository architecture
@@ -199,9 +216,9 @@ python -m src.run_benchmark tracking=wandb_on
 ├── src/
 │   ├── data/                 # Dataset loaders and registry
 │   ├── models/               # 4M wrappers and registry
-│   ├── metrics/              # CKA and metric registry
-│   ├── pipeline/             # Extraction/metrics orchestration
-│   ├── analysis/             # Null-distribution scaffold
+│   ├── metrics/              # CKA, PWCCA, k-NN overlap, reductions
+│   ├── pipeline/             # Benchmark orchestration + stage helpers
+│   ├── analysis/             # Null runner/sampling/stop/artifacts modules
 │   └── utils/                # I/O, tracking, config helpers
 ├── docs/                     # Setup and pipeline docs
 ├── resources/                # Local heavy assets (gitignored)
@@ -214,8 +231,10 @@ python -m src.run_benchmark tracking=wandb_on
 2. Extraction stage loads aligned sample pairs from the selected dataset.
 3. Model wrapper encodes each modality and saves vectors in `activations/`.
 4. Activation index is written in `artifacts/activation_index_<pair>.csv`.
-5. Metrics stage loads indices and computes CKA per layer.
-6. Metrics are written to `metrics/metrics.csv` and optionally logged to W&B.
+5. Observed metrics are computed per layer (`CKA`, `PWCCA`, `kNN overlap`).
+6. If enabled, adaptive null draws run from mismatched samples and stop by threshold/caps.
+7. Metrics stage enriches rows with significance statistics from null artifacts.
+8. Metrics are written to `metrics/metrics.csv` and optionally logged to W&B.
 
 ## Run outputs
 
@@ -229,14 +248,24 @@ Typical files:
 - `artifacts/activation_index_<pair>.csv`
 - `metrics/metrics.csv`
 - `metrics/metrics.parquet` (if enabled)
+- `metrics/null_stop_evaluation.csv` (when null stage runs)
 - `run_summary.json`
 - `resolved_config.json`
+
+Null artifacts are stored separately under:
+
+`results/runs/null_distributions/<run_id>/`
+
+- `null_distribution.csv`
+- `null_distribution.parquet` (if enabled)
+- `null_distribution_state.json`
 
 ## Stage entrypoints
 
 ```bash
 python -m src.run_benchmark
 python -m src.run_extraction
+python -m src.run_null_distribution runtime.metrics_input_run_id=<run_id>
 python -m src.run_metrics runtime.metrics_input_run_id=<run_id>
 ```
 
