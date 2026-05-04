@@ -54,6 +54,7 @@ def knn_overlap(
           pca.enabled        (bool,  default True)
           pca.n_components   (int,   default 64)
           pca.seed           (int,   default 0)
+          pca.shared_basis   (bool,  default False)
 
     Returns
     -------
@@ -71,7 +72,14 @@ def knn_overlap(
         return 0.0
 
     # PCA reduction (enabled by default)
-    pca_cfg = {"pca": {"enabled": True, "n_components": 64, "seed": 0}}
+    pca_cfg = {
+        "pca": {
+            "enabled": True,
+            "n_components": 64,
+            "seed": 0,
+            "shared_basis": False,
+        }
+    }
     pca_cfg["pca"].update(cfg.get("pca", {}))
     x_r, y_r = maybe_reduce(x, y, pca_cfg)
 

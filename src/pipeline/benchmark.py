@@ -1,313 +1,67 @@
-"""Orchestrate extraction and metric stages for benchmark runs."""
+"""Thin benchmark orchestrator for extraction, null, and metrics stages."""
 
 from __future__ import annotations
 
-from itertools import combinations
 import logging
 from pathlib import Path
 from typing import Any
 
-import numpy as np
 import pandas as pd
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
-from src.analysis.significance import compute_p_value
+from src.analysis.null_distribution import (
+    NullRunResult,
+    compute_null_distribution_adaptive,
+    evaluate_adaptive_stop,
+)
 from src.data.registry import load_dataset_pairs
 from src.models.registry import build_model
+from src.pipeline.benchmark_config import (
+    list_activation_index_files as _list_activation_index_files,
+    read_null_state as _read_null_state,
+    resolve_metric_pairs as _resolve_metric_pairs,
+    resolve_null_artifact_path as _resolve_null_artifact_path,
+    resolve_run_ctx_for_extraction as _resolve_run_ctx_for_extraction,
+    resolve_run_ctx_for_metrics as _resolve_run_ctx_for_metrics,
+)
+from src.pipeline.benchmark_plots import log_metric_plots, log_significance_plots
+from src.pipeline.benchmark_significance import enrich_with_significance
+from src.pipeline.benchmark_tables import (
+    compute_metric_table_from_indices as _compute_metric_table_from_indices,
+    load_activation_indices as _load_activation_indices,
+)
 from src.pipeline.extraction import run_extraction
-from src.pipeline.metrics import run_metrics
-from src.utils.config import RunContext, cfg_to_container, ensure_dir, make_run_context
+from src.utils.config import RunContext, cfg_to_container
 from src.utils.io import read_null_distribution, write_json, write_optional_parquet, write_table
 from src.utils.tracking import build_tracker
 
 log = logging.getLogger(__name__)
 
 
-def _list_activation_index_files(run_ctx: RunContext) -> list[Path]:
-    """List activation index CSV files for a run."""
-    return sorted(run_ctx.artifacts_dir.glob("activation_index_*.csv"))
-
-
 def _log(message: str) -> None:
-    """Print a standardized info log line."""
+    """Print a standardized info line for benchmark stages."""
     print(f"[INFO] {message}")
 
 
-def _normalize_pair(pair: Any) -> list[str]:
-    """Validate one modality pair and return ``[left, right]``."""
-    if not isinstance(pair, (list, tuple)) or len(pair) != 2:
-        raise ValueError(
-            f"Invalid modality pair: {pair!r}. Expected two entries, e.g. [rgb, depth]."
-        )
-    left, right = str(pair[0]), str(pair[1])
-    if left == right:
-        raise ValueError(f"Invalid modality pair: {pair!r}. Modalities must differ.")
-    return [left, right]
-
-
-def _resolve_metric_pairs(metrics_cfg: dict[str, Any]) -> list[list[str]]:
-    """Resolve benchmark modality pairs from metrics config.
-
-    Supports two modes:
-    - ``explicit``: use ``metrics.pairs`` as provided.
-    - ``all_combinations``: build all unordered pairs from ``metrics.modalities``.
-    """
-    pairs_mode = str(metrics_cfg.get("pairs_mode", "explicit"))
-    explicit_pairs = metrics_cfg.get("pairs", []) or []
-
-    if pairs_mode == "explicit":
-        if not explicit_pairs:
-            raise ValueError("metrics.pairs is empty while metrics.pairs_mode=explicit.")
-        normalized = [_normalize_pair(p) for p in explicit_pairs]
-    elif pairs_mode == "all_combinations":
-        modalities_raw = metrics_cfg.get("modalities", []) or []
-        modalities = list(dict.fromkeys(str(m) for m in modalities_raw))
-        if len(modalities) < 2:
-            raise ValueError(
-                "metrics.modalities must contain at least two unique entries when "
-                "metrics.pairs_mode=all_combinations."
-            )
-        normalized = [[left, right] for left, right in combinations(modalities, 2)]
-    else:
-        raise ValueError(
-            f"Unknown metrics.pairs_mode='{pairs_mode}'. "
-            "Supported values: explicit, all_combinations."
-        )
-
-    seen: set[tuple[str, str]] = set()
-    resolved: list[list[str]] = []
-    for left, right in normalized:
-        key = (left, right)
-        if key in seen:
-            continue
-        seen.add(key)
-        resolved.append([left, right])
-    return resolved
-
-
-def _layer_sort_key(layer_name: str) -> tuple[int, str]:
-    """Build a stable sort key from layer naming."""
-    try:
-        return (int(str(layer_name).split("_")[-1]), str(layer_name))
-    except Exception:
-        return (10**9, str(layer_name))
-
-
-def _sorted_layer_df(df: pd.DataFrame) -> pd.DataFrame:
-    """Add ``layer_order`` and ``layer_idx`` columns, return sorted copy."""
-    df = df.copy()
-    df["layer"] = df["layer"].astype(str)
-    df["layer_order"] = df["layer"].map(lambda x: _layer_sort_key(x)[0])
-    df = df.sort_values(["layer_order", "layer"]).reset_index(drop=True)
-    df["layer_idx"] = df["layer_order"].astype(int)
-    return df
-
-
-def _log_metric_plots(tracker, metric_table: pd.DataFrame) -> None:
-    """Log value-vs-layer line plots for every (metric, pair) combination."""
-    if metric_table.empty:
-        return
-    for metric_name in sorted(metric_table["metric"].unique().tolist()):
-        m_df = metric_table[metric_table["metric"] == metric_name].copy()
-        for pair in sorted(m_df["pair"].unique().tolist()):
-            pair_df = _sorted_layer_df(m_df[m_df["pair"] == pair])
-            if pair_df.empty:
-                continue
-            plot_df = pair_df[["layer_idx", "layer", "value"]].copy()
-            tracker.log_line_plot(
-                name=f"{metric_name}_vs_layer/{pair}",
-                table=plot_df,
-                x="layer_idx",
-                y="value",
-                title=f"{metric_name.upper()} vs Layer ({pair})",
-            )
-            tracker.log_scatter_plot(
-                name=f"{metric_name}_vs_layer_points/{pair}",
-                table=plot_df,
-                x="layer_idx",
-                y="value",
-                title=f"{metric_name.upper()} vs Layer Points ({pair})",
-            )
-
-
-def _log_significance_plots(tracker, metric_table: pd.DataFrame) -> None:
-    """Log p-value and delta-vs-null-mean charts per (metric, pair).
-
-    Produces per-metric, per-pair line plots:
-    - ``pvalue_vs_layer/<metric>/<pair>``
-    - ``delta_vs_null_mean/<metric>/<pair>``
-    - ``z_score_vs_layer/<metric>/<pair>``
-    """
-    needed = {"p_value", "delta_vs_null_mean", "pair", "layer", "metric"}
-    if not needed.issubset(metric_table.columns):
-        return
-
-    sig_df = metric_table.dropna(subset=["p_value"]).copy()
-    if sig_df.empty:
-        return
-
-    for metric_name in sorted(sig_df["metric"].unique().tolist()):
-        m_df = sig_df[sig_df["metric"] == metric_name]
-        for pair in sorted(m_df["pair"].unique().tolist()):
-            pair_df = _sorted_layer_df(m_df[m_df["pair"] == pair])
-            if pair_df.empty:
-                continue
-
-            tracker.log_line_plot(
-                name=f"pvalue_vs_layer/{metric_name}/{pair}",
-                table=pair_df[["layer_idx", "layer", "p_value"]].copy(),
-                x="layer_idx",
-                y="p_value",
-                title=f"p-value vs Layer — {metric_name.upper()} ({pair})",
-            )
-            tracker.log_line_plot(
-                name=f"delta_vs_null_mean/{metric_name}/{pair}",
-                table=pair_df[["layer_idx", "layer", "delta_vs_null_mean"]].copy(),
-                x="layer_idx",
-                y="delta_vs_null_mean",
-                title=f"{metric_name.upper()} − null_mean vs Layer ({pair})",
-            )
-            if "z_score" in pair_df.columns:
-                tracker.log_line_plot(
-                    name=f"z_score_vs_layer/{metric_name}/{pair}",
-                    table=pair_df[["layer_idx", "layer", "z_score"]].copy(),
-                    x="layer_idx",
-                    y="z_score",
-                    title=f"z-score vs Layer — {metric_name.upper()} ({pair})",
-                )
-
-
-def _resolve_null_artifact_path(cfg_dict: dict[str, Any]) -> Path | None:
-    """Return the path to a precomputed null distribution CSV, or None.
-
-    Resolution order:
-    1. ``runtime.null_input_filename`` (exact versioned name, e.g.
-       ``null_distribution_10scenes_2000draws.csv``) inside the run subdirectory.
-    2. The latest versioned file matching
-       ``null_distribution_*scenes_*draws.csv`` (most draws wins).
-    3. Legacy fallback: ``null_distribution.csv``.
-    """
-    null_run_id = cfg_dict.get("runtime", {}).get("null_input_run_id")
-    if not null_run_id:
-        return None
-    artifact_dir = Path(
-        cfg_dict.get("analysis", {})
-        .get("null_distribution", {})
-        .get("artifact_dir", "")
-    )
-    if not artifact_dir:
-        return None
-
-    run_dir = artifact_dir / str(null_run_id)
-
-    # 1. Explicit filename override
-    explicit = cfg_dict.get("runtime", {}).get("null_input_filename")
-    if explicit:
-        candidate = run_dir / str(explicit)
-        if candidate.exists():
-            return candidate
-
-    # 2. Latest versioned file (prefer most draws for stability)
-    versioned = sorted(run_dir.glob("null_distribution_*scenes_*draws.csv"))
-    if versioned:
-        # Sort by n_draws (last numeric token before "draws")
-        def _draws(p: Path) -> int:
-            try:
-                return int(p.stem.split("draws")[0].split("_")[-1])
-            except ValueError:
-                return 0
-        return max(versioned, key=_draws)
-
-    # 3. Legacy fallback
-    for candidate in [
-        run_dir / "null_distribution.csv",
-        artifact_dir / "null_distribution.csv",
-    ]:
-        if candidate.exists():
-            return candidate
-
-    return run_dir / "null_distribution.csv"
-
-
-def _enrich_with_significance(
-    metric_table: pd.DataFrame,
-    null_df: pd.DataFrame,
-) -> pd.DataFrame:
-    """Join observed metrics with null distribution and add significance columns.
-
-    Added columns: ``p_value``, ``null_mean``, ``null_std``,
-    ``delta_vs_null_mean``, ``z_score``.
-    Rows without a matching null entry receive ``NaN`` for all new fields.
-    """
-    sig_cols = ["p_value", "null_mean", "null_std", "delta_vs_null_mean", "z_score"]
-    for col in sig_cols:
-        metric_table[col] = float("nan")
-
-    if null_df.empty:
-        return metric_table
-
-    for idx, row in metric_table.iterrows():
-        mask = (
-            (null_df["pair"] == row["pair"])
-            & (null_df["layer"].astype(str) == str(row["layer"]))
-            & (null_df["metric"] == row["metric"])
-        )
-        null_values = null_df.loc[mask, "null_value"].to_numpy(dtype=float)
-        if len(null_values) == 0:
-            continue
-
-        observed = float(row["value"])
-        null_mean = float(np.mean(null_values))
-        null_std = float(np.std(null_values))
-
-        metric_table.at[idx, "p_value"] = compute_p_value(
-            observed, null_values, side="greater"
-        )
-        metric_table.at[idx, "null_mean"] = null_mean
-        metric_table.at[idx, "null_std"] = null_std
-        metric_table.at[idx, "delta_vs_null_mean"] = observed - null_mean
-        metric_table.at[idx, "z_score"] = (
-            (observed - null_mean) / null_std if null_std > 0 else float("nan")
-        )
-
-    return metric_table
-
-
-def _resolve_run_ctx_for_metrics(cfg_dict: dict[str, Any]) -> RunContext:
-    """Resolve which run directory to use for metrics stage."""
-    run_id = cfg_dict["runtime"].get("metrics_input_run_id")
-    runs_root = Path(cfg_dict["paths"]["runs_root"])
-    if run_id:
-        run_dir = runs_root / run_id
-    else:
-        candidates = sorted([p for p in runs_root.glob("*") if p.is_dir()])
-        if not candidates:
-            raise FileNotFoundError(
-                "No run directory found for metrics stage. "
-                "Run extraction first or set runtime.metrics_input_run_id."
-            )
-        run_dir = candidates[-1]
-    return RunContext(
-        run_id=run_dir.name,
-        run_dir=run_dir,
-        activations_dir=run_dir / "activations",
-        metrics_dir=ensure_dir(run_dir / "metrics"),
-        artifacts_dir=ensure_dir(run_dir / "artifacts"),
-    )
-
-
-def run_extraction_stage(cfg: DictConfig) -> RunContext:
-    """Run extraction for all configured modality pairs."""
+def run_extraction_stage(cfg: DictConfig, run_ctx_override: RunContext | None = None) -> RunContext:
+    """Run extraction for all resolved modality pairs."""
     cfg_dict = cfg_to_container(cfg)
     resolved_pairs = _resolve_metric_pairs(cfg_dict["metrics"])
     cfg_dict["metrics"]["resolved_pairs"] = resolved_pairs
-    run_ctx = make_run_context(cfg)
+    run_ctx = run_ctx_override or _resolve_run_ctx_for_extraction(cfg, cfg_dict)
     _log(f"Starting extraction stage: run_id={run_ctx.run_id}")
     model = build_model(cfg_dict["model"], cfg_dict["runtime"])
 
     for pair in resolved_pairs:
         left_mod, right_mod = pair[0], pair[1]
         pair_name = f"{left_mod}-{right_mod}"
+        out_idx = run_ctx.artifacts_dir / f"activation_index_{pair_name}.csv"
+        reuse_cfg = dict(cfg_dict.get("runtime", {}).get("reuse", {}))
+        reuse_enabled = bool(reuse_cfg.get("activations", reuse_cfg.get("extraction", False)))
+        if reuse_enabled and out_idx.exists():
+            _log(f"Skipping extraction for {pair_name}: existing index found ({out_idx.name})")
+            continue
+
         _log(f"Loading samples for pair {pair_name}")
         samples = load_dataset_pairs(
             dataset_name=cfg_dict["data"]["name"],
@@ -317,7 +71,6 @@ def run_extraction_stage(cfg: DictConfig) -> RunContext:
             scene_stride=int(cfg_dict["data"]["scene_stride"]),
             exclude_scenes=list(cfg_dict["data"].get("exclude_scenes") or []),
         )
-
         activation_index = run_extraction(
             model=model,
             samples=samples,
@@ -326,8 +79,9 @@ def run_extraction_stage(cfg: DictConfig) -> RunContext:
             out_dir=run_ctx.activations_dir,
             show_progress=True,
         )
-        write_table(run_ctx.artifacts_dir / f"activation_index_{pair_name}.csv", activation_index)
+        write_table(out_idx, activation_index)
         _log(f"Saved activation index for {pair_name}: rows={len(activation_index)}")
+
     write_json(run_ctx.run_dir / "resolved_config.json", cfg_dict)
     write_json(
         run_ctx.run_dir / "run_summary.json",
@@ -344,119 +98,169 @@ def run_extraction_stage(cfg: DictConfig) -> RunContext:
     return run_ctx
 
 
-def run_metrics_stage(cfg: DictConfig) -> RunContext:
-    """Run metrics using saved activation indices."""
+def run_null_stage(
+    cfg: DictConfig,
+    run_ctx: RunContext,
+    observed_metric_table: pd.DataFrame,
+) -> NullRunResult | None:
+    """Run or resume adaptive null-distribution stage."""
+    cfg_dict = cfg_to_container(cfg)
+    null_cfg = dict(cfg_dict.get("analysis", {}).get("null_distribution", {}))
+    if not bool(null_cfg.get("enabled", False)):
+        return None
+
+    null_artifact_path = _resolve_null_artifact_path(cfg_dict, run_ctx=run_ctx)
+    if null_artifact_path is None:
+        return None
+
+    existing_null = pd.DataFrame()
+    reuse_if_exists = bool(null_cfg.get("reuse_if_exists", True))
+    resume_if_partial = bool(null_cfg.get("resume_if_partial", True))
+    state_path = null_artifact_path.parent / str(null_cfg.get("state_filename", "null_distribution_state.json"))
+    reuse_null = bool(cfg_dict.get("runtime", {}).get("reuse", {}).get("null_distribution", False))
+    if reuse_null and null_artifact_path.exists():
+        existing_null = read_null_distribution(null_artifact_path)
+        _log(f"Loaded existing null artifact: {null_artifact_path} ({len(existing_null)} rows)")
+        state = _read_null_state(state_path)
+        stop_reason = str(state.get("stop_reason", "unknown"))
+        is_partial = stop_reason in {"manual_interrupt", "max_draws_reached", "max_batches_reached", "running"}
+        if reuse_if_exists and (not is_partial or not resume_if_partial):
+            _log("Reusing existing null artifact without additional draws.")
+            return NullRunResult(
+                null_df=existing_null,
+                artifact_path=null_artifact_path,
+                state_path=state_path,
+                stop_reason="reused_existing",
+                is_partial=is_partial,
+                batches_completed=int(state.get("batches_completed", 0)),
+            )
+
+    activation_index = _load_activation_indices(run_ctx)
+    if activation_index.empty:
+        _log("No activation index found for null stage. Skipping null computation.")
+        return None
+
+    _log("Starting adaptive null-distribution stage...")
+    result = compute_null_distribution_adaptive(
+        activation_index=activation_index,
+        observed_metrics=observed_metric_table,
+        null_cfg=null_cfg,
+        metrics_cfg=cfg_dict["metrics"],
+        run_id=run_ctx.run_id,
+        out_dir=null_artifact_path.parent,
+        out_filename=null_artifact_path.name,
+        existing_null_df=existing_null,
+    )
+    _log(
+        f"Null stage completed: rows={len(result.null_df)} "
+        f"stop_reason={result.stop_reason} partial={result.is_partial}"
+    )
+    return result
+
+
+def run_metrics_stage(
+    cfg: DictConfig,
+    run_ctx_override: RunContext | None = None,
+    precomputed_metric_table: pd.DataFrame | None = None,
+    null_result: NullRunResult | None = None,
+) -> RunContext:
+    """Run metrics, optional null enrichment, and tracker logging."""
     cfg_dict = cfg_to_container(cfg)
     try:
         cfg_dict["metrics"]["resolved_pairs"] = _resolve_metric_pairs(cfg_dict["metrics"])
     except Exception:
-        # metrics-only runs may rely on already-materialized activation indices
         pass
-    run_ctx = _resolve_run_ctx_for_metrics(cfg_dict)
+
+    run_ctx = run_ctx_override or _resolve_run_ctx_for_metrics(cfg_dict)
     _log(f"Starting metrics stage for run_id={run_ctx.run_id}")
     tracker = build_tracker(cfg=cfg_dict, run_id=run_ctx.run_id)
     tracker.log_config(cfg_dict)
 
-    all_metric_frames: list[pd.DataFrame] = []
-    for idx_file in _list_activation_index_files(run_ctx):
-        activation_index = pd.read_csv(idx_file)
-        pair_name = idx_file.stem.replace("activation_index_", "")
-        _log(f"Processing metrics for pair={pair_name}")
-        try:
-            left_mod, right_mod = tuple(pair_name.split("-", 1))
-        except ValueError:
-            continue
-        metric_df = run_metrics(
-            activation_index=activation_index,
-            metric_names=list(cfg_dict["metrics"]["enabled"]),
-            metrics_cfg=cfg_dict["metrics"],
-            pair_modalities=(left_mod, right_mod),
-            show_progress=True,
-        )
-        all_metric_frames.append(metric_df)
-
-    if all_metric_frames:
-        metric_table = pd.concat(all_metric_frames, ignore_index=True)
-    else:
-        metric_table = pd.DataFrame()
-
-    # ------------------------------------------------------------------
-    # Optional: enrich with null-distribution significance stats
-    # ------------------------------------------------------------------
-    null_missing_behavior: str = str(
-        cfg_dict.get("runtime", {}).get("null_missing_behavior", "warn_and_skip")
+    metric_table = (
+        precomputed_metric_table.copy()
+        if precomputed_metric_table is not None
+        else _compute_metric_table_from_indices(cfg_dict, run_ctx, show_progress=True, log_fn=_log)
     )
-    null_artifact_path = _resolve_null_artifact_path(cfg_dict)
-    has_significance = False
 
-    if null_artifact_path is not None:
+    null_cfg = dict(cfg_dict.get("analysis", {}).get("null_distribution", {}))
+    adaptive_cfg = dict(null_cfg.get("adaptive_stop", {}))
+    correction = str(adaptive_cfg.get("correction", "bh_fdr"))
+    alpha = float(adaptive_cfg.get("alpha", 0.05))
+    null_missing_behavior = str(cfg_dict.get("runtime", {}).get("null_missing_behavior", "warn_and_skip"))
+
+    has_significance = False
+    null_stop_reason = "not_requested"
+    null_is_partial = False
+    null_draws_used = 0
+
+    null_artifact_path = _resolve_null_artifact_path(cfg_dict, run_ctx=run_ctx)
+    if null_result is not None:
+        null_df = null_result.null_df
+        null_stop_reason = null_result.stop_reason
+        null_is_partial = bool(null_result.is_partial)
+    elif null_artifact_path is not None:
         _log(f"Loading null distribution from: {null_artifact_path}")
         null_df = read_null_distribution(null_artifact_path)
-        if null_df.empty:
-            msg = (
-                f"Null artifact not found or empty at '{null_artifact_path}'. "
-                "Significance stats will be omitted."
-            )
-            if null_missing_behavior == "error":
-                raise FileNotFoundError(msg)
-            log.warning(msg)
-        else:
-            _log(f"Null distribution loaded: {len(null_df)} rows. Enriching metrics...")
-            if not metric_table.empty:
-                metric_table = _enrich_with_significance(metric_table, null_df)
-                has_significance = True
-                _log("Significance columns added: p_value, null_mean, null_std, "
-                     "delta_vs_null_mean, z_score")
+        null_stop_reason = "loaded_from_artifact"
+    else:
+        null_df = pd.DataFrame()
 
-    csv_path = run_ctx.metrics_dir / "metrics.csv"
-    write_table(csv_path, metric_table)
+    if not null_df.empty and not metric_table.empty:
+        metric_table = enrich_with_significance(metric_table, null_df, correction=correction, alpha=alpha)
+        null_draws_used = int(len(null_df))
+        has_significance = True
+    elif null_artifact_path is not None and null_df.empty:
+        msg = f"Null artifact not found or empty at '{null_artifact_path}'. Significance stats will be omitted."
+        if null_missing_behavior == "error":
+            raise FileNotFoundError(msg)
+        log.warning(msg)
+
+    write_table(run_ctx.metrics_dir / "metrics.csv", metric_table)
     write_optional_parquet(
         path=run_ctx.metrics_dir / "metrics.parquet",
         table=metric_table,
         enabled=bool(cfg_dict["metrics"]["output"]["save_parquet"]),
     )
 
-    write_json(
-        run_ctx.run_dir / "run_summary.json",
-        {
-            "run_id": run_ctx.run_id,
-            "dataset": cfg_dict["data"]["name"],
-            "metrics": cfg_dict["metrics"]["enabled"],
-            "pairs_mode": cfg_dict["metrics"].get("pairs_mode", "explicit"),
-            "pairs": sorted(metric_table["pair"].unique().tolist()) if not metric_table.empty else [],
-            "n_rows_metrics": int(len(metric_table)),
-            "has_significance": has_significance,
-            "stage": "metrics",
-        },
-    )
+    run_summary = {
+        "run_id": run_ctx.run_id,
+        "dataset": cfg_dict["data"]["name"],
+        "metrics": cfg_dict["metrics"]["enabled"],
+        "pairs_mode": cfg_dict["metrics"].get("pairs_mode", "explicit"),
+        "pairs": sorted(metric_table["pair"].unique().tolist()) if not metric_table.empty else [],
+        "n_rows_metrics": int(len(metric_table)),
+        "has_significance": has_significance,
+        "null_draws_used": int(null_draws_used),
+        "null_stop_reason": str(null_stop_reason),
+        "null_is_partial": bool(null_is_partial),
+        "stage": "metrics",
+    }
+    write_json(run_ctx.run_dir / "run_summary.json", run_summary)
     write_json(run_ctx.run_dir / "resolved_config.json", cfg_dict)
 
     if not metric_table.empty:
         tracker.log_table("metrics_table", metric_table)
-        _log_metric_plots(tracker=tracker, metric_table=metric_table)
+        log_metric_plots(tracker=tracker, metric_table=metric_table)
         if has_significance:
-            _log_significance_plots(tracker=tracker, metric_table=metric_table)
+            log_significance_plots(tracker=tracker, metric_table=metric_table)
         summary: dict[str, Any] = {"metrics_rows": int(len(metric_table))}
         if has_significance:
             sig_rows = metric_table.dropna(subset=["p_value"])
             if not sig_rows.empty:
-                # Overall summary
-                summary["n_significant_p05"] = int(
-                    (sig_rows["p_value"] <= 0.05).sum()
-                )
+                summary["n_significant_p05"] = int((sig_rows["p_value"] <= 0.05).sum())
+                if "p_value_adjusted" in sig_rows.columns:
+                    summary["n_significant_adj_p05"] = int((sig_rows["p_value_adjusted"] <= 0.05).sum())
                 summary["mean_p_value"] = float(sig_rows["p_value"].mean())
-                # Per-metric breakdown
                 for metric_name, grp in sig_rows.groupby("metric"):
                     prefix = str(metric_name)
-                    summary[f"{prefix}/n_significant_p05"] = int(
-                        (grp["p_value"] <= 0.05).sum()
-                    )
+                    summary[f"{prefix}/n_significant_p05"] = int((grp["p_value"] <= 0.05).sum())
+                    if "p_value_adjusted" in grp.columns:
+                        summary[f"{prefix}/n_significant_adj_p05"] = int((grp["p_value_adjusted"] <= 0.05).sum())
                     summary[f"{prefix}/mean_p_value"] = float(grp["p_value"].mean())
                     summary[f"{prefix}/mean_value"] = float(grp["value"].mean())
-                    if "z_score" in grp.columns:
-                        summary[f"{prefix}/mean_z_score"] = float(
-                            grp["z_score"].dropna().mean()
-                        )
+        summary["null_stop_reason"] = null_stop_reason
+        summary["null_draws_used"] = int(null_draws_used)
+        summary["null_is_partial"] = bool(null_is_partial)
         tracker.log_summary(summary)
     tracker.finish()
     _log(f"Metrics stage completed. rows={len(metric_table)}")
@@ -464,11 +268,40 @@ def run_metrics_stage(cfg: DictConfig) -> RunContext:
 
 
 def run_benchmark(cfg: DictConfig) -> RunContext:
-    """Run extraction then metrics as one benchmark workflow."""
-    run_ctx = run_extraction_stage(cfg)
+    """Run extraction -> optional adaptive null -> metrics."""
     cfg_dict = cfg_to_container(cfg)
+    run_ctx = run_extraction_stage(cfg)
     cfg_dict["runtime"]["metrics_input_run_id"] = run_ctx.run_id
-    from omegaconf import OmegaConf
+    cfg_dict["runtime"]["activation_input_run_id"] = run_ctx.run_id
+    cfg_for_next = OmegaConf.create(cfg_dict)
 
-    cfg_for_metrics = OmegaConf.create(cfg_dict)
-    return run_metrics_stage(cfg_for_metrics)
+    observed_metric_table = _compute_metric_table_from_indices(
+        cfg_dict=cfg_dict,
+        run_ctx=run_ctx,
+        show_progress=False,
+        log_fn=_log,
+    )
+
+    null_result = None
+    if bool(cfg_dict.get("analysis", {}).get("null_distribution", {}).get("enabled", False)):
+        null_result = run_null_stage(cfg=cfg_for_next, run_ctx=run_ctx, observed_metric_table=observed_metric_table)
+        if null_result is not None and not null_result.null_df.empty:
+            adaptive_cfg = dict(cfg_dict.get("analysis", {}).get("null_distribution", {}).get("adaptive_stop", {}))
+            should_stop, stop_eval = evaluate_adaptive_stop(
+                observed_metrics=observed_metric_table,
+                null_df=null_result.null_df,
+                alpha=float(adaptive_cfg.get("alpha", 0.05)),
+                correction=str(adaptive_cfg.get("correction", "bh_fdr")),
+                require_all_hypotheses=bool(adaptive_cfg.get("require_all_hypotheses", True)),
+                min_total_draws=int(cfg_dict.get("analysis", {}).get("null_distribution", {}).get("min_total_draws", 1)),
+            )
+            if not stop_eval.empty:
+                stop_eval["stop_criterion_met"] = bool(should_stop)
+                write_table(run_ctx.metrics_dir / "null_stop_evaluation.csv", stop_eval)
+
+    return run_metrics_stage(
+        cfg=cfg_for_next,
+        run_ctx_override=run_ctx,
+        precomputed_metric_table=observed_metric_table,
+        null_result=null_result,
+    )

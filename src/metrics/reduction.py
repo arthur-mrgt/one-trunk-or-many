@@ -1,10 +1,4 @@
-"""PCA dimensionality reduction utility for metric preprocessing.
-
-Both PWCCA and k-NN overlap benefit from projecting high-dimensional
-activations to a lower-dimensional space before computing distances or
-canonical correlations.  This module provides a single reusable helper
-that fits PCA on the union of both activation matrices and transforms each.
-"""
+"""PCA dimensionality reduction utilities for metric preprocessing."""
 
 from __future__ import annotations
 
@@ -63,6 +57,31 @@ def pca_reduce(
     return x_proj, y_proj
 
 
+def pca_reduce_independent(
+    x: np.ndarray,
+    y: np.ndarray,
+    n_components: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Project x and y with separate PCA bases.
+
+    This is generally preferable for representation-comparison metrics
+    (PWCCA / kNN-overlap) because it preserves each space's geometry
+    independently instead of forcing a shared basis.
+    """
+    return _pca_single(x, n_components=n_components), _pca_single(y, n_components=n_components)
+
+
+def _pca_single(a: np.ndarray, n_components: int) -> np.ndarray:
+    """Project one matrix to at most n_components principal directions."""
+    n, d = a.shape
+    k = min(int(n_components), n - 1, d)
+    if k <= 0:
+        return a
+    centered = a.astype(np.float64) - a.mean(axis=0)
+    _, _, vt = np.linalg.svd(centered, full_matrices=False)
+    return centered @ vt[:k].T
+
+
 def maybe_reduce(
     x: np.ndarray,
     y: np.ndarray,
@@ -80,4 +99,7 @@ def maybe_reduce(
         return x, y
     n_components = int(pca_cfg.get("n_components", 64))
     seed = int(pca_cfg.get("seed", 0))
-    return pca_reduce(x, y, n_components=n_components, seed=seed)
+    shared_basis = bool(pca_cfg.get("shared_basis", False))
+    if shared_basis:
+        return pca_reduce(x, y, n_components=n_components, seed=seed)
+    return pca_reduce_independent(x, y, n_components=n_components)

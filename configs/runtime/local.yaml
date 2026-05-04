@@ -3,8 +3,14 @@ num_workers: 4
 device: auto
 precision: fp32
 save_activations: true
+activation_input_run_id: null
 metrics_input_run_id: null
 multi_gpu_strategy: none
 null_input_run_id: null
 null_input_filename: null
 null_missing_behavior: warn_and_skip
+reuse:
+  activations: false
+  extraction: false
+  null_distribution: false
+  metrics_inputs: false

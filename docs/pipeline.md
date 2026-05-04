@@ -1,4 +1,4 @@
-# CKA Pipeline Guide
+# Benchmark Pipeline Guide
 
 ## Overview
 
@@ -9,16 +9,17 @@ The benchmark is Hydra-driven and fully YAML-configurable.
 - Metrics are selected via `metrics.enabled` and `metrics.pairs`.
 - Tracking is controlled via `tracking` config group.
 
-Main end-to-end entrypoint:
+Main end-to-end entrypoint (single orchestrator):
 
 ```bash
 python -m src.run_benchmark
 ```
 
-Separated stage entrypoints:
+Optional stage entrypoints:
 
 ```bash
 python -m src.run_extraction
+python -m src.run_null_distribution runtime.metrics_input_run_id=<run_id>
 python -m src.run_metrics runtime.metrics_input_run_id=<run_id>
 ```
 
@@ -39,6 +40,7 @@ Each run creates `results/runs/<run_id>/` with:
 - `activations/` - saved vectors as `.npy`.
 - `artifacts/activation_index_<pair>.csv` - index of saved activations.
 - `metrics/metrics.csv` - metric table (`metric`, `pair`, `layer`, `value`, ...).
+- `metrics/null_stop_evaluation.csv` - adaptive null stop diagnostics (when null is enabled).
 - `run_summary.json` - run-level summary.
 - `resolved_config.json` - fully resolved config snapshot.
 
@@ -95,8 +97,46 @@ Submit with:
 sbatch scripts/run_benchmark.slurm
 ```
 
+## Null distribution (adaptive)
+
+Null computation is now integrated into `python -m src.run_benchmark`:
+
+- Extraction runs first (or is reused if `runtime.reuse.activations=true` and artifacts exist).
+- Null draws run next when `analysis.null_distribution.enabled=true`.
+- Metrics stage runs last and adds significance columns (`p_value`, `p_value_adjusted`, `n_null_draws`, etc.) when null artifacts are available.
+
+Adaptive stop is controlled in YAML:
+
+- `analysis.null_distribution.adaptive_stop.alpha`
+- `analysis.null_distribution.adaptive_stop.correction`
+- `analysis.null_distribution.adaptive_stop.require_all_hypotheses`
+- `analysis.null_distribution.min_total_draws`
+- `analysis.null_distribution.max_total_draws`
+
+Manual interrupt:
+
+- `Ctrl+C` during null stage persists partial null artifacts and the benchmark still continues to metrics (default `on_keyboard_interrupt: save_and_continue`).
+
+Reuse behavior (YAML):
+
+- `runtime.reuse.activations=true`: reuse extraction artifacts instead of recomputing.
+- `runtime.activation_input_run_id=<run_id>`: if set, reuse activations from this run.
+- if `runtime.activation_input_run_id=null`, the latest run is used as activation source.
+- `runtime.reuse.null_distribution=true|false`: reuse/continue existing null artifact or force recomputation.
+
 ## Extension points
 
 - Add metrics by implementing a function and registering it in `src/metrics/registry.py`.
 - Add datasets by implementing a loader and wiring it in `src/data/registry.py`.
-- Null distribution is scaffolded in config under `analysis.null_distribution` and in `src/analysis/null_distribution.py`.
+- Null distribution internals are split across:
+  - `src/analysis/null_runner.py`
+  - `src/analysis/null_sampling.py`
+  - `src/analysis/null_artifacts.py`
+  - `src/analysis/null_stop.py`
+  - public API: `src/analysis/null_distribution.py`
+- Benchmark internals are split across:
+  - `src/pipeline/benchmark_config.py`
+  - `src/pipeline/benchmark_tables.py`
+  - `src/pipeline/benchmark_significance.py`
+  - `src/pipeline/benchmark_plots.py`
+  - stage orchestrator: `src/pipeline/benchmark.py`

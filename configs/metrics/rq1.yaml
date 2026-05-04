@@ -21,6 +21,7 @@ pwcca:
     enabled: true
     n_components: 64
     seed: 0
+    shared_basis: false
 
 knn_overlap:
   k: 10
@@ -28,6 +29,7 @@ knn_overlap:
     enabled: true
     n_components: 64
     seed: 0
+    shared_basis: false
 
 output:
   save_csv: true

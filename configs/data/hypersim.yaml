@@ -1,7 +1,7 @@
 name: hypersim
 root: ${paths.datasets_root}/hypersim
 split: train
-n_scenes: 5
+n_scenes: 20
 scene_stride: 1
 exclude_scenes: []
 modalities:
