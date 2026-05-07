@@ -41,14 +41,21 @@ def _list_scene_ids(root: Path) -> list[str]:
     )
 
 
+_MODALITY_PATTERNS: dict[str, str] = {
+    "rgb":     "images/scene_cam_*_final_hdf5/frame.*.color.hdf5",
+    "depth":   "images/scene_cam_*_geometry_hdf5/frame.*.depth_meters.hdf5",
+    "normals": "images/scene_cam_*_geometry_hdf5/frame.*.normal_cam.hdf5"
+}
+
+
 def _index_scene_files(scene_root: Path, modality: str) -> dict[str, Path]:
     """Index files for one modality by frame key."""
-    if modality == "rgb":
-        pattern = "images/scene_cam_*_final_hdf5/frame.*.color.hdf5"
-    elif modality == "depth":
-        pattern = "images/scene_cam_*_geometry_hdf5/frame.*.depth_meters.hdf5"
-    else:
-        raise ValueError(f"Unsupported Hypersim modality: {modality}")
+    if modality not in _MODALITY_PATTERNS:
+        raise ValueError(
+            f"Unsupported Hypersim modality: '{modality}'. "
+            f"Available: {sorted(_MODALITY_PATTERNS)}"
+        )
+    pattern = _MODALITY_PATTERNS[modality]
 
     mapping: dict[str, Path] = {}
     for file_path in scene_root.glob(pattern):

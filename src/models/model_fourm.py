@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 from pathlib import Path
 from typing import Any
 
 import numpy as np
+
+log = logging.getLogger(__name__)
 
 
 class FourMMockEncoder:
@@ -55,6 +58,8 @@ class FourMEncoder:
             raise ValueError("model.rgb_input_mode must be one of: pixel, tokenized")
         self._rgb_tokenizer = self._load_rgb_tokenizer()
         self._depth_tokenizer = self._load_depth_tokenizer()
+        self._normal_tokenizer = self._load_normal_tokenizer()
+        # self._semseg_tokenizer = self._load_semseg_tokenizer()  # semseg disabled
         self._model = self._move_and_wrap_model(self._model)
         self._model.eval()
 
@@ -118,6 +123,18 @@ class FourMEncoder:
         tok = DiVAE.from_pretrained(depth_repo).to(self._device)
         tok.eval()
         return tok
+
+    def _load_normal_tokenizer(self):
+        """Load the surface-normal tokenizer when configured."""
+        normal_repo = self.model_cfg.get("tokenizers", {}).get("normal_repo")
+        if not normal_repo:
+            return None
+        from fourm.vq.vqvae import DiVAE
+
+        tok = DiVAE.from_pretrained(normal_repo).to(self._device)
+        tok.eval()
+        return tok
+
 
     def _load_rgb_tokenizer(self):
         """Load the RGB tokenizer for tokenized RGB mode."""
@@ -199,6 +216,23 @@ class FourMEncoder:
             token_grid = self._rgb_tokenizer.tokenize(tensor)  # [B,H',W']
         return token_grid.reshape(token_grid.shape[0], -1)
 
+    def _to_normal_tokens(self, arr: np.ndarray):
+        if self._normal_tokenizer is None:
+            raise RuntimeError("Normal tokenizer missing. Set model.tokenizers.normal_repo in config.")
+        
+        tensor = self._torch.from_numpy(arr).permute(2, 0, 1).unsqueeze(0).float()
+        input_size = int(self.model_cfg.get("input_size", 224))
+        tensor = self._torch.nn.functional.interpolate(
+            tensor, size=(input_size, input_size), mode="bilinear", align_corners=False
+        )
+        # Hypersim normals are already in [-1,1] — matches NormalTransform output exactly
+        tensor = self._torch.nan_to_num(tensor).clamp(-1.0, 1.0)
+        tensor = tensor.to(self._device)
+        with self._torch.no_grad():
+            token_grid = self._normal_tokenizer.tokenize(tensor)
+        return token_grid.reshape(token_grid.shape[0], -1)
+
+
     def _build_mod_dict(self, modality: str, arr: np.ndarray) -> dict[str, dict[str, Any]]:
         """Build a single-modality input dictionary for 4M."""
         if modality == "rgb":
@@ -211,6 +245,9 @@ class FourMEncoder:
         elif modality == "depth":
             domain = "tok_depth@224"
             tensor = self._to_depth_tokens(arr)
+        elif modality == "normals":
+            domain = "tok_normal@224"
+            tensor = self._to_normal_tokens(arr)
         else:
             raise ValueError(f"Unsupported modality for FourMEncoder: {modality}")
 

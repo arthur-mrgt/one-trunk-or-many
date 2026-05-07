@@ -7,9 +7,12 @@ pairs_mode: explicit
 modalities:
   - rgb
   - depth
+  - normals
 
 pairs:
   - [rgb, depth]
+  - [rgb, normals]
+  - [depth, normals]
 
 cka:
   center_gram: true
