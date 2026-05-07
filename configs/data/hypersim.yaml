@@ -1,9 +1,11 @@
 name: hypersim
 root: ${paths.datasets_root}/hypersim
 split: train
-n_scenes: 20
+n_scenes: 100
 scene_stride: 1
 exclude_scenes: []
+frames_per_scene: 40   # randomly sample this many frames per scene; null = all frames
+seed: 42               # random seed for frame sampling
 modalities:
   - rgb
   - depth

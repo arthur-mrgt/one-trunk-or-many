@@ -69,22 +69,36 @@ def load_pairs(
     n_scenes: int,
     scene_stride: int,
     exclude_scenes: list[str] | None = None,
+    frames_per_scene: int | None = None,
+    seed: int = 42,
 ) -> list[PairSample]:
     """Load aligned pair samples for the requested modalities.
 
     Parameters
     ----------
+    n_scenes:
+        Number of scenes to load (after stride and exclusion).
+    scene_stride:
+        Step size when walking the sorted scene list (1 = every scene).
     exclude_scenes:
-        Optional list of scene IDs to skip, e.g. ``["ai_002_007"]``.
-        Exclusion is applied before the ``n_scenes`` cap, so you always
-        get exactly ``n_scenes`` valid scenes (or fewer if not enough are
-        available after exclusion).
+        Optional list of scene IDs to skip.
+    frames_per_scene:
+        If set, randomly sample this many frames per scene instead of
+        using all available frames. Scenes with fewer frames than this
+        value contribute all their frames. Pass ``None`` (default) to
+        keep every frame.
+    seed:
+        Random seed used for frame sampling (ignored when
+        ``frames_per_scene`` is None).
     """
+    import random
+
     excluded = set(exclude_scenes or [])
     scene_ids = [s for s in _list_scene_ids(root) if s not in excluded]
     sampled_scene_ids = scene_ids[:: max(scene_stride, 1)][:n_scenes]
     output: list[PairSample] = []
 
+    rng = random.Random(seed)
     scenes_root = root / "scenes" if (root / "scenes").exists() else root
 
     for scene_id in sampled_scene_ids:
@@ -95,6 +109,10 @@ def load_pairs(
         left = _index_scene_files(scene_root, modalities[0])
         right = _index_scene_files(scene_root, modalities[1])
         common_keys = sorted(set(left).intersection(right))
+
+        if frames_per_scene is not None and frames_per_scene < len(common_keys):
+            common_keys = rng.sample(common_keys, frames_per_scene)
+            common_keys = sorted(common_keys)
 
         for key in common_keys:
             output.append(

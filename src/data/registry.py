@@ -15,6 +15,8 @@ def load_dataset_pairs(
     n_scenes: int,
     scene_stride: int,
     exclude_scenes: list[str] | None = None,
+    frames_per_scene: int | None = None,
+    seed: int = 42,
 ) -> list[Any]:
     """Dispatch pair loading to the selected dataset adapter."""
     if dataset_name == "hypersim":
@@ -24,6 +26,8 @@ def load_dataset_pairs(
             n_scenes=n_scenes,
             scene_stride=scene_stride,
             exclude_scenes=exclude_scenes,
+            frames_per_scene=frames_per_scene,
+            seed=seed,
         )
     if dataset_name == "diode":
         return diode.load_pairs(
