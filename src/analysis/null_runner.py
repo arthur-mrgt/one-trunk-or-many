@@ -9,6 +9,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from tqdm.auto import tqdm
 
 from src.analysis.null_artifacts import (
     load_scene_type_map,
@@ -164,6 +165,15 @@ def compute_null_distribution_adaptive(
     stop_reason = "max_draws_reached"
     is_partial = False
 
+    expected_batches = max(1, max_total_draws // max(1, draws_per_batch))
+    if max_batches > 0:
+        expected_batches = min(expected_batches, max_batches)
+    batch_pbar = tqdm(
+        total=expected_batches,
+        desc="Null[batches]",
+        unit="batch",
+    )
+
     try:
         while True:
             if max_batches > 0 and batches_completed >= max_batches:
@@ -172,13 +182,20 @@ def compute_null_distribution_adaptive(
 
             can_draw_any = False
             batch_rows: list[dict[str, Any]] = []
-            for hyp in hypotheses:
+            hyp_iter = tqdm(
+                hypotheses,
+                desc=f"Null[batch {batches_completed}]",
+                unit="hyp",
+                leave=False,
+            )
+            for hyp in hyp_iter:
                 count = existing_counts.get(hyp, 0)
                 remaining = max_total_draws - count
                 if remaining <= 0:
                     continue
                 n_to_draw = min(draws_per_batch, remaining)
                 can_draw_any = True
+                hyp_iter.set_postfix_str(f"{hyp[0]}|{hyp[1]}|{hyp[2]} draws={count}")
 
                 rows = draw_mismatched_image_level(
                     cache=caches[hyp],
@@ -194,6 +211,7 @@ def compute_null_distribution_adaptive(
                 )
                 batch_rows.extend(rows)
                 existing_counts[hyp] = count + len(rows)
+            hyp_iter.close()
 
             if not can_draw_any:
                 stop_reason = "max_draws_reached"
@@ -205,6 +223,8 @@ def compute_null_distribution_adaptive(
 
             batches_completed += 1
             stop_reason = "running"
+            batch_pbar.update(1)
+            batch_pbar.set_postfix_str(f"rows={len(null_df)}")
             if batches_completed % checkpoint_every_batches == 0:
                 write_null_artifacts(
                     csv_path=csv_path,
@@ -233,6 +253,8 @@ def compute_null_distribution_adaptive(
             raise
         stop_reason = "manual_interrupt"
         is_partial = True
+    finally:
+        batch_pbar.close()
 
     write_null_artifacts(
         csv_path=csv_path,

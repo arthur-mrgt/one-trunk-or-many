@@ -70,6 +70,7 @@ def load_pairs(
     scene_stride: int,
     exclude_scenes: list[str] | None = None,
     frames_per_scene: int | None = None,
+    max_total_samples: int | None = None,
     seed: int = 42,
 ) -> list[PairSample]:
     """Load aligned pair samples for the requested modalities.
@@ -87,9 +88,13 @@ def load_pairs(
         using all available frames. Scenes with fewer frames than this
         value contribute all their frames. Pass ``None`` (default) to
         keep every frame.
+    max_total_samples:
+        If set, after per-scene sampling, randomly subsample the global
+        pool of ``(scene, frame)`` tuples down to this many samples.
+        Sampling is done without replacement and is deterministic w.r.t.
+        ``seed``. Pass ``None`` (default) to keep every sample.
     seed:
-        Random seed used for frame sampling (ignored when
-        ``frames_per_scene`` is None).
+        Random seed used for frame and global sampling.
     """
     import random
 
@@ -125,4 +130,9 @@ def load_pairs(
                     },
                 )
             )
+
+    if max_total_samples is not None and max_total_samples < len(output):
+        output = rng.sample(output, max_total_samples)
+        output.sort(key=lambda s: (s.scene_id, s.sample_key))
+
     return output

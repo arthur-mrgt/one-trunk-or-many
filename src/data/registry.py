@@ -16,6 +16,7 @@ def load_dataset_pairs(
     scene_stride: int,
     exclude_scenes: list[str] | None = None,
     frames_per_scene: int | None = None,
+    max_total_samples: int | None = None,
     seed: int = 42,
 ) -> list[Any]:
     """Dispatch pair loading to the selected dataset adapter."""
@@ -27,6 +28,7 @@ def load_dataset_pairs(
             scene_stride=scene_stride,
             exclude_scenes=exclude_scenes,
             frames_per_scene=frames_per_scene,
+            max_total_samples=max_total_samples,
             seed=seed,
         )
     if dataset_name == "diode":

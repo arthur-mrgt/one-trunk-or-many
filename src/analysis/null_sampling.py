@@ -8,6 +8,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from tqdm.auto import tqdm
 
 from src.analysis.null_artifacts import load_vectors
 from src.metrics.registry import build_metric
@@ -47,10 +48,17 @@ def prepare_hypothesis_caches(
     caches: dict[tuple[str, str, str], HypothesisCache] = {}
     cka_cfg = metrics_cfg.get("cka", {})
 
-    for _, obs in observed_metrics.iterrows():
+    obs_iter = tqdm(
+        list(observed_metrics.iterrows()),
+        desc="NullPrep[caches]",
+        unit="hyp",
+        total=len(observed_metrics),
+    )
+    for _, obs in obs_iter:
         pair = str(obs["pair"])
         layer = str(obs["layer"])
         metric = str(obs["metric"])
+        obs_iter.set_postfix_str(f"{pair}|{layer}|{metric}")
         observed_value = float(obs["value"])
         observed_n = int(obs["n_samples"])
         left_mod, right_mod = tuple(pair.split("-", 1))
