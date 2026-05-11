@@ -75,6 +75,8 @@ def run_extraction_stage(cfg: DictConfig, run_ctx_override: RunContext | None = 
             frames_per_scene=int(frames_per_scene_raw) if frames_per_scene_raw is not None else None,
             max_total_samples=int(max_total_samples_raw) if max_total_samples_raw is not None else None,
             seed=int(cfg_dict["data"].get("seed", 42)),
+            split=str(cfg_dict["data"].get("split", "train")),
+            environment=str(cfg_dict["data"].get("environment", "indoors")),
         )
         activation_index = run_extraction(
             model=model,

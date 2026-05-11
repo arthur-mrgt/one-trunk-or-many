@@ -18,6 +18,8 @@ def load_dataset_pairs(
     frames_per_scene: int | None = None,
     max_total_samples: int | None = None,
     seed: int = 42,
+    split: str = "train",
+    environment: str = "indoors",
 ) -> list[Any]:
     """Dispatch pair loading to the selected dataset adapter."""
     if dataset_name == "hypersim":
@@ -37,5 +39,10 @@ def load_dataset_pairs(
             modalities=modalities,
             n_scenes=n_scenes,
             scene_stride=scene_stride,
+            split=split,
+            environment=environment,
+            exclude_scenes=exclude_scenes,
+            frames_per_scene=frames_per_scene,
+            seed=seed,
         )
     raise ValueError(f"Unknown dataset: {dataset_name}")

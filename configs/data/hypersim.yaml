@@ -10,3 +10,4 @@ seed: 42                    # random seed for frame and global sampling
 modalities:
   - rgb
   - depth
+  - normals
