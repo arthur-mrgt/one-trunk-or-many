@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +20,7 @@ def load_dataset_pairs(
     max_total_samples: int | None = None,
     seed: int = 42,
     split: str = "train",
-    environment: str = "indoors",
+    environment: str | Sequence[str] = "indoors",
 ) -> list[Any]:
     """Dispatch pair loading to the selected dataset adapter."""
     if dataset_name == "hypersim":

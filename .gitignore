@@ -19,7 +19,9 @@ results/**/activations/
 results/**/artifacts/
 results/runs/
 results/diagnostics/
+results/slurm/
 
 wandb/
+
 
 .DS_Store

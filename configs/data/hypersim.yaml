@@ -1,13 +1,27 @@
-name: hypersim
-root: ${paths.datasets_root}/hypersim
-split: train
-n_scenes: 100
-scene_stride: 1
-exclude_scenes: []
-frames_per_scene: 40        # per-scene cap on sampled frames; null = use every frame
-max_total_samples: null     # global cap on (scene, frame) tuples after per-scene sampling; null = no cap
-seed: 42                    # random seed for frame and global sampling
-modalities:
-  - rgb
-  - depth
-  - normals
+# @package _global_
+#
+# Hypersim dataset config. Owns both `data.*` and the dataset-specific
+# `analysis.null_distribution.*` knobs so `configs/default.yaml` can stay
+# dataset-agnostic.
+data:
+  name: hypersim
+  root: ${paths.datasets_root}/hypersim
+  split: train
+  n_scenes: 100
+  scene_stride: 1
+  exclude_scenes: []
+  frames_per_scene: 40        # per-scene cap on sampled frames; null = use every frame
+  max_total_samples: null     # global cap on (scene, frame) tuples after per-scene sampling; null = no cap
+  seed: 42                    # random seed for frame and global sampling
+  modalities:
+    - rgb
+    - depth
+    - normals
+
+analysis:
+  null_distribution:
+    # Hypersim ships a scene-type CSV (Animation, Scene type). When this CSV
+    # is reachable the null sampler uses it directly and ignores
+    # `scene_type_source`.
+    metadata_path: ${paths.datasets_root}/hypersim/metadata_camera_trajectories.csv
+    scene_type_source: csv

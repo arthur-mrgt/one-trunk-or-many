@@ -244,7 +244,7 @@ class FourMEncoder:
         tensor = self._torch.nn.functional.interpolate(
             tensor, size=(input_size, input_size), mode="bilinear", align_corners=False
         )
-        tensor = self._torch.nan_to_num(tensor)
+        tensor = self._torch.nan_to_num(tensor).to(self._device)
 
         # Bring to [0, 1] — dispatch on pixel range
         if tensor.max() > 2.0:
@@ -265,7 +265,7 @@ class FourMEncoder:
         ).view(1, 3, 1, 1)
         tensor = (tensor - mean) / std
 
-        return tensor.to(self._device)
+        return tensor
 
     def _truncated_depth_standardization(self, depth, thresh: float = 0.1):
         """Replicates 4M's DepthTransform.truncated_depth_standardization exactly."""

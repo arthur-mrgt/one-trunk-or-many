@@ -102,7 +102,7 @@ def compute_null_distribution_adaptive(
     if max_total_draws <= 0:
         raise ValueError("analysis.null_distribution.max_total_draws must be > 0.")
 
-    scene_type_map = load_scene_type_map(null_cfg)
+    scene_type_map = load_scene_type_map(null_cfg, activation_index=activation_index)
     use_type_constraint = sampling_mode == "cross_scene_type_random" and bool(scene_type_map)
     if sampling_mode == "cross_scene_type_random" and not use_type_constraint:
         log.warning(

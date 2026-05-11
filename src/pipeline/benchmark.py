@@ -65,6 +65,12 @@ def run_extraction_stage(cfg: DictConfig, run_ctx_override: RunContext | None = 
         _log(f"Loading samples for pair {pair_name}")
         frames_per_scene_raw = cfg_dict["data"].get("frames_per_scene")
         max_total_samples_raw = cfg_dict["data"].get("max_total_samples")
+        environment_raw = cfg_dict["data"].get("environment", "indoors")
+        environment = (
+            list(environment_raw)
+            if isinstance(environment_raw, (list, tuple))
+            else str(environment_raw)
+        )
         samples = load_dataset_pairs(
             dataset_name=cfg_dict["data"]["name"],
             root=Path(cfg_dict["data"]["root"]),
@@ -76,7 +82,7 @@ def run_extraction_stage(cfg: DictConfig, run_ctx_override: RunContext | None = 
             max_total_samples=int(max_total_samples_raw) if max_total_samples_raw is not None else None,
             seed=int(cfg_dict["data"].get("seed", 42)),
             split=str(cfg_dict["data"].get("split", "train")),
-            environment=str(cfg_dict["data"].get("environment", "indoors")),
+            environment=environment,
         )
         activation_index = run_extraction(
             model=model,

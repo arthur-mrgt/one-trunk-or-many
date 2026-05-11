@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import random
+from collections.abc import Sequence
 from pathlib import Path
 
 from src.data.hypersim import PairSample
@@ -49,13 +50,35 @@ def _list_scene_rgb_files(scene_root: Path) -> list[Path]:
     )
 
 
+def _normalize_environments(environment: str | Sequence[str]) -> list[str]:
+    """Return the list of environments to load, preserving order and uniqueness.
+
+    Accepts a single string (``"indoors"``), a list/tuple of strings
+    (``["indoors", "outdoor"]``), or the sentinel ``"both"`` / ``"all"``.
+    """
+    if isinstance(environment, str):
+        if environment.lower() in {"both", "all"}:
+            return ["indoors", "outdoor"]
+        return [environment]
+    seen: set[str] = set()
+    result: list[str] = []
+    for env in environment:
+        env_str = str(env)
+        if env_str not in seen:
+            seen.add(env_str)
+            result.append(env_str)
+    if not result:
+        raise ValueError("environment must be a non-empty string or sequence of strings")
+    return result
+
+
 def load_pairs(
     root: Path,
     modalities: tuple[str, str],
     n_scenes: int,
     scene_stride: int,
     split: str = "train",
-    environment: str = "indoors",
+    environment: str | Sequence[str] = "indoors",
     exclude_scenes: list[str] | None = None,
     frames_per_scene: int | None = None,
     seed: int = 42,
@@ -70,15 +93,34 @@ def load_pairs(
         Two-element tuple of modality names, e.g. ``("rgb", "depth")``.
         Supported: ``"rgb"``, ``"depth"``, ``"normals"``.
     n_scenes:
-        Number of scenes to include (after stride and exclusion).
+        Number of scenes to include per environment (after stride and
+        exclusion). When multiple environments are requested, the cap is
+        applied independently to each one, so the total scene count can be
+        up to ``n_scenes * len(environments)``.
     scene_stride:
         Step size when walking the sorted scene list (1 = every scene).
     split:
         Dataset split: one of ``"train"``, ``"val"``, ``"test"``.
     environment:
-        Scene environment: one of ``"indoors"``, ``"outdoor"``.
+        Scene environment. Either a single value (``"indoors"`` or
+        ``"outdoor"``), the sentinel ``"both"`` / ``"all"``, or a list such
+        as ``["indoors", "outdoor"]``. When multiple environments are
+        selected, ``scene_id`` is prefixed with the environment name to keep
+        IDs unique across environments.
+
+    Notes
+    -----
+    Each sample's ``scene_id`` resolves to the **scan-level** path so that
+    every DIODE scan is treated as a distinct "scene" by downstream null
+    sampling. With multiple environments selected, IDs look like
+    ``"indoors/scene_00021/scan_00190"``; with a single environment, they
+    look like ``"scene_00021/scan_00190"``. The parent of each ``scene_id``
+    (e.g. ``"indoors/scene_00021"``) groups scans into a DIODE-scene, which
+    the null-distribution stage uses as the "scene type" for the
+    ``cross_scene_type=scene`` constraint.
     exclude_scenes:
-        Optional scene IDs to skip.
+        Optional scene IDs to skip. Each entry is matched against the bare
+        scene directory name (e.g. ``"scene_00019"``).
     frames_per_scene:
         If set, randomly sample this many frames per scene.
         Scenes with fewer frames contribute all their frames.
@@ -86,60 +128,76 @@ def load_pairs(
     seed:
         Random seed for frame sampling.
     """
-    env_root = root / split / environment
-    if not env_root.exists():
-        raise FileNotFoundError(
-            f"DIODE environment directory not found: {env_root}\n"
-            f"Expected layout: <root>/{split}/{environment}/scene_XXXXX/scan_XXXXX/*.png"
-        )
-
+    environments = _normalize_environments(environment)
+    namespace_scenes = len(environments) > 1
     excluded = set(exclude_scenes or [])
-    scene_ids = [s for s in _list_scene_ids(env_root) if s not in excluded]
-    sampled_scene_ids = scene_ids[:: max(scene_stride, 1)][:n_scenes]
-    output: list[PairSample] = []
     rng = random.Random(seed)
 
-    for scene_id in sampled_scene_ids:
-        scene_root = env_root / scene_id
-        if not scene_root.exists():
-            log.warning("DIODE scene %s not found, skipping.", scene_id)
-            continue
+    output: list[PairSample] = []
+    total_sampled_scenes = 0
 
-        rgb_files = _list_scene_rgb_files(scene_root)
+    for env in environments:
+        env_root = root / split / env
+        if not env_root.exists():
+            raise FileNotFoundError(
+                f"DIODE environment directory not found: {env_root}\n"
+                f"Expected layout: <root>/{split}/{env}/scene_XXXXX/scan_XXXXX/*.png"
+            )
 
-        if frames_per_scene is not None and frames_per_scene < len(rgb_files):
-            rgb_files = sorted(rng.sample(rgb_files, frames_per_scene))
+        scene_ids = [s for s in _list_scene_ids(env_root) if s not in excluded]
+        sampled_scene_ids = scene_ids[:: max(scene_stride, 1)][:n_scenes]
+        total_sampled_scenes += len(sampled_scene_ids)
 
-        for rgb_path in rgb_files:
-            mod_paths: dict[str, Path] = {}
-            skip = False
-            for mod in modalities:
-                path = _modality_path(rgb_path, mod)
-                if not path.exists():
-                    log.debug(
-                        "Missing %s file for %s (expected %s), skipping sample.",
-                        mod, rgb_path.name, path.name,
-                    )
-                    skip = True
-                    break
-                mod_paths[mod] = path
-
-            if skip:
+        env_samples_before = len(output)
+        for scene_dir in sampled_scene_ids:
+            scene_root = env_root / scene_dir
+            if not scene_root.exists():
+                log.warning("DIODE scene %s/%s not found, skipping.", env, scene_dir)
                 continue
 
-            scan_name = rgb_path.parent.name       # e.g. "scan_00001"
-            sample_key = f"{scan_name}:{rgb_path.stem}"
+            rgb_files = _list_scene_rgb_files(scene_root)
 
-            output.append(
-                PairSample(
-                    scene_id=scene_id,
-                    sample_key=sample_key,
-                    modality_paths=mod_paths,
+            if frames_per_scene is not None and frames_per_scene < len(rgb_files):
+                rgb_files = sorted(rng.sample(rgb_files, frames_per_scene))
+
+            scene_id = f"{env}/{scene_dir}" if namespace_scenes else scene_dir
+
+            for rgb_path in rgb_files:
+                mod_paths: dict[str, Path] = {}
+                skip = False
+                for mod in modalities:
+                    path = _modality_path(rgb_path, mod)
+                    if not path.exists():
+                        log.debug(
+                            "Missing %s file for %s (expected %s), skipping sample.",
+                            mod, rgb_path.name, path.name,
+                        )
+                        skip = True
+                        break
+                    mod_paths[mod] = path
+
+                if skip:
+                    continue
+
+                scan_name = rgb_path.parent.name       # e.g. "scan_00001"
+                scan_scene_id = f"{scene_id}/{scan_name}"
+                sample_key = rgb_path.stem
+
+                output.append(
+                    PairSample(
+                        scene_id=scan_scene_id,
+                        sample_key=sample_key,
+                        modality_paths=mod_paths,
+                    )
                 )
-            )
+
+        log.info(
+            "DIODE %s/%s: %d samples from %d scenes",
+            split, env, len(output) - env_samples_before, len(sampled_scene_ids),
+        )
 
     log.info(
         "DIODE loaded %d samples | split=%s | env=%s | scenes=%d",
-        len(output), split, environment, len(sampled_scene_ids),
+        len(output), split, ",".join(environments), total_sampled_scenes,
     )
     return output

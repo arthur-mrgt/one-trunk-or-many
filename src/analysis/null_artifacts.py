@@ -48,32 +48,43 @@ def write_null_artifacts(
     state_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
-def load_scene_type_map(null_cfg: dict[str, Any]) -> dict[str, str]:
-    """Load `scene_id -> scene_type` mapping from Hypersim metadata CSV."""
+def load_scene_type_map(
+    null_cfg: dict[str, Any],
+    activation_index: pd.DataFrame | None = None,
+) -> dict[str, str]:
+    """Return a `scene_id -> scene_type` mapping for null sampling.
+
+    Two sources, tried in order:
+      1. ``metadata_path`` → Hypersim-style CSV with ``Animation`` and
+         ``Scene type`` columns.
+      2. ``scene_type_source: scene_id_parent`` → derive the type as the
+         parent path of each ``scene_id`` in ``activation_index``
+         (DIODE: ``<env>/<scene>/<scan>`` ↦ ``<env>/<scene>``). Flat
+         scene IDs (no ``/``) are skipped, so Hypersim is unaffected.
+    Returns an empty map if neither applies; the caller degrades
+    ``cross_scene_type_random`` → ``cross_scene_random``.
+    """
     metadata_path = null_cfg.get("metadata_path")
-    if not metadata_path:
-        return {}
-
-    path = Path(metadata_path)
-    if not path.exists():
-        log.warning("Scene type metadata not found at '%s'.", path)
-        return {}
-
-    try:
-        df = pd.read_csv(path)
+    if metadata_path and Path(metadata_path).exists():
+        df = pd.read_csv(metadata_path)
         if "Animation" not in df.columns or "Scene type" not in df.columns:
             return {}
-        mapping: dict[str, str] = {}
-        for _, row in df.iterrows():
-            anim = str(row["Animation"])
-            scene_id = "_".join(anim.split("_")[:3])
-            scene_type = str(row["Scene type"]).strip()
-            if scene_id and scene_type and scene_type.lower() not in {"nan", ""}:
-                mapping[scene_id] = scene_type
-        return mapping
-    except Exception as exc:
-        log.warning("Could not parse scene-type metadata from '%s': %s", path, exc)
-        return {}
+        return {
+            scene_id: scene_type
+            for anim, raw_type in zip(df["Animation"], df["Scene type"])
+            if (scene_id := "_".join(str(anim).split("_")[:3]))
+            and (scene_type := str(raw_type).strip())
+            and scene_type.lower() != "nan"
+        }
+
+    if null_cfg.get("scene_type_source") == "scene_id_parent" and activation_index is not None:
+        return {
+            sid: sid.rsplit("/", 1)[0]
+            for sid in (str(s) for s in activation_index["scene_id"].dropna().unique())
+            if "/" in sid
+        }
+
+    return {}
 
 
 def load_vectors(paths: list[str]) -> np.ndarray | None:
