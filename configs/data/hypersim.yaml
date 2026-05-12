@@ -3,6 +3,7 @@
 # Hypersim dataset config. Owns both `data.*` and the dataset-specific
 # `analysis.null_distribution.*` knobs so `configs/default.yaml` can stay
 # dataset-agnostic.
+
 data:
   name: hypersim
   root: ${paths.datasets_root}/hypersim
@@ -20,8 +21,45 @@ data:
 
 analysis:
   null_distribution:
-    # Hypersim ships a scene-type CSV (Animation, Scene type). When this CSV
-    # is reachable the null sampler uses it directly and ignores
-    # `scene_type_source`.
+    # The scene-type CSV ships with Hypersim. When the file is reachable the
+    # null sampler uses it directly and `scene_type_source` is ignored.
     metadata_path: ${paths.datasets_root}/hypersim/metadata_camera_trajectories.csv
     scene_type_source: csv
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Null-distribution menu (override `analysis.null_distribution.sampling_mode`)
+#
+#   sampling_mode=cross_scene_type_random          ←── Null A (easiest, default)
+#     RIGHT must come from a different scene AND a different scene type
+#     (kitchen-A RGB ↔ bathroom-C depth, never kitchen-A ↔ kitchen-B).
+#     Question: "Does this layer prefer matched RGB/depth over depth from a
+#     completely unrelated kind of room?"
+#     Expected: every layer beats the null with huge z-scores; useful only as
+#     a sanity floor.
+#
+#   sampling_mode=within_scene_type_random         ←── Null B (medium)
+#     RIGHT must come from a different scene but the SAME scene type
+#     (kitchen-A RGB ↔ kitchen-B depth). Both scenes share the category
+#     (cabinets, sinks…) but are not the same room.
+#     Question: "Does this layer encode the *specific room*, or only the
+#     *kind of room*?"
+#     Expected: shallow layers (edges/textures) still significant; deep
+#     semantic layers may stop being significant because two kitchens look
+#     alike up there.
+#
+#   sampling_mode=within_scene_random              ←── Null C (hardest)
+#     RIGHT must come from the SAME scene as LEFT but a different frame
+#     (frame 5 of ai_001_005 RGB ↔ frame 17 of ai_001_005 depth). Same room,
+#     same furniture, same lighting — only the camera pose differs.
+#     Question: "Does this layer encode the *specific viewpoint*, or only
+#     scene-level info?"
+#     Expected: only models with truly view-specific cross-modal binding
+#     beat this null. Anything that only learned 'this kitchen has these
+#     objects' will drop to near-zero z-score here.
+#
+# Practical hints when running B or C:
+#   • Increase `max_total_draws` (e.g. 5000–10000) — pools are smaller so
+#     each draw is more correlated; you need more draws for a smooth tail.
+#   • C needs `frames_per_scene >= 2`. With the current `frames_per_scene=40`
+#     the within-scene pool is ~39 frames per LEFT — plenty.
+# ─────────────────────────────────────────────────────────────────────────────

@@ -41,7 +41,7 @@ def prepare_hypothesis_caches(
     sample_size_mode: str,
     sample_size_value: Any,
     min_scenes: int,
-    use_type_constraint: bool,
+    sampling_mode: str,
     scene_type_map: dict[str, str],
 ) -> dict[tuple[str, str, str], HypothesisCache]:
     """Build per-hypothesis caches from activation index and observed rows."""
@@ -74,8 +74,12 @@ def prepare_hypothesis_caches(
         ].reset_index(drop=True)
         if left_df.empty or right_df.empty:
             continue
-        if left_df["scene_id"].nunique() < min_scenes or right_df["scene_id"].nunique() < min_scenes:
-            continue
+        # The min_scenes guard only makes sense for cross-scene modes; the
+        # within-scene mode explicitly needs multiple frames *per* scene, not
+        # multiple scenes.
+        if sampling_mode != "within_scene_random":
+            if left_df["scene_id"].nunique() < min_scenes or right_df["scene_id"].nunique() < min_scenes:
+                continue
 
         left_vectors = load_vectors(left_df["activation_path"].tolist())
         right_vectors = load_vectors(right_df["activation_path"].tolist())
@@ -100,11 +104,15 @@ def prepare_hypothesis_caches(
 
         left_scene_ids = left_df["scene_id"].astype(str).to_numpy()
         right_scene_ids = right_df["scene_id"].astype(str).to_numpy()
+        left_sample_keys = left_df["sample_key"].astype(str).to_numpy()
+        right_sample_keys = right_df["sample_key"].astype(str).to_numpy()
         candidates = build_right_candidates_by_left_index(
             left_scene_ids=left_scene_ids,
             right_scene_ids=right_scene_ids,
-            use_type_constraint=use_type_constraint,
+            sampling_mode=sampling_mode,
             scene_type_map=scene_type_map,
+            left_sample_keys=left_sample_keys,
+            right_sample_keys=right_sample_keys,
         )
         if not candidates:
             continue
@@ -132,30 +140,97 @@ def prepare_hypothesis_caches(
     return caches
 
 
+SUPPORTED_SAMPLING_MODES: frozenset[str] = frozenset({
+    "cross_scene_type_random",     # different scene_id AND different scene_type  (Null A — easiest)
+    "within_scene_type_random",    # different scene_id AND same scene_type       (Null B — medium)
+    "within_scene_random",         # same scene_id AND different sample_key       (Null C — hardest)
+})
+
+MODES_NEEDING_TYPE_MAP: frozenset[str] = frozenset({
+    "cross_scene_type_random",
+    "within_scene_type_random",
+})
+
+
 def build_right_candidates_by_left_index(
     left_scene_ids: np.ndarray,
     right_scene_ids: np.ndarray,
-    use_type_constraint: bool,
+    sampling_mode: str,
     scene_type_map: dict[str, str],
+    left_sample_keys: np.ndarray | None = None,
+    right_sample_keys: np.ndarray | None = None,
 ) -> dict[int, np.ndarray]:
-    """Precompute valid right indices for each left index."""
+    """Precompute valid right indices for each left index, mode-aware.
+
+    Modes:
+      * ``cross_scene_type_random``— right scene_id ≠ left scene_id AND
+        right type ≠ left type. If a particular LEFT has no different-type
+        partner (e.g. its type is missing from the map), it degrades to any
+        different-scene partner for that LEFT only — never silently across
+        the whole run.
+      * ``within_scene_type_random``— right scene_id ≠ left scene_id AND
+        right type == left type. No fallback (the type match is the point).
+      * ``within_scene_random``     — right scene_id == left scene_id AND
+        right sample_key ≠ left sample_key. Requires ``*_sample_keys``.
+    """
+    if sampling_mode not in SUPPORTED_SAMPLING_MODES:
+        raise ValueError(
+            f"Unknown sampling_mode '{sampling_mode}'. "
+            f"Supported: {sorted(SUPPORTED_SAMPLING_MODES)}."
+        )
+    if sampling_mode == "within_scene_random" and (
+        left_sample_keys is None or right_sample_keys is None
+    ):
+        raise ValueError(
+            "sampling_mode=within_scene_random requires left/right sample_keys."
+        )
+
     out: dict[int, np.ndarray] = {}
     right_all_idx = np.arange(len(right_scene_ids), dtype=int)
+    different_scene_mask_cache: dict[str, np.ndarray] = {}
+
     for left_idx, left_scene in enumerate(left_scene_ids.tolist()):
-        valid = right_all_idx[right_scene_ids != left_scene]
+        left_scene_str = str(left_scene)
+
+        if sampling_mode == "within_scene_random":
+            same_scene = right_scene_ids == left_scene
+            different_key = right_sample_keys != left_sample_keys[left_idx]
+            valid = right_all_idx[same_scene & different_key]
+            if len(valid):
+                out[left_idx] = valid
+            continue
+
+        # cross-scene base mask (cached per scene to avoid rebuilds)
+        mask = different_scene_mask_cache.get(left_scene_str)
+        if mask is None:
+            mask = right_scene_ids != left_scene
+            different_scene_mask_cache[left_scene_str] = mask
+        valid = right_all_idx[mask]
         if len(valid) == 0:
             continue
-        if use_type_constraint:
-            left_type = scene_type_map.get(str(left_scene))
-            if left_type:
-                typed = [
-                    ridx
-                    for ridx in valid.tolist()
-                    if scene_type_map.get(str(right_scene_ids[ridx]), left_type) != left_type
-                ]
-                if typed:
-                    valid = np.array(typed, dtype=int)
-        out[left_idx] = valid
+
+        # cross_scene_type_random or within_scene_type_random
+        left_type = scene_type_map.get(left_scene_str)
+        if not left_type:
+            if sampling_mode == "cross_scene_type_random":
+                out[left_idx] = valid  # per-LEFT fallback when this scene's type is unknown
+            continue
+
+        if sampling_mode == "cross_scene_type_random":
+            typed = [
+                ridx for ridx in valid.tolist()
+                if scene_type_map.get(str(right_scene_ids[ridx]), left_type) != left_type
+            ]
+            valid = np.array(typed, dtype=int) if typed else valid  # per-LEFT fallback
+        else:  # within_scene_type_random
+            typed = [
+                ridx for ridx in valid.tolist()
+                if scene_type_map.get(str(right_scene_ids[ridx])) == left_type
+            ]
+            valid = np.array(typed, dtype=int) if typed else np.array([], dtype=int)
+
+        if len(valid):
+            out[left_idx] = valid
     return out
 
 

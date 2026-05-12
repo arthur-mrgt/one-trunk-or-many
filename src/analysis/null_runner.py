@@ -16,7 +16,12 @@ from src.analysis.null_artifacts import (
     null_draw_counts,
     write_null_artifacts,
 )
-from src.analysis.null_sampling import draw_mismatched_image_level, prepare_hypothesis_caches
+from src.analysis.null_sampling import (
+    MODES_NEEDING_TYPE_MAP,
+    SUPPORTED_SAMPLING_MODES,
+    draw_mismatched_image_level,
+    prepare_hypothesis_caches,
+)
 from src.analysis.null_stop import (
     build_observed_stub,
     evaluate_adaptive_stop,
@@ -101,13 +106,20 @@ def compute_null_distribution_adaptive(
         raise ValueError("analysis.null_distribution.checkpoint_every_batches must be > 0.")
     if max_total_draws <= 0:
         raise ValueError("analysis.null_distribution.max_total_draws must be > 0.")
+    if sampling_mode not in SUPPORTED_SAMPLING_MODES:
+        raise ValueError(
+            f"Unknown analysis.null_distribution.sampling_mode='{sampling_mode}'. "
+            f"Supported: {sorted(SUPPORTED_SAMPLING_MODES)}."
+        )
 
     scene_type_map = load_scene_type_map(null_cfg, activation_index=activation_index)
-    use_type_constraint = sampling_mode == "cross_scene_type_random" and bool(scene_type_map)
-    if sampling_mode == "cross_scene_type_random" and not use_type_constraint:
-        log.warning(
-            "sampling_mode=cross_scene_type_random requested but metadata is unavailable; "
-            "falling back to cross_scene_random."
+    needs_type_map = sampling_mode in MODES_NEEDING_TYPE_MAP
+    if needs_type_map and not scene_type_map:
+        raise ValueError(
+            f"sampling_mode={sampling_mode} requires a scene-type map but none "
+            f"was loaded. Set `analysis.null_distribution.metadata_path` to a "
+            f"valid CSV, or set `analysis.null_distribution.scene_type_source` "
+            f"(e.g. `scene_id_parent` for DIODE)."
         )
 
     observed = normalize_observed_metrics(observed_metrics, metrics_cfg)
@@ -138,7 +150,7 @@ def compute_null_distribution_adaptive(
         sample_size_mode=str(null_cfg.get("sample_size_mode", "observed_n_samples")),
         sample_size_value=null_cfg.get("sample_size_value"),
         min_scenes=min_scenes,
-        use_type_constraint=use_type_constraint,
+        sampling_mode=sampling_mode,
         scene_type_map=scene_type_map,
     )
     if not caches:
@@ -202,7 +214,7 @@ def compute_null_distribution_adaptive(
                     n_draws=n_to_draw,
                     replace=replace,
                     sampling_mode=sampling_mode,
-                    scene_type_map=scene_type_map if use_type_constraint else {},
+                    scene_type_map=scene_type_map if needs_type_map else {},
                     rng=rng,
                     start_draw_id=count,
                     run_id=run_id,

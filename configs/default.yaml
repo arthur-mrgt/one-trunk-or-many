@@ -21,7 +21,7 @@ paths:
 
 analysis:
   null_distribution:
-    enabled: false
+    enabled: true
     artifact_filename: null_distribution.csv
     state_filename: null_distribution_state.json
     sampling_mode: cross_scene_type_random

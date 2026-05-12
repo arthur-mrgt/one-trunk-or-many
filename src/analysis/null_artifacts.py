@@ -61,8 +61,8 @@ def load_scene_type_map(
          parent path of each ``scene_id`` in ``activation_index``
          (DIODE: ``<env>/<scene>/<scan>`` ↦ ``<env>/<scene>``). Flat
          scene IDs (no ``/``) are skipped, so Hypersim is unaffected.
-    Returns an empty map if neither applies; the caller degrades
-    ``cross_scene_type_random`` → ``cross_scene_random``.
+    Returns an empty map if neither applies; the caller raises if the
+    selected sampling mode requires a type map.
     """
     metadata_path = null_cfg.get("metadata_path")
     if metadata_path and Path(metadata_path).exists():

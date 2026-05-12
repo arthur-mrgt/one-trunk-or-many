@@ -39,16 +39,20 @@ def _make_activation_index(
     rows: list[dict] = []
     rng = np.random.default_rng(0)
 
+    # Use hierarchical scene_ids so `scene_type_source=scene_id_parent`
+    # can derive a non-empty type map for type-constrained modes.
     for scene_idx in range(n_scenes):
-        scene_id = f"ai_{scene_idx:03d}_001"
+        scene_group = f"group_{scene_idx % 2:02d}"  # 2 alternating "types"
+        scene_id = f"{scene_group}/ai_{scene_idx:03d}_001"
         for frame_idx in range(n_frames_per_scene):
+            sample_key = f"frame_{frame_idx:04d}"
             for layer_idx in range(n_layers):
                 layer_name = f"layer_{layer_idx:02d}"
                 for modality in (left_mod, right_mod):
                     vec = rng.standard_normal(dim).astype(np.float32)
                     act_path = (
                         tmp_path
-                        / f"{scene_id}_{frame_idx:04d}_{layer_name}_{modality}.npy"
+                        / f"scene{scene_idx}_{sample_key}_{layer_name}_{modality}.npy"
                     )
                     np.save(act_path, vec)
                     rows.append(
@@ -56,7 +60,7 @@ def _make_activation_index(
                             "run_id": "smoke_run",
                             "pair": pair,
                             "scene_id": scene_id,
-                            "frame_id": frame_idx,
+                            "sample_key": sample_key,
                             "layer": layer_name,
                             "modality": modality,
                             "activation_path": str(act_path),
@@ -134,7 +138,8 @@ class TestNullDistributionSmoke:
             "seed": 0,
             "replace": True,
             "min_scenes": 2,
-            "sampling": "cross_scene_random",
+            "sampling_mode": "cross_scene_type_random",
+            "scene_type_source": "scene_id_parent",
         }
         metrics_cfg = {
             "enabled": ["cka"],
