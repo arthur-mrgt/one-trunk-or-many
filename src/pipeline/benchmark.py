@@ -30,7 +30,8 @@ from src.pipeline.benchmark_tables import (
     compute_metric_table_from_indices as _compute_metric_table_from_indices,
     load_activation_indices as _load_activation_indices,
 )
-from src.pipeline.extraction import run_extraction
+from src.pipeline.extraction import run_extraction, run_joint_extraction
+from src.pipeline.joint_indices import build_joint_comparison_indices
 from src.utils.config import RunContext, cfg_to_container
 from src.utils.io import read_null_distribution, write_json, write_optional_parquet, write_table
 from src.utils.tracking import build_tracker
@@ -43,6 +44,106 @@ def _log(message: str) -> None:
     print(f"[INFO] {message}")
 
 
+def _load_pair_samples(cfg_dict: dict[str, Any], modalities: tuple[str, str]) -> list[Any]:
+    """Resolve dataset/run config and load aligned samples for a pair."""
+    frames_per_scene_raw = cfg_dict["data"].get("frames_per_scene")
+    max_total_samples_raw = cfg_dict["data"].get("max_total_samples")
+    environment_raw = cfg_dict["data"].get("environment", "indoors")
+    environment = (
+        list(environment_raw)
+        if isinstance(environment_raw, (list, tuple))
+        else str(environment_raw)
+    )
+    split_raw = cfg_dict["data"].get("split", "train")
+    split = (
+        list(split_raw) if isinstance(split_raw, (list, tuple)) else str(split_raw)
+    )
+    return load_dataset_pairs(
+        dataset_name=cfg_dict["data"]["name"],
+        root=Path(cfg_dict["data"]["root"]),
+        modalities=modalities,
+        n_scenes=int(cfg_dict["data"]["n_scenes"]),
+        scene_stride=int(cfg_dict["data"]["scene_stride"]),
+        exclude_scenes=list(cfg_dict["data"].get("exclude_scenes") or []),
+        frames_per_scene=int(frames_per_scene_raw) if frames_per_scene_raw is not None else None,
+        max_total_samples=int(max_total_samples_raw) if max_total_samples_raw is not None else None,
+        seed=int(cfg_dict["data"].get("seed", 42)),
+        split=split,
+        environment=environment,
+    )
+
+
+def _run_joint_pass_for_pair(
+    cfg_dict: dict[str, Any],
+    model: Any,
+    run_ctx: RunContext,
+    left_mod: str,
+    right_mod: str,
+    samples: list[Any] | None,
+    reuse_enabled: bool,
+) -> None:
+    """Run the joint forward pass for one pair and emit comparison indices.
+
+    Three comparison index files are written next to the single-mod indices so
+    the metrics engine picks them up automatically:
+
+      * ``activation_index_<A>-<A>_joint_with_<B>.csv``
+      * ``activation_index_<B>-<B>_joint_with_<A>.csv``
+      * ``activation_index_<A>_joint_with_<B>-<B>_joint_with_<A>.csv``
+
+    The raw joint extraction index is saved as ``joint_raw_index_<pair>.csv``
+    so it stays available for inspection without being double-counted by the
+    metrics glob (which only matches ``activation_index_*.csv``).
+    """
+    pair_name = f"{left_mod}-{right_mod}"
+    single_idx_path = run_ctx.artifacts_dir / f"activation_index_{pair_name}.csv"
+    joint_raw_path = run_ctx.artifacts_dir / f"joint_raw_index_{pair_name}.csv"
+    cmp_paths = [
+        run_ctx.artifacts_dir / f"activation_index_{left_mod}-{left_mod}_joint_with_{right_mod}.csv",
+        run_ctx.artifacts_dir / f"activation_index_{right_mod}-{right_mod}_joint_with_{left_mod}.csv",
+        run_ctx.artifacts_dir / f"activation_index_{left_mod}_joint_with_{right_mod}-{right_mod}_joint_with_{left_mod}.csv",
+    ]
+
+    if reuse_enabled and joint_raw_path.exists() and all(p.exists() for p in cmp_paths):
+        _log(f"Skipping joint extraction for {pair_name}: existing artifacts found")
+        return
+
+    if samples is None:
+        _log(f"Loading samples for joint pair {pair_name}")
+        samples = _load_pair_samples(cfg_dict, modalities=(left_mod, right_mod))
+
+    if not single_idx_path.exists():
+        raise FileNotFoundError(
+            f"Joint comparison indices require single-mod index at '{single_idx_path}'. "
+            "Run single-modality extraction for this pair first."
+        )
+    single_mod_index = pd.read_csv(single_idx_path)
+
+    joint_index = run_joint_extraction(
+        model=model,
+        samples=samples,
+        pair_name=pair_name,
+        modalities=(left_mod, right_mod),
+        run_id=run_ctx.run_id,
+        out_dir=run_ctx.activations_dir,
+        show_progress=True,
+    )
+    write_table(joint_raw_path, joint_index)
+
+    comparisons = build_joint_comparison_indices(
+        single_mod_index=single_mod_index,
+        joint_index=joint_index,
+        left_modality=left_mod,
+        right_modality=right_mod,
+    )
+    for comp in comparisons:
+        out = run_ctx.artifacts_dir / f"activation_index_{comp.pair_name}.csv"
+        write_table(out, comp.table)
+        _log(
+            f"Saved joint comparison index {comp.pair_name}: rows={len(comp.table)}"
+        )
+
+
 def run_extraction_stage(cfg: DictConfig, run_ctx_override: RunContext | None = None) -> RunContext:
     """Run extraction for all resolved modality pairs."""
     cfg_dict = cfg_to_container(cfg)
@@ -52,48 +153,44 @@ def run_extraction_stage(cfg: DictConfig, run_ctx_override: RunContext | None = 
     _log(f"Starting extraction stage: run_id={run_ctx.run_id}")
     model = build_model(cfg_dict["model"], cfg_dict["runtime"])
 
+    joint_cfg = dict(cfg_dict["metrics"].get("joint_pass", {}) or {})
+    joint_enabled = bool(joint_cfg.get("enabled", False))
+    reuse_cfg = dict(cfg_dict.get("runtime", {}).get("reuse", {}))
+    reuse_enabled = bool(reuse_cfg.get("activations", reuse_cfg.get("extraction", False)))
+    reuse_joint = bool(reuse_cfg.get("joint_activations", reuse_enabled))
+
     for pair in resolved_pairs:
         left_mod, right_mod = pair[0], pair[1]
         pair_name = f"{left_mod}-{right_mod}"
         out_idx = run_ctx.artifacts_dir / f"activation_index_{pair_name}.csv"
-        reuse_cfg = dict(cfg_dict.get("runtime", {}).get("reuse", {}))
-        reuse_enabled = bool(reuse_cfg.get("activations", reuse_cfg.get("extraction", False)))
+
+        samples: list[Any] | None = None
         if reuse_enabled and out_idx.exists():
             _log(f"Skipping extraction for {pair_name}: existing index found ({out_idx.name})")
-            continue
+        else:
+            _log(f"Loading samples for pair {pair_name}")
+            samples = _load_pair_samples(cfg_dict, modalities=(left_mod, right_mod))
+            activation_index = run_extraction(
+                model=model,
+                samples=samples,
+                pair_name=pair_name,
+                run_id=run_ctx.run_id,
+                out_dir=run_ctx.activations_dir,
+                show_progress=True,
+            )
+            write_table(out_idx, activation_index)
+            _log(f"Saved activation index for {pair_name}: rows={len(activation_index)}")
 
-        _log(f"Loading samples for pair {pair_name}")
-        frames_per_scene_raw = cfg_dict["data"].get("frames_per_scene")
-        max_total_samples_raw = cfg_dict["data"].get("max_total_samples")
-        environment_raw = cfg_dict["data"].get("environment", "indoors")
-        environment = (
-            list(environment_raw)
-            if isinstance(environment_raw, (list, tuple))
-            else str(environment_raw)
-        )
-        samples = load_dataset_pairs(
-            dataset_name=cfg_dict["data"]["name"],
-            root=Path(cfg_dict["data"]["root"]),
-            modalities=(left_mod, right_mod),
-            n_scenes=int(cfg_dict["data"]["n_scenes"]),
-            scene_stride=int(cfg_dict["data"]["scene_stride"]),
-            exclude_scenes=list(cfg_dict["data"].get("exclude_scenes") or []),
-            frames_per_scene=int(frames_per_scene_raw) if frames_per_scene_raw is not None else None,
-            max_total_samples=int(max_total_samples_raw) if max_total_samples_raw is not None else None,
-            seed=int(cfg_dict["data"].get("seed", 42)),
-            split=str(cfg_dict["data"].get("split", "train")),
-            environment=environment,
-        )
-        activation_index = run_extraction(
-            model=model,
-            samples=samples,
-            pair_name=pair_name,
-            run_id=run_ctx.run_id,
-            out_dir=run_ctx.activations_dir,
-            show_progress=True,
-        )
-        write_table(out_idx, activation_index)
-        _log(f"Saved activation index for {pair_name}: rows={len(activation_index)}")
+        if joint_enabled:
+            _run_joint_pass_for_pair(
+                cfg_dict=cfg_dict,
+                model=model,
+                run_ctx=run_ctx,
+                left_mod=left_mod,
+                right_mod=right_mod,
+                samples=samples,
+                reuse_enabled=reuse_joint,
+            )
 
     write_json(run_ctx.run_dir / "resolved_config.json", cfg_dict)
     write_json(
@@ -103,6 +200,7 @@ def run_extraction_stage(cfg: DictConfig, run_ctx_override: RunContext | None = 
             "dataset": cfg_dict["data"]["name"],
             "pairs_mode": cfg_dict["metrics"].get("pairs_mode", "explicit"),
             "pairs": resolved_pairs,
+            "joint_pass_enabled": joint_enabled,
             "stage": "extraction",
             "activation_indices": [str(p) for p in _list_activation_index_files(run_ctx)],
         },

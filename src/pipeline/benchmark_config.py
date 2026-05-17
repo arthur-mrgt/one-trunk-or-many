@@ -65,18 +65,31 @@ def list_activation_index_files(run_ctx: RunContext) -> list[Path]:
 
 
 def resolve_run_ctx_for_metrics(cfg_dict: dict[str, Any]) -> RunContext:
-    """Resolve which run directory to use for metrics-like stages."""
+    """Resolve which run directory to use for metrics-like stages.
+
+    Resolution order:
+      1. Explicit ``runtime.activation_input_run_id`` / ``metrics_input_run_id``.
+      2. Latest run dir whose name starts with ``{project.stage}-``. Filtering
+         by stage prevents silent reuse of artifacts from an unrelated stage
+         (which was previously possible because the candidate list was the
+         lexicographic max of *all* run dirs).
+      3. If ``project.stage`` is empty, fall back to the legacy behaviour
+         (latest run dir of any name) so old configs keep working.
+    """
     runtime_cfg = cfg_dict.get("runtime", {})
     run_id = runtime_cfg.get("activation_input_run_id") or runtime_cfg.get("metrics_input_run_id")
     runs_root = Path(cfg_dict["paths"]["runs_root"])
     if run_id:
         run_dir = runs_root / run_id
     else:
-        candidates = sorted([p for p in runs_root.glob("*") if p.is_dir()])
+        stage = str(cfg_dict.get("project", {}).get("stage", "")).strip()
+        glob_pat = f"{stage}-*" if stage else "*"
+        candidates = sorted(p for p in runs_root.glob(glob_pat) if p.is_dir())
         if not candidates:
+            hint = f"stage={stage!r}" if stage else "any stage"
             raise FileNotFoundError(
-                "No run directory found for metrics stage. "
-                "Run extraction first or set runtime.metrics_input_run_id."
+                f"No run directory found for {hint}. "
+                "Run extraction first or set runtime.activation_input_run_id."
             )
         run_dir = candidates[-1]
     return RunContext(

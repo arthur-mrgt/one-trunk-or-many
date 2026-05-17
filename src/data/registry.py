@@ -19,7 +19,7 @@ def load_dataset_pairs(
     frames_per_scene: int | None = None,
     max_total_samples: int | None = None,
     seed: int = 42,
-    split: str = "train",
+    split: str | Sequence[str] = "train",
     environment: str | Sequence[str] = "indoors",
 ) -> list[Any]:
     """Dispatch pair loading to the selected dataset adapter."""

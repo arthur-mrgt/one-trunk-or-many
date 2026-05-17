@@ -1,6 +1,6 @@
 defaults:
   - _self_
-  - data: diode
+  - data: hypersim
   - model: fourm
   - metrics: rq1
   - tracking: wandb_on
@@ -9,7 +9,8 @@ defaults:
 
 project:
   name: one-trunk-or-many
-  stage: rq1_full_pipeline_diode_all_frames_both
+  stage: test_fix_1_4_hypersim_100_scenes_20_frames
+  # stage: rq1_full_pipeline_hypersim_
   seed: 42
 
 paths:
@@ -21,7 +22,7 @@ paths:
 
 analysis:
   null_distribution:
-    enabled: true
+    enabled: false
     artifact_filename: null_distribution.csv
     state_filename: null_distribution_state.json
     sampling_mode: cross_scene_type_random

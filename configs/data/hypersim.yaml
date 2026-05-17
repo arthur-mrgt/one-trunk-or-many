@@ -11,7 +11,7 @@ data:
   n_scenes: 100
   scene_stride: 1
   exclude_scenes: []
-  frames_per_scene: 40        # per-scene cap on sampled frames; null = use every frame
+  frames_per_scene: 20        # per-scene cap on sampled frames; null = use every frame
   max_total_samples: null     # global cap on (scene, frame) tuples after per-scene sampling; null = no cap
   seed: 42                    # random seed for frame and global sampling
   modalities:
