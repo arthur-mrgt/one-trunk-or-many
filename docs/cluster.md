@@ -155,21 +155,60 @@ What gets re-used:
 The `RUN_ID_OF_CRASHED_JOB` is printed at the top of every run (e.g.
 `rq1_final_hypersim-20260524-205615`) and is also visible in W&B.
 
-## Force activations to a fast ephemeral path (advanced, fragile)
+## Activations on fast ephemeral storage (recommended for long runs)
 
-For maximum extraction speed at the cost of resumability, you can also
-write activations to compute-node local storage:
+Lustre is catastrophically slow for the small `.npy` writes the extraction
+stage emits (we measured **~107 ms per file create** on Izar Lustre vs
+**~0.04 ms** on local NVMe — a 3000× ratio). For a 4000-sample × 3-pair
+run, that translates to ~8h30 of pure write-wait on Lustre vs ~10s on
+`/tmp`. Recommended override:
 
 ```bash
 sbatch scripts/run/submit_slurm.sh \
   EXTRA="paths.activations_root=/tmp/$USER/trunk_acts"
 ```
 
-Trade-offs:
+Only the `.npy` activation vectors land on `/tmp`. The
+`activation_index_*.csv` files (which the metrics and null stages need)
+**always live on `/home`** in `results/runs/<run_id>/artifacts/` because
+they are produced by `_resolve_activations_dir` in `src/utils/config.py`.
+That keeps the small but critical metadata persistent.
 
-- The activation files do **not** survive the SLURM job (compute-node `/tmp`
-  is wiped). The `activation_index_*.csv` records absolute paths, so the
-  metrics and null stages must run in the same job as extraction.
-- Crashing during extraction or during the null stage means losing every
-  intermediate activation, with no way to resume.
-- Use only for short, low-risk runs (smoke testing).
+### Snapshot watchdog (safety net for the ephemeral activations)
+
+`submit_slurm.sh` automatically tars `/tmp/$USER/trunk_acts` to
+`results/snapshots/job_<JOBID>/snapshot_*.tar` every 15 minutes (and once
+more on script exit). Each snapshot is a single ~70-100 MB monolithic
+file → 1 Lustre create + 1 sequential write ≈ 1-2 seconds, instead of
+the ~2 hours that copying 96k small `.npy` files would cost.
+
+Tune via env var:
+
+```bash
+SNAPSHOT_INTERVAL=600 sbatch scripts/run/submit_slurm.sh ...   # every 10 min
+SNAPSHOT_INTERVAL=0   sbatch scripts/run/submit_slurm.sh ...   # disable
+```
+
+### Resuming after a crash with snapshots
+
+When a job dies (OOM, timeout, node failure) the `activation_index_*.csv`
+on `/home` references absolute `/tmp` paths that no longer exist. Pass
+`RESTORE_FROM_SNAPSHOT=<path>.tar` so the new job's launcher extracts the
+last snapshot back to `/tmp/$USER/` before launching Python:
+
+```bash
+LATEST=$(ls -t results/snapshots/job_*/snapshot_FINAL_*.tar 2>/dev/null | head -1)
+sbatch \
+  --export=ALL,WANDB_MODE=offline,RESTORE_FROM_SNAPSHOT="$LATEST",\
+EXTRA="paths.activations_root=/tmp/$USER/trunk_acts \
+       runtime.activation_input_run_id=<RUN_ID_OF_CRASHED_JOB> \
+       runtime.reuse.activations=true \
+       analysis.null_distribution.resume_if_partial=true" \
+  -A cs-503 --qos=cs-503 --gres=gpu:2 --cpus-per-task=40 --mem=180G \
+  --time=08:00:00 --job-name=trunk-resume \
+  scripts/run/submit_slurm.sh
+```
+
+The launcher prints `[INFO] Restoring activations from <tar>` then the
+pipeline replays only the missing pairs and resumes the partial null
+distribution.

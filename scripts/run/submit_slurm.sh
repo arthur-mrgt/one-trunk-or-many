@@ -34,12 +34,20 @@
 #     scripts/run/submit_slurm.sh
 #
 # Env vars (forwarded by sbatch):
-#   PRESET           Hydra preset name (default: benchmark_rq1_final_hypersim).
-#   CONDA_ENV        Conda env to activate (default: trunk).
-#   EXTRA            Extra Hydra overrides appended to the command.
-#   STAGE_HYPERSIM   1 to copy Hypersim to compute-node /tmp before launch
-#                    (default: 1 when resources/datasets/hypersim exists).
-#                    Set to 0 when running on other datasets.
+#   PRESET                   Hydra preset name (default: benchmark_rq1_final_hypersim).
+#   CONDA_ENV                Conda env to activate (default: trunk).
+#   EXTRA                    Extra Hydra overrides appended to the command.
+#   STAGE_HYPERSIM           1 to copy Hypersim to compute-node /tmp before launch
+#                            (default: 1 when resources/datasets/hypersim exists).
+#                            Set to 0 when running on other datasets.
+#   SNAPSHOT_INTERVAL        Seconds between background tar snapshots of
+#                            /tmp/$USER/trunk_acts → /home (default: 900 = 15 min,
+#                            0 disables). Snapshots land in
+#                            results/snapshots/job_<JOBID>/snapshot_*.tar.
+#   RESTORE_FROM_SNAPSHOT    Absolute path to a previous snapshot .tar; if set,
+#                            the script extracts it to /tmp/$USER before launch
+#                            so a crashed run can resume with
+#                            `runtime.reuse.activations=true`.
 #
 # The script auto-detects the number of GPUs allocated by SLURM
 # (SLURM_GPUS_ON_NODE / SLURM_GPUS / --gres=gpu:N) and uses torchrun for
@@ -121,6 +129,63 @@ if [[ "${STAGE_HYPERSIM}" == "1" && -d "resources/datasets/hypersim" ]]; then
   EXTRA="paths.datasets_root=/tmp/${USER} ${EXTRA}"
 else
   echo "[INFO] STAGE_HYPERSIM=${STAGE_HYPERSIM}; using ${PWD}/resources/datasets for I/O."
+fi
+
+# ─── Restore activations from a previous snapshot (resume after crash) ───
+# Set RESTORE_FROM_SNAPSHOT=<abs path to .tar> to extract a prior snapshot
+# back to /tmp/$USER before launching python. The activation_index_*.csv
+# files (always on /home) reference absolute /tmp paths, so the restore
+# only works on the same user account; they will resolve correctly once
+# the .npy files are back on /tmp.
+# ─────────────────────────────────────────────────────────────────────────
+if [[ -n "${RESTORE_FROM_SNAPSHOT:-}" ]]; then
+  if [[ -f "${RESTORE_FROM_SNAPSHOT}" ]]; then
+    echo "[INFO] Restoring activations from ${RESTORE_FROM_SNAPSHOT} to /tmp/${USER}/ ..."
+    mkdir -p "/tmp/${USER}"
+    time tar xf "${RESTORE_FROM_SNAPSHOT}" -C "/tmp/${USER}/"
+    echo "[INFO] Restore complete. trunk_acts size: $(du -sh /tmp/${USER}/trunk_acts 2>/dev/null | cut -f1)"
+  else
+    echo "[WARN] RESTORE_FROM_SNAPSHOT=${RESTORE_FROM_SNAPSHOT} does not exist; continuing without restore."
+  fi
+fi
+
+# ─── Background snapshot watchdog ────────────────────────────────────────
+# Periodically tar /tmp/$USER/trunk_acts → results/snapshots/job_<JOBID>/
+# so a crashed run can be resumed via RESTORE_FROM_SNAPSHOT. Snapshots are
+# monolithic .tar files (1 Lustre create + 1 sequential write ≈ 1-2 sec)
+# rather than 96k small file copies (would take ~2 hours on Lustre).
+# Disable with SNAPSHOT_INTERVAL=0.
+# ─────────────────────────────────────────────────────────────────────────
+SNAPSHOT_INTERVAL="${SNAPSHOT_INTERVAL:-900}"
+SNAPSHOT_DIR="${PWD}/results/snapshots/job_${SLURM_JOB_ID:-local}"
+SNAPSHOT_PID=""
+if [[ "${SNAPSHOT_INTERVAL}" -gt 0 ]]; then
+  mkdir -p "${SNAPSHOT_DIR}"
+  echo "[INFO] Snapshot watchdog enabled: every ${SNAPSHOT_INTERVAL}s → ${SNAPSHOT_DIR}"
+  (
+    while sleep "${SNAPSHOT_INTERVAL}"; do
+      if [[ -d "/tmp/${USER}/trunk_acts" ]]; then
+        ts=$(date +%H%M%S)
+        out="${SNAPSHOT_DIR}/snapshot_${ts}.tar"
+        if tar cf "${out}" -C "/tmp/${USER}" trunk_acts/ 2>/dev/null; then
+          echo "[BACKUP $(date +%H:%M:%S)] $(basename "${out}") ($(du -sh "${out}" | cut -f1))"
+        fi
+      fi
+    done
+  ) &
+  SNAPSHOT_PID=$!
+  # On script exit (normal or crash), kill watchdog and take a final snapshot.
+  cleanup_snapshot() {
+    [[ -n "${SNAPSHOT_PID}" ]] && kill "${SNAPSHOT_PID}" 2>/dev/null || true
+    if [[ -d "/tmp/${USER}/trunk_acts" ]]; then
+      ts=$(date +%H%M%S)
+      out="${SNAPSHOT_DIR}/snapshot_FINAL_${ts}.tar"
+      if tar cf "${out}" -C "/tmp/${USER}" trunk_acts/ 2>/dev/null; then
+        echo "[BACKUP final] $(basename "${out}") ($(du -sh "${out}" | cut -f1))"
+      fi
+    fi
+  }
+  trap cleanup_snapshot EXIT
 fi
 
 if [[ "${TOTAL_PROCS}" -le 1 ]]; then
