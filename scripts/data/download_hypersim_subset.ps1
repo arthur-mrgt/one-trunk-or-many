@@ -10,7 +10,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$cmd = @("python", "scripts/download_hypersim_subset.py")
+$cmd = @("python", "scripts/data/download_hypersim_subset.py")
 if ($Scenes -and $Scenes.Count -gt 0) {
   $cmd += @("--scenes") + $Scenes
 }

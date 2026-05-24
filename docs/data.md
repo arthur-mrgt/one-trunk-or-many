@@ -177,8 +177,10 @@ bash scripts/data/download_hypersim_subset.sh \
 # Random N scenes stratified by Scene type, reproducible via --seed.
 # The chosen IDs are also saved to resources/datasets/hypersim/scenes_<n>_seed<seed>.txt
 # so the same subset can be re-downloaded later with --scenes-file.
+# `--jobs 8` parallelises download + extraction across 8 workers.
+# `--cleanup-zip` deletes each ~3 GB scene archive after extraction to save disk.
 bash scripts/data/download_hypersim_subset.sh \
-  --n-random 100 --seed 42 \
+  --n-random 100 --seed 42 --jobs 8 --cleanup-zip \
   --include-rgb --include-depth --include-normals --include-metadata
 
 # Re-use a previously sampled list

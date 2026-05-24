@@ -14,6 +14,7 @@ import time
 import urllib.request
 import zipfile
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 
@@ -259,6 +260,17 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Re-extract files even if they already exist in destination.",
     )
+    parser.add_argument(
+        "--jobs",
+        type=int,
+        default=4,
+        help="Number of scenes to download/extract in parallel (default: 4).",
+    )
+    parser.add_argument(
+        "--cleanup-zip",
+        action="store_true",
+        help="Delete each scene zip after successful extraction to save disk space.",
+    )
     return parser.parse_args()
 
 
@@ -333,29 +345,52 @@ def main() -> int:
         downloads_dir = hypersim_dir / "downloads"
         downloaded_count = 0
         reused_zip_count = 0
-        for scene in args.scenes:
+        failures: list[tuple[str, str]] = []
+
+        def _process_one(scene_id: str) -> tuple[str, bool, str]:
+            """Download + extract one scene; returns (scene, was_cached, error_msg)."""
             scene_t0 = time.perf_counter()
-            scene_zip = downloads_dir / f"{scene}.zip"
-            if scene_zip.exists():
-                reused_zip_count += 1
-                print(f"[INFO] Reusing cached scene archive: {scene_zip}")
-            else:
-                downloaded_count += 1
-            zip_path = _download_scene_zip(scene_id=scene, downloads_dir=downloads_dir)
-            _extract_scene_subset(
-                scene_id=scene,
-                zip_path=zip_path,
-                out_dir=hypersim_dir,
-                args=args,
+            scene_zip = downloads_dir / f"{scene_id}.zip"
+            was_cached = scene_zip.exists() and zipfile.is_zipfile(scene_zip)
+            try:
+                zip_path = _download_scene_zip(scene_id=scene_id, downloads_dir=downloads_dir)
+                _extract_scene_subset(
+                    scene_id=scene_id,
+                    zip_path=zip_path,
+                    out_dir=hypersim_dir,
+                    args=args,
+                )
+                if args.cleanup_zip:
+                    zip_path.unlink(missing_ok=True)
+            except Exception as exc:  # noqa: BLE001 — record and continue
+                return scene_id, was_cached, f"{type(exc).__name__}: {exc}"
+            print(
+                f"[INFO] Scene {scene_id}: total elapsed={time.perf_counter() - scene_t0:.1f}s"
             )
-            print(f"[INFO] Scene {scene}: total elapsed={time.perf_counter() - scene_t0:.1f}s")
+            return scene_id, was_cached, ""
+
+        jobs = max(1, int(args.jobs))
+        print(f"[INFO] Processing {len(args.scenes)} scenes with {jobs} parallel workers")
+        with ThreadPoolExecutor(max_workers=jobs) as pool:
+            futures = {pool.submit(_process_one, s): s for s in args.scenes}
+            for fut in as_completed(futures):
+                scene_id, was_cached, err = fut.result()
+                if err:
+                    failures.append((scene_id, err))
+                elif was_cached:
+                    reused_zip_count += 1
+                else:
+                    downloaded_count += 1
+
         print(
             f"[INFO] Scene archives: downloaded={downloaded_count}, "
-            f"reused_cache={reused_zip_count}"
+            f"reused_cache={reused_zip_count}, failed={len(failures)}"
         )
+        for scene_id, err in failures:
+            print(f"[WARN] Scene {scene_id} failed: {err}")
         print(f"[INFO] Total elapsed={time.perf_counter() - t_global:.1f}s")
         print(f"[DONE] Hypersim subset downloaded in {hypersim_dir}")
-        return 0
+        return 1 if failures else 0
 
     modality_filters: list[list[str]] = []
     if args.include_rgb:
