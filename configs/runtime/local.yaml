@@ -3,5 +3,29 @@ num_workers: 4
 device: auto
 precision: fp32
 save_activations: true
+
+# ─── Run-directory resolution ─────────────────────────────────────────────
+# Leave these null to auto-pick the latest run dir whose name starts with
+# `${project.stage}-`. Set explicitly only when you want to point a follow-up
+# stage (metrics / null) at a *specific* historical run.
+activation_input_run_id: null
 metrics_input_run_id: null
+null_input_run_id: null
+null_input_filename: null
+
 multi_gpu_strategy: none
+null_missing_behavior: warn_and_skip
+
+# ─── Reuse policy ─────────────────────────────────────────────────────────
+# DEFAULT: extract fresh. Reusing stale artifacts that were built with a
+# different `data.*` config (e.g. different split / environment / n_scenes)
+# silently produces meaningless metrics, so the safe default is `false`
+# everywhere. Flip an individual flag to `true` only when you intentionally
+# want to skip a stage and you've verified the on-disk artifacts match the
+# current config.
+reuse:
+  activations: false        # single-modality activation_index_<pair>.csv + .npy files
+  extraction: false         # legacy alias of `activations` (kept for compat)
+  joint_activations: false  # joint forward-pass artifacts + derived indices
+  null_distribution: false  # null_distribution.csv + state
+  metrics_inputs: false     # cached per-pair metric tables

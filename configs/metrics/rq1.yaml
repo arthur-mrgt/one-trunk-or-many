@@ -1,0 +1,64 @@
+enabled:
+  - cka
+  - pwcca
+  - knn_overlap
+
+pairs_mode: explicit
+modalities:
+  - rgb
+  - depth
+  - normals
+
+pairs:
+  - [rgb, depth]
+  - [rgb, normals]
+  - [depth, normals]
+
+cka:
+  center_gram: true
+  unbiased: false
+
+pwcca:
+  eps: 1.0e-10
+  pca:
+    enabled: true
+    n_components: 64
+    seed: 0
+    shared_basis: false
+
+knn_overlap:
+  k: 10
+  pca:
+    enabled: true
+    n_components: 64
+    seed: 0
+    shared_basis: false
+
+output:
+  save_csv: true
+  save_parquet: false
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Joint forward pass (additive, off by default)
+#
+# When `enabled: true`, every pair in `pairs` triggers a second forward pass
+# where both modalities' tokens are concatenated and fed through the encoder
+# once. For each pair (A, B) this produces three derived comparison index
+# files automatically (no extra config needed):
+#
+#   1. A                vs A_joint_with_B
+#       → does the joint context shift A's representation vs the
+#         single-modality pass?
+#   2. B                vs B_joint_with_A
+#       → same question, mirrored.
+#   3. A_joint_with_B   vs B_joint_with_A
+#       → are the two slices more aligned to each other in the joint pass
+#         than they are between the two single-modality passes?
+#
+# The single-modality extractions still run as before; joint extraction is
+# purely additive. Token concatenation is **alphabetical** by modality name
+# (e.g. for (rgb, depth) the encoder sees [depth_tokens | rgb_tokens]).
+# Synthetic modality names use the format `<modality>_joint_with_<partner>`.
+# ─────────────────────────────────────────────────────────────────────────────
+joint_pass:
+  enabled: false

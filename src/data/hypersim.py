@@ -41,14 +41,21 @@ def _list_scene_ids(root: Path) -> list[str]:
     )
 
 
+_MODALITY_PATTERNS: dict[str, str] = {
+    "rgb":     "images/scene_cam_*_final_hdf5/frame.*.color.hdf5",
+    "depth":   "images/scene_cam_*_geometry_hdf5/frame.*.depth_meters.hdf5",
+    "normals": "images/scene_cam_*_geometry_hdf5/frame.*.normal_cam.hdf5"
+}
+
+
 def _index_scene_files(scene_root: Path, modality: str) -> dict[str, Path]:
     """Index files for one modality by frame key."""
-    if modality == "rgb":
-        pattern = "images/scene_cam_*_final_hdf5/frame.*.color.hdf5"
-    elif modality == "depth":
-        pattern = "images/scene_cam_*_geometry_hdf5/frame.*.depth_meters.hdf5"
-    else:
-        raise ValueError(f"Unsupported Hypersim modality: {modality}")
+    if modality not in _MODALITY_PATTERNS:
+        raise ValueError(
+            f"Unsupported Hypersim modality: '{modality}'. "
+            f"Available: {sorted(_MODALITY_PATTERNS)}"
+        )
+    pattern = _MODALITY_PATTERNS[modality]
 
     mapping: dict[str, Path] = {}
     for file_path in scene_root.glob(pattern):
@@ -61,12 +68,42 @@ def load_pairs(
     modalities: tuple[str, str],
     n_scenes: int,
     scene_stride: int,
+    exclude_scenes: list[str] | None = None,
+    frames_per_scene: int | None = None,
+    max_total_samples: int | None = None,
+    seed: int = 42,
 ) -> list[PairSample]:
-    """Load aligned pair samples for the requested modalities."""
-    scene_ids = _list_scene_ids(root)
+    """Load aligned pair samples for the requested modalities.
+
+    Parameters
+    ----------
+    n_scenes:
+        Number of scenes to load (after stride and exclusion).
+    scene_stride:
+        Step size when walking the sorted scene list (1 = every scene).
+    exclude_scenes:
+        Optional list of scene IDs to skip.
+    frames_per_scene:
+        If set, randomly sample this many frames per scene instead of
+        using all available frames. Scenes with fewer frames than this
+        value contribute all their frames. Pass ``None`` (default) to
+        keep every frame.
+    max_total_samples:
+        If set, after per-scene sampling, randomly subsample the global
+        pool of ``(scene, frame)`` tuples down to this many samples.
+        Sampling is done without replacement and is deterministic w.r.t.
+        ``seed``. Pass ``None`` (default) to keep every sample.
+    seed:
+        Random seed used for frame and global sampling.
+    """
+    import random
+
+    excluded = set(exclude_scenes or [])
+    scene_ids = [s for s in _list_scene_ids(root) if s not in excluded]
     sampled_scene_ids = scene_ids[:: max(scene_stride, 1)][:n_scenes]
     output: list[PairSample] = []
 
+    rng = random.Random(seed)
     scenes_root = root / "scenes" if (root / "scenes").exists() else root
 
     for scene_id in sampled_scene_ids:
@@ -77,6 +114,10 @@ def load_pairs(
         left = _index_scene_files(scene_root, modalities[0])
         right = _index_scene_files(scene_root, modalities[1])
         common_keys = sorted(set(left).intersection(right))
+
+        if frames_per_scene is not None and frames_per_scene < len(common_keys):
+            common_keys = rng.sample(common_keys, frames_per_scene)
+            common_keys = sorted(common_keys)
 
         for key in common_keys:
             output.append(
@@ -89,4 +130,9 @@ def load_pairs(
                     },
                 )
             )
+
+    if max_total_samples is not None and max_total_samples < len(output):
+        output = rng.sample(output, max_total_samples)
+        output.sort(key=lambda s: (s.scene_id, s.sample_key))
+
     return output

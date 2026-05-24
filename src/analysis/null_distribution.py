@@ -1,8 +1,15 @@
-"""Null distribution scaffold for future implementation."""
+"""Public API for null-distribution computation and adaptive stop logic."""
 
+from src.analysis.null_runner import (
+    NullRunResult,
+    compute_null_distribution,
+    compute_null_distribution_adaptive,
+)
+from src.analysis.null_stop import evaluate_adaptive_stop
 
-def compute_null_distribution(*args, **kwargs):
-    """Placeholder for future null-distribution estimation."""
-    raise NotImplementedError(
-        "Null distribution is intentionally not implemented in this iteration."
-    )
+__all__ = [
+    "NullRunResult",
+    "compute_null_distribution",
+    "compute_null_distribution_adaptive",
+    "evaluate_adaptive_stop",
+]

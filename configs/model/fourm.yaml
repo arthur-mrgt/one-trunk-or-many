@@ -7,4 +7,5 @@ rgb_input_mode: pixel
 tokenizers:
   rgb_repo: EPFL-VILAB/4M_tokenizers_rgb_16k_224-448
   depth_repo: EPFL-VILAB/4M_tokenizers_depth_8k_224-448
+  normal_repo: EPFL-VILAB/4M_tokenizers_normal_8k_224-448
 input_size: 224

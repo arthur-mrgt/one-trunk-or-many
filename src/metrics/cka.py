@@ -17,6 +17,8 @@ def linear_cka(x: np.ndarray, y: np.ndarray, center_gram: bool = True) -> float:
     if x.shape[0] != y.shape[0]:
         raise ValueError("CKA requires same number of samples in x and y.")
 
+    x = x.astype(np.float64)
+    y = y.astype(np.float64)
     gram_x = x @ x.T
     gram_y = y @ y.T
 

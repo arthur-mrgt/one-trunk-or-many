@@ -1,0 +1,88 @@
+# @package _global_
+#
+# DIODE dataset config. Owns both `data.*` and the dataset-specific
+# `analysis.null_distribution.*` knobs so `configs/default.yaml` can stay
+# dataset-agnostic.
+
+project:
+  name: one-trunk-or-many
+  seed: 42
+
+data:
+  name: diode
+  root: ${paths.datasets_root}/diode
+  split: train+val              # one of: train, val, test, "train+val", "all", or a list
+                          # (DIODE scene IDs are globally unique across splits,
+                          #  so combining splits never causes ID collisions.)
+                          # Hydra CLI examples:
+                          #   data.split=train+val
+                          #   'data.split=[train,val]'
+  # environment accepts:
+  #   - a single string: "indoors" or "outdoor"
+  #   - the sentinel "both" / "all" (= ["indoors", "outdoor"])
+  #   - a list: [indoors, outdoor]
+  # When multiple environments are selected, n_scenes is applied per environment
+  # and the resulting scene_id is namespaced as "<env>/scene_XXXXX/scan_XXXXX"
+  # so IDs stay unique and the parent of each scene_id (the DIODE-scene) groups
+  # scans together for the null-distribution constraints.
+  environment: outdoor
+  n_scenes: 15              # per-environment cap (so total = n_scenes * n_envs)
+  scene_stride: 1
+  exclude_scenes: []
+  frames_per_scene: null   # randomly sample this many frames per scene; null = all frames
+  seed: 42                 # random seed for frame sampling
+  modalities:
+    - rgb
+    - depth
+    - normals
+
+analysis:
+  null_distribution:
+    # DIODE has no scene-type CSV. The "type" is derived from each sample's
+    # scene_id: scan path "indoors/scene_00021/scan_00190" has parent
+    # "indoors/scene_00021" (the DIODE-scene), and that parent is used as the
+    # type. Setting metadata_path=null skips the CSV branch.
+    metadata_path: null
+    scene_type_source: scene_id_parent
+    sampling_mode: cross_scene_type_random
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Null-distribution menu (override `analysis.null_distribution.sampling_mode`)
+#
+# DIODE's hierarchy is `env > DIODE-scene > scan > frame`. After our adapter
+# change, each sample's `scene_id` is the *scan* path; the parent is the
+# DIODE-scene; the grandparent is the environment.
+#
+#   sampling_mode=cross_scene_type_random          ←── Null A (easiest, default)
+#     RIGHT must come from a different scan AND a different DIODE-scene
+#     (e.g. indoors/scene_00021/scan_00189 ↔ outdoor/scene_00023/scan_00194).
+#     Question: "Does this layer prefer matched RGB/depth over depth from a
+#     completely different room?"
+#     Expected: every layer beats the null with huge z-scores; sanity floor.
+#
+#   sampling_mode=within_scene_type_random         ←── Null B (medium)
+#     RIGHT must come from a different scan but the SAME DIODE-scene
+#     (e.g. scan_00189 ↔ scan_00190, both inside indoors/scene_00021).
+#     Same room photographed in two different walkthroughs.
+#     Question: "Does this layer encode the *specific scan* or only the
+#     *room*?"
+#     Expected: small candidate pool on val (2–4 scans per DIODE-scene).
+#     With train+val this fattens to ~10× more. Useful for asking how much
+#     viewpoint/temporal-session info is encoded.
+#
+#   sampling_mode=within_scene_random              ←── Null C (hardest)
+#     RIGHT must come from the SAME scan as LEFT but a different frame
+#     (frame 050_000 ↔ frame 050_030 inside scan_00190). Same room, same
+#     scan session, only the camera pose differs.
+#     Question: "Does this layer encode the *specific viewpoint* or only
+#     scan/scene context?"
+#     Expected: this is the strictest test — only models doing genuine
+#     per-frame cross-modal alignment beat it.
+#
+# Practical hints when running B or C:
+#   • Bump `max_total_draws` to 5000–10000 — pools are small and correlated.
+#   • Null B on val has tight pools (~2–3 scans per DIODE-scene). Some
+#     DIODE-scenes will be skipped silently because they have only one scan.
+#     Use train+val for a healthier pool.
+#   • Null C needs ≥2 frames per scan, which is always true on DIODE.
+# ─────────────────────────────────────────────────────────────────────────────

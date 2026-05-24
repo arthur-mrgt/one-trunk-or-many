@@ -22,6 +22,10 @@ resources/
         4M-7_B_CC12M/
   datasets/
     hypersim/
+      metadata_camera_trajectories.csv   ← scene-type metadata (auto-downloaded)
+      ai_001_001/                        ← downloaded scene data
+      ai_001_002/
+      ...
     diode/
 ```
 
@@ -121,7 +125,27 @@ powershell -ExecutionPolicy Bypass -File scripts/download_diode.ps1
 powershell -ExecutionPolicy Bypass -File scripts/download_diode.ps1 -DepthOnly
 ```
 
-### 4.3 Hypersim download (full by default, subset via args)
+### 4.3 Hypersim scene-type metadata
+
+`resources/datasets/hypersim/metadata_camera_trajectories.csv` is a lightweight
+CSV file sourced from Apple's official Hypersim release. It is **automatically
+copied** from the cloned `ml-hypersim` repo the first time you run any
+`download_hypersim_subset.sh` command — no manual step needed. It maps every camera trajectory to its scene
+and scene type (e.g. Bathroom, Office, Living room).
+
+Columns used by the pipeline:
+
+| Column | Example | Purpose |
+|---|---|---|
+| `Animation` | `ai_001_001_cam_00` | Identifies the trajectory; first 3 `_`-parts give the scene ID (`ai_001_001`) |
+| `Scene type` | `Bathroom` | Used by the null-distribution engine to enforce cross-scene-type sampling |
+
+The null distribution step reads this file automatically when
+`analysis.null_distribution.sampling=cross_scene_type_random` (the default).
+If the file is missing, the pipeline falls back to plain cross-scene sampling
+with a warning.
+
+### 4.4 Hypersim download (full by default, subset via args)
 
 This uses Apple’s contrib downloader that supports partial file selection:
 [`contrib/99991`](https://github.com/apple/ml-hypersim/tree/main/contrib/99991).
