@@ -1,0 +1,39 @@
+# RQ1 smoke preset (Hypersim, small footprint to validate full wiring).
+#
+# Same modality pairs and metrics as the final preset, but with much fewer
+# samples, scenes and null draws so the entire pipeline finishes quickly.
+#
+# Run with:
+#   python -m src.run_benchmark --config-name benchmark_rq1_smoke_hypersim
+
+defaults:
+  - default
+  - override runtime: full_gpu_faiss
+  - override tracking: wandb_on
+  - _self_
+
+project:
+  stage: rq1_smoke_hypersim
+
+data:
+  name: hypersim
+  n_scenes: 5
+  scene_stride: 1
+  frames_per_scene: null
+  max_total_samples: 200
+  seed: 42
+
+analysis:
+  null_distribution:
+    enabled: true
+    metrics_enabled: [cka, pwcca, knn_overlap]
+    draws_per_batch: 50
+    min_total_draws: 100
+    max_total_draws: 300
+    reuse_if_exists: false
+    resume_if_partial: false
+    adaptive_stop:
+      enabled: true
+      alpha: 0.05
+      correction: bh_fdr
+      require_all_hypotheses: true

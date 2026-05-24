@@ -186,32 +186,13 @@ def run_extraction_stage(cfg: DictConfig, run_ctx_override: RunContext | None = 
         pair_name = f"{left_mod}-{right_mod}"
         out_idx = run_ctx.artifacts_dir / f"activation_index_{pair_name}.csv"
 
-        samples: list[Any] | None = None
         if reuse_enabled and out_idx.exists():
             _log(f"Skipping extraction for {pair_name}: existing index found ({out_idx.name})")
-        else:
-            _log(f"Loading samples for pair {pair_name}")
-            samples = _load_pair_samples(cfg_dict, modalities=(left_mod, right_mod))
-            activation_index = run_extraction(
-                model=model,
-                samples=samples,
-                pair_name=pair_name,
-                run_id=run_ctx.run_id,
-                out_dir=run_ctx.activations_dir,
-                show_progress=True,
-            )
-            write_table(out_idx, activation_index)
-            _log(f"Saved activation index for {pair_name}: rows={len(activation_index)}")
+            barrier()
+            continue
 
-        _log(f"Loading samples for pair {pair_name}")
-        samples = load_dataset_pairs(
-            dataset_name=cfg_dict["data"]["name"],
-            root=Path(cfg_dict["data"]["root"]),
-            modalities=(left_mod, right_mod),
-            n_scenes=int(cfg_dict["data"]["n_scenes"]),
-            scene_stride=int(cfg_dict["data"]["scene_stride"]),
-            exclude_scenes=list(cfg_dict["data"].get("exclude_scenes") or []),
-        )
+        _log(f"Loading samples for pair {pair_name} (sampling-aware)")
+        samples = _load_pair_samples(cfg_dict, modalities=(left_mod, right_mod))
         local_samples = split_by_rank(samples, ctx=dist_ctx)
         _log(
             f"Pair {pair_name}: loaded_samples={len(samples)} local_samples={len(local_samples)}"

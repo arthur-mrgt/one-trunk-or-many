@@ -236,6 +236,47 @@ python -m src.run_benchmark runtime.activation_input_run_id=<run_id> runtime.reu
 7. Metrics stage enriches rows with significance statistics from null artifacts.
 8. Metrics are written to `metrics/metrics.csv` and optionally logged to W&B.
 
+## RQ1 final and smoke presets
+
+Two Hydra presets wrap the end-to-end pipeline for the RQ1 deliverables:
+
+- `benchmark_rq1_final_hypersim.yaml` — Hypersim, 100 scenes, ~4000 randomly
+  sampled paired examples, 3 modality pairs (`rgb-depth`, `rgb-normals`,
+  `depth-normals`), 3 metrics (CKA, PWCCA, kNN overlap), adaptive null with
+  `min_total_draws=1000` and `alpha=0.01`.
+- `benchmark_rq1_smoke_hypersim.yaml` — same wiring with 5 scenes, 200 samples
+  and 100 null draws for fast end-to-end validation.
+
+Run locally (after the dataset is downloaded):
+
+```bash
+python -m src.run_benchmark --config-name benchmark_rq1_smoke_hypersim
+python -m src.run_benchmark --config-name benchmark_rq1_final_hypersim
+```
+
+Run interactively on a GPU node (local or `srun --pty bash`):
+
+```bash
+# Smoke run
+PRESET=benchmark_rq1_smoke_hypersim bash scripts/run_local.sh
+# Final run
+bash scripts/run_local.sh
+```
+
+Submit as a SLURM batch job (e.g. SCITAS):
+
+```bash
+# Smoke run
+PRESET=benchmark_rq1_smoke_hypersim sbatch scripts/submit_slurm.sh
+# Final run
+sbatch scripts/submit_slurm.sh
+```
+
+The launcher prints the resolved `RUN_ID` along with the paths to
+`metrics.csv` and `null_distribution.csv`. To render the layer-wise plots
+and p-value diagnostics, open `notebooks/pvalue_diagnostics.ipynb`, set
+`RUN_ID` to the printed value, and run all cells.
+
 ## Run outputs
 
 Each run writes to:
@@ -271,17 +312,15 @@ python -m src.run_metrics runtime.metrics_input_run_id=<run_id>
 
 ## SCITAS / SLURM
 
-Templates:
-
-- `scripts/run_benchmark.slurm`
-- `scripts/run_extraction.slurm`
-- `scripts/run_metrics.slurm`
-
-Submit:
+Submit any Hydra preset as a batch job:
 
 ```bash
-sbatch scripts/run_benchmark.slurm
+sbatch scripts/submit_slurm.sh                                       # final RQ1 preset
+PRESET=benchmark_rq1_smoke_hypersim sbatch scripts/submit_slurm.sh   # smoke preset
 ```
+
+Adapt the `#SBATCH` directives in `scripts/submit_slurm.sh` (partition,
+`--gres`, `--time`, `--mem`) to your cluster.
 
 ## More docs
 
