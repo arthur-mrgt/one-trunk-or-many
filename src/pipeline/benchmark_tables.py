@@ -61,6 +61,7 @@ def compute_metric_table_from_indices(
             metrics_cfg=cfg_dict["metrics"],
             pair_modalities=(left_mod, right_mod),
             show_progress=show_progress,
+            log_fn=log_fn,
         )
         frames.append(metric_df)
     if not frames:

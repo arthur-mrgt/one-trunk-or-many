@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 from pathlib import Path
 from typing import Any
 
@@ -70,7 +71,14 @@ class FourMEncoder:
 
     def _select_device(self):
         """Resolve the runtime device from config and availability."""
+        dist_cfg = self.runtime_cfg.get("distributed", {}) or {}
+        dist_enabled = bool(dist_cfg.get("enabled", False)) or int(os.environ.get("WORLD_SIZE", "1")) > 1
+        local_rank = int(os.environ.get("LOCAL_RANK", "0"))
         device_cfg = str(self.runtime_cfg.get("device", "auto")).lower()
+        if dist_enabled:
+            if not self._torch.cuda.is_available():
+                raise RuntimeError("Distributed mode requires CUDA-enabled GPUs.")
+            return self._torch.device(f"cuda:{local_rank}")
         if device_cfg == "auto":
             return self._torch.device("cuda" if self._torch.cuda.is_available() else "cpu")
         if device_cfg in {"cuda", "gpu"}:
@@ -137,6 +145,10 @@ class FourMEncoder:
     def _move_and_wrap_model(self, model):
         """Move model to target device and apply multi-GPU wrapper."""
         model = model.to(self._device)
+        dist_cfg = self.runtime_cfg.get("distributed", {}) or {}
+        dist_enabled = bool(dist_cfg.get("enabled", False)) or int(os.environ.get("WORLD_SIZE", "1")) > 1
+        if dist_enabled:
+            return model
         strategy = str(self.runtime_cfg.get("multi_gpu_strategy", "none")).lower()
         if self._device.type == "cuda" and self._torch.cuda.device_count() > 1:
             if strategy == "data_parallel":

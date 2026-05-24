@@ -37,6 +37,7 @@ def prepare_hypothesis_caches(
     activation_index: pd.DataFrame,
     observed_metrics: pd.DataFrame,
     metrics_cfg: dict[str, Any],
+    null_metrics_enabled: list[str] | None,
     sample_size_mode: str,
     sample_size_value: Any,
     min_scenes: int,
@@ -46,11 +47,18 @@ def prepare_hypothesis_caches(
     """Build per-hypothesis caches from activation index and observed rows."""
     caches: dict[tuple[str, str, str], HypothesisCache] = {}
     cka_cfg = metrics_cfg.get("cka", {})
+    allowed_metrics = (
+        {str(m) for m in null_metrics_enabled}
+        if null_metrics_enabled
+        else {str(m) for m in metrics_cfg.get("enabled", ["cka"])}
+    )
 
     for _, obs in observed_metrics.iterrows():
         pair = str(obs["pair"])
         layer = str(obs["layer"])
         metric = str(obs["metric"])
+        if metric not in allowed_metrics:
+            continue
         observed_value = float(obs["value"])
         observed_n = int(obs["n_samples"])
         left_mod, right_mod = tuple(pair.split("-", 1))
@@ -82,6 +90,8 @@ def prepare_hypothesis_caches(
                 right_vectors=right_vectors,
                 n_components=int(pca_cfg.get("n_components", 64)),
                 shared_basis=bool(pca_cfg.get("shared_basis", False)),
+                backend=str(pca_cfg.get("backend", "numpy")),
+                device=str(pca_cfg.get("device", "auto")),
             )
 
         metrics_cfg_for_null = dict(metrics_cfg)
@@ -277,10 +287,18 @@ def project_pca(
     right_vectors: np.ndarray,
     n_components: int,
     shared_basis: bool,
+    backend: str = "numpy",
+    device: str = "auto",
 ) -> tuple[np.ndarray, np.ndarray]:
     """Project vectors either with shared PCA or modality-specific PCA."""
+    backend_norm = str(backend).lower()
+    if backend_norm not in {"numpy", "torch"}:
+        raise ValueError("PCA backend must be one of: numpy, torch.")
     if not shared_basis:
-        return project_single(left_vectors, n_components), project_single(right_vectors, n_components)
+        return (
+            project_single(left_vectors, n_components, backend=backend_norm, device=device),
+            project_single(right_vectors, n_components, backend=backend_norm, device=device),
+        )
 
     stacked = np.concatenate([left_vectors, right_vectors], axis=0).astype(np.float64)
     n_total, dim = stacked.shape
@@ -296,12 +314,25 @@ def project_pca(
     return left_proj, right_proj
 
 
-def project_single(vectors: np.ndarray, n_components: int) -> np.ndarray:
+def project_single(
+    vectors: np.ndarray,
+    n_components: int,
+    backend: str = "numpy",
+    device: str = "auto",
+) -> np.ndarray:
     """Project one matrix to at most `n_components` principal directions."""
     n, dim = vectors.shape
     k = min(int(n_components), n - 1, dim)
     if k <= 0:
         return vectors
+    if backend == "torch":
+        import torch
+
+        resolved = ("cuda" if torch.cuda.is_available() else "cpu") if device == "auto" else str(device)
+        t = torch.as_tensor(vectors, dtype=torch.float32, device=resolved)
+        centered_t = t - t.mean(dim=0, keepdim=True)
+        _, _, vt = torch.linalg.svd(centered_t, full_matrices=False)
+        return (centered_t @ vt[:k].T).detach().cpu().numpy()
     centered = vectors.astype(np.float64) - vectors.mean(axis=0)
     _, _, vt = np.linalg.svd(centered, full_matrices=False)
     return centered @ vt[:k].T

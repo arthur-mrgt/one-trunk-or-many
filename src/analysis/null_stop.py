@@ -13,11 +13,15 @@ from src.analysis.significance import bh_fdr_correction, compute_p_value
 def normalize_observed_metrics(
     observed_metrics: pd.DataFrame,
     metrics_cfg: dict[str, Any],
+    null_cfg: dict[str, Any] | None = None,
 ) -> pd.DataFrame:
     """Normalize observed metric rows used by adaptive stop evaluation."""
     if observed_metrics.empty:
         return pd.DataFrame()
-    enabled = set(str(m) for m in metrics_cfg.get("enabled", ["cka"]))
+    null_cfg = null_cfg or {}
+    null_metrics = null_cfg.get("metrics_enabled")
+    enabled_source = null_metrics if null_metrics else metrics_cfg.get("enabled", ["cka"])
+    enabled = set(str(m) for m in enabled_source)
     required_cols = {"pair", "layer", "metric", "value", "n_samples"}
     if not required_cols.issubset(observed_metrics.columns):
         return pd.DataFrame()

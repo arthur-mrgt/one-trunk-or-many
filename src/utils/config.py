@@ -41,6 +41,18 @@ def make_run_context(cfg: DictConfig) -> RunContext:
     )
 
 
+def make_run_context_from_id(runs_root: Path, run_id: str) -> RunContext:
+    """Build a run context from an already agreed run identifier."""
+    run_dir = ensure_dir(Path(runs_root) / str(run_id))
+    return RunContext(
+        run_id=str(run_id),
+        run_dir=run_dir,
+        activations_dir=ensure_dir(run_dir / "activations"),
+        metrics_dir=ensure_dir(run_dir / "metrics"),
+        artifacts_dir=ensure_dir(run_dir / "artifacts"),
+    )
+
+
 def cfg_to_container(cfg: DictConfig) -> dict[str, Any]:
     """Convert Hydra config object to a plain dictionary."""
     return OmegaConf.to_container(cfg, resolve=True)  # type: ignore[return-value]

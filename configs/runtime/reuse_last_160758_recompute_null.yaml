@@ -3,8 +3,11 @@ num_workers: 4
 device: auto
 precision: fp32
 save_activations: true
-activation_input_run_id: null
-metrics_input_run_id: null
+
+# Reuse activations/metrics inputs from the selected existing run.
+activation_input_run_id: rq1_full_pipeline-20260504-160758
+metrics_input_run_id: rq1_full_pipeline-20260504-160758
+
 multi_gpu_strategy: none
 distributed:
   enabled: false
@@ -14,8 +17,9 @@ distributed:
 null_input_run_id: null
 null_input_filename: null
 null_missing_behavior: warn_and_skip
+
 reuse:
-  activations: false
-  extraction: false
+  activations: true
+  extraction: true
   null_distribution: false
-  metrics_inputs: false
+  metrics_inputs: true
