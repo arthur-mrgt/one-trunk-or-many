@@ -9,8 +9,7 @@ defaults:
 
 project:
   name: one-trunk-or-many
-  stage: test_fix_1_4_hypersim_100_scenes_20_frames
-  # stage: rq1_full_pipeline_hypersim_
+  stage: default
   seed: 42
 
 paths:

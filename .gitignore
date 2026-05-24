@@ -18,9 +18,11 @@ __pycache__/
 results/**/activations/
 results/**/artifacts/
 results/runs/
-results/diagnostics/
 results/slurm/
+results/wandb/
 
+# Legacy locations (kept for backwards compat)
+results/diagnostics/
 wandb/
 
 

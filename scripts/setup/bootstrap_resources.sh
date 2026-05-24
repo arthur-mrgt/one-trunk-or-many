@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # Usage:
-#   bash scripts/bootstrap_resources.sh [MODEL_REPO] [--download-diode] [--download-hypersim]
+#   bash scripts/setup/bootstrap_resources.sh [MODEL_REPO] [--download-diode] [--download-hypersim]
 # Example:
-#   bash scripts/bootstrap_resources.sh EPFL-VILAB/4M-7_B_CC12M --download-diode
+#   bash scripts/setup/bootstrap_resources.sh EPFL-VILAB/4M-7_B_CC12M --download-diode
 
 MODEL_REPO="${1:-EPFL-VILAB/4M-7_B_CC12M}"
 RESOURCES_ROOT="${OTM_RESOURCES_ROOT:-$(pwd)/resources}"

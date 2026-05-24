@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Local / interactive launcher for the benchmark pipeline.
+# Interactive launcher for the benchmark pipeline (foreground execution).
 #
-# Works on Linux/macOS shells and inside an interactive SLURM allocation
-# (e.g. `srun --pty bash`). For non-interactive SLURM submission, use
-# `scripts/submit_slurm.sh` instead.
+# Use this on a local workstation OR inside an interactive SLURM allocation
+# (e.g. after `srun --pty bash`). For non-interactive SLURM batch submission,
+# use `scripts/run/submit_slurm.sh` instead.
 #
 # Usage:
-#   bash scripts/run_local.sh                                          # final RQ1 preset
-#   PRESET=benchmark_rq1_smoke_hypersim bash scripts/run_local.sh      # smoke preset
-#   PRESET=<preset> EXTRA="data.n_scenes=10" bash scripts/run_local.sh # custom overrides
+#   bash scripts/run/run_interactive.sh                                          # final RQ1 preset
+#   PRESET=benchmark_rq1_smoke_hypersim bash scripts/run/run_interactive.sh      # smoke preset
+#   PRESET=<preset> EXTRA="data.n_scenes=10" bash scripts/run/run_interactive.sh # custom overrides
 #
 # Env vars:
 #   PRESET     Hydra preset name (default: benchmark_rq1_final_hypersim).

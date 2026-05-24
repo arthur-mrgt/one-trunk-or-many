@@ -96,13 +96,13 @@ We keep setup modular: one script per concern.
 Linux/SCITAS:
 
 ```bash
-bash scripts/setup_base.sh EPFL-VILAB/4M-7_B_CC12M
+bash scripts/setup/setup_base.sh EPFL-VILAB/4M-7_B_CC12M
 ```
 
 Windows:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/setup_base.ps1 -ModelRepo EPFL-VILAB/4M-7_B_CC12M
+powershell -ExecutionPolicy Bypass -File scripts/setup/setup_base.ps1 -ModelRepo EPFL-VILAB/4M-7_B_CC12M
 ```
 
 ### 4.2 DIODE dataset
@@ -111,18 +111,18 @@ Linux/SCITAS:
 
 ```bash
 # full depth + normals
-bash scripts/download_diode.sh
+bash scripts/data/download_diode.sh
 # depth only (smaller)
-bash scripts/download_diode.sh --depth-only
+bash scripts/data/download_diode.sh --depth-only
 ```
 
 Windows:
 
 ```powershell
 # full depth + normals
-powershell -ExecutionPolicy Bypass -File scripts/download_diode.ps1
+powershell -ExecutionPolicy Bypass -File scripts/data/download_diode.ps1
 # depth only (smaller)
-powershell -ExecutionPolicy Bypass -File scripts/download_diode.ps1 -DepthOnly
+powershell -ExecutionPolicy Bypass -File scripts/data/download_diode.ps1 -DepthOnly
 ```
 
 ### 4.3 Hypersim scene-type metadata
@@ -155,13 +155,13 @@ Default (full dataset):
 Linux/SCITAS:
 
 ```bash
-bash scripts/download_hypersim_subset.sh
+bash scripts/data/download_hypersim_subset.sh
 ```
 
 Windows:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/download_hypersim_subset.ps1
+powershell -ExecutionPolicy Bypass -File scripts/data/download_hypersim_subset.ps1
 ```
 
 Subset examples:
@@ -169,7 +169,7 @@ Subset examples:
 Linux/SCITAS:
 
 ```bash
-bash scripts/download_hypersim_subset.sh \
+bash scripts/data/download_hypersim_subset.sh \
   --scenes ai_001_001 ai_001_002 ai_001_003 \
   --include-rgb --include-depth --include-metadata
 ```
@@ -177,7 +177,7 @@ bash scripts/download_hypersim_subset.sh \
 Windows:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/download_hypersim_subset.ps1 `
+powershell -ExecutionPolicy Bypass -File scripts/data/download_hypersim_subset.ps1 `
   -Scenes ai_001_001,ai_001_002,ai_001_003 `
   -IncludeRgb -IncludeDepth -IncludeMetadata
 ```

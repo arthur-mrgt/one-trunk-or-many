@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Usage:
-#   bash scripts/setup_base.sh [MODEL_REPO]
+#   bash scripts/setup/setup_base.sh [MODEL_REPO]
 
 MODEL_REPO="${1:-EPFL-VILAB/4M-7_B_CC12M}"
 RESOURCES_ROOT="${OTM_RESOURCES_ROOT:-$(pwd)/resources}"

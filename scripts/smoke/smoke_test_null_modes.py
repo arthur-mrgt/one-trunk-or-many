@@ -1,6 +1,6 @@
 """Smoke test for all 4 null sampling modes.
 
-Run with:  python scripts/smoke_test_null_modes.py
+Run with:  python scripts/smoke/smoke_test_null_modes.py
 Verifies that build_right_candidates_by_left_index returns the expected
 candidates for each mode on a tiny synthetic DIODE-shaped index.
 """

@@ -11,7 +11,7 @@ Verifies, end-to-end, on the deterministic mock backend:
   4. The metric engine's merge predicate (run_id, pair, scene_id,
      sample_key, layer) yields non-empty merges on all three comparisons.
 
-Run with:  python scripts/smoke_test_joint_pass.py
+Run with:  python scripts/smoke/smoke_test_joint_pass.py
 """
 
 from __future__ import annotations

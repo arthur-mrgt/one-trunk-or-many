@@ -88,11 +88,11 @@ python -m src.run_benchmark runtime.device=cuda runtime.multi_gpu_strategy=data_
 Submit any Hydra preset:
 
 ```bash
-sbatch scripts/submit_slurm.sh                                       # final RQ1 preset
-PRESET=benchmark_rq1_smoke_hypersim sbatch scripts/submit_slurm.sh   # smoke preset
+sbatch scripts/run/submit_slurm.sh                                       # final RQ1 preset
+PRESET=benchmark_rq1_smoke_hypersim sbatch scripts/run/submit_slurm.sh   # smoke preset
 ```
 
-Adapt the `#SBATCH` directives in `scripts/submit_slurm.sh` (partition,
+Adapt the `#SBATCH` directives in `scripts/run/submit_slurm.sh` (partition,
 `--gres`, `--time`, `--mem`) to your cluster.
 
 ## Null distribution (adaptive)

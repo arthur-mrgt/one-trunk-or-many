@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -64,12 +65,16 @@ class WandbTracker(Tracker):
 
         run_name = cfg["tracking"]["wandb"]["run_name"] or run_id
         self._wandb = wandb
+        results_root = Path(cfg.get("paths", {}).get("results_root", "./results"))
+        wandb_dir = results_root / "wandb"
+        wandb_dir.mkdir(parents=True, exist_ok=True)
         self._run = wandb.init(
             project=cfg["tracking"]["wandb"]["project"],
             entity=cfg["tracking"]["wandb"]["entity"],
             name=run_name,
             tags=cfg["tracking"]["wandb"]["tags"],
             config=cfg,
+            dir=str(wandb_dir),
         )
 
     def log_table(self, name: str, table: pd.DataFrame) -> None:

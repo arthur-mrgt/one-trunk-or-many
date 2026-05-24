@@ -7,13 +7,14 @@
 #SBATCH --time=24:00:00
 #SBATCH --output=results/slurm/%x_%j.out
 #SBATCH --error=results/slurm/%x_%j.err
+#SBATCH --chdir=.
 
 # SLURM submission script for the benchmark pipeline (SCITAS et al.).
 #
 # Usage:
-#   sbatch scripts/submit_slurm.sh                                          # final RQ1 preset
-#   PRESET=benchmark_rq1_smoke_hypersim sbatch scripts/submit_slurm.sh      # smoke preset
-#   PRESET=<preset> EXTRA="data.n_scenes=10" sbatch scripts/submit_slurm.sh # custom overrides
+#   sbatch scripts/run/submit_slurm.sh                                          # final RQ1 preset
+#   PRESET=benchmark_rq1_smoke_hypersim sbatch scripts/run/submit_slurm.sh      # smoke preset
+#   PRESET=<preset> EXTRA="data.n_scenes=10" sbatch scripts/run/submit_slurm.sh # custom overrides
 #
 # Adapt the #SBATCH directives above to your cluster (partition, gres, time).
 #

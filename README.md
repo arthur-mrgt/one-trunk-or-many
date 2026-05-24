@@ -56,13 +56,13 @@ This creates local resource folders and downloads `EPFL-VILAB/4M-7_B_CC12M`.
 Linux/macOS:
 
 ```bash
-bash scripts/setup_base.sh EPFL-VILAB/4M-7_B_CC12M
+bash scripts/setup/setup_base.sh EPFL-VILAB/4M-7_B_CC12M
 ```
 
 Windows PowerShell:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/setup_base.ps1 -ModelRepo EPFL-VILAB/4M-7_B_CC12M
+powershell -ExecutionPolicy Bypass -File scripts/setup/setup_base.ps1 -ModelRepo EPFL-VILAB/4M-7_B_CC12M
 ```
 
 By default, resources are stored in `<repo>/resources`.  
@@ -75,19 +75,19 @@ Override path with `OTM_RESOURCES_ROOT` when needed.
 Linux/macOS:
 
 ```bash
-bash scripts/download_hypersim_subset.sh \
+bash scripts/data/download_hypersim_subset.sh \
   --scenes ai_001_001 ai_001_002 \
   --include-rgb --include-depth --include-metadata
 ```
 
 ```bash
-bash scripts/download_hypersim_subset.sh \
+bash scripts/data/download_hypersim_subset.sh \
   --scenes ai_024_010 ai_001_001 ai_001_006 ai_009_001 ai_005_010 ai_023_004 ai_013_002 ai_027_005 ai_001_005 ai_053_001 ai_016_009 ai_001_004 \
   --include-rgb --include-depth --include-metadata
 ```
 
 ```bash
-bash scripts/download_hypersim_subset.sh \
+bash scripts/data/download_hypersim_subset.sh \
   --scenes ai_024_010 ai_001_001 ai_001_006 ai_009_001 ai_005_010 ai_023_004 ai_013_002 ai_027_005 ai_001_005 ai_053_001 ai_016_009 ai_001_004 ai_001_002 ai_005_003 ai_047_002 ai_008_001 ai_006_006 ai_002_007 ai_006_002 ai_005_005 \
   --include-rgb --include-depth --include-metadata
 ```
@@ -95,7 +95,7 @@ bash scripts/download_hypersim_subset.sh \
 Windows PowerShell:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/download_hypersim_subset.ps1 `
+powershell -ExecutionPolicy Bypass -File scripts/data/download_hypersim_subset.ps1 `
   -Scenes ai_001_001,ai_001_002 `
   -IncludeRgb -IncludeDepth -IncludeMetadata
 ```
@@ -105,17 +105,17 @@ powershell -ExecutionPolicy Bypass -File scripts/download_hypersim_subset.ps1 `
 Linux/macOS:
 
 ```bash
-bash scripts/download_diode.sh
+bash scripts/data/download_diode.sh
 # or smaller depth-only download
-bash scripts/download_diode.sh --depth-only
+bash scripts/data/download_diode.sh --depth-only
 ```
 
 Windows PowerShell:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/download_diode.ps1
+powershell -ExecutionPolicy Bypass -File scripts/data/download_diode.ps1
 # or smaller depth-only download
-powershell -ExecutionPolicy Bypass -File scripts/download_diode.ps1 -DepthOnly
+powershell -ExecutionPolicy Bypass -File scripts/data/download_diode.ps1 -DepthOnly
 ```
 
 ### 5) Run benchmark
@@ -258,18 +258,18 @@ Run interactively on a GPU node (local or `srun --pty bash`):
 
 ```bash
 # Smoke run
-PRESET=benchmark_rq1_smoke_hypersim bash scripts/run_local.sh
+PRESET=benchmark_rq1_smoke_hypersim bash scripts/run/run_interactive.sh
 # Final run
-bash scripts/run_local.sh
+bash scripts/run/run_interactive.sh
 ```
 
 Submit as a SLURM batch job (e.g. SCITAS):
 
 ```bash
 # Smoke run
-PRESET=benchmark_rq1_smoke_hypersim sbatch scripts/submit_slurm.sh
+PRESET=benchmark_rq1_smoke_hypersim sbatch scripts/run/submit_slurm.sh
 # Final run
-sbatch scripts/submit_slurm.sh
+sbatch scripts/run/submit_slurm.sh
 ```
 
 The launcher prints the resolved `RUN_ID` along with the paths to
@@ -315,11 +315,11 @@ python -m src.run_metrics runtime.metrics_input_run_id=<run_id>
 Submit any Hydra preset as a batch job:
 
 ```bash
-sbatch scripts/submit_slurm.sh                                       # final RQ1 preset
-PRESET=benchmark_rq1_smoke_hypersim sbatch scripts/submit_slurm.sh   # smoke preset
+sbatch scripts/run/submit_slurm.sh                                       # final RQ1 preset
+PRESET=benchmark_rq1_smoke_hypersim sbatch scripts/run/submit_slurm.sh   # smoke preset
 ```
 
-Adapt the `#SBATCH` directives in `scripts/submit_slurm.sh` (partition,
+Adapt the `#SBATCH` directives in `scripts/run/submit_slurm.sh` (partition,
 `--gres`, `--time`, `--mem`) to your cluster.
 
 ## More docs
