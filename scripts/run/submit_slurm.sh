@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=trunk-benchmark
 #SBATCH --partition=gpu
-#SBATCH --qos=gpu
 #SBATCH --gres=gpu:1
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
