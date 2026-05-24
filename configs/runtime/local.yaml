@@ -10,6 +10,12 @@ save_activations: true
 # stage (metrics / null) at a *specific* historical run.
 activation_input_run_id: null
 metrics_input_run_id: null
+multi_gpu_strategy: none
+distributed:
+  enabled: false
+  backend: auto
+  world_size: auto
+  local_rank: auto
 null_input_run_id: null
 null_input_filename: null
 

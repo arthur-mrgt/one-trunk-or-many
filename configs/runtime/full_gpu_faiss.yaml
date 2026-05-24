@@ -1,0 +1,21 @@
+batch_size: 1
+num_workers: 8
+device: cuda
+precision: fp32
+save_activations: true
+activation_input_run_id: null
+metrics_input_run_id: null
+multi_gpu_strategy: data_parallel
+distributed:
+  enabled: false
+  backend: nccl
+  world_size: auto
+  local_rank: auto
+null_input_run_id: null
+null_input_filename: null
+null_missing_behavior: warn_and_skip
+reuse:
+  activations: false
+  extraction: false
+  null_distribution: false
+  metrics_inputs: false

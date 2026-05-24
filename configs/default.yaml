@@ -22,7 +22,8 @@ paths:
 
 analysis:
   null_distribution:
-    enabled: false
+    enabled: true
+    metrics_enabled: [cka, pwcca, knn_overlap]
     artifact_filename: null_distribution.csv
     state_filename: null_distribution_state.json
     sampling_mode: cross_scene_type_random
@@ -38,6 +39,9 @@ analysis:
     max_total_draws: 5000
     max_batches: 0
     checkpoint_every_batches: 1
+    checkpoint_every_hypotheses: 1
+    progress_log_every_batches: 1
+    draw_chunk_size: 50
     on_keyboard_interrupt: save_and_continue
     reuse_if_exists: false
     resume_if_partial: false

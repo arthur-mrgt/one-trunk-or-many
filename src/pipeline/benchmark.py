@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +15,7 @@ from src.analysis.null_distribution import (
     compute_null_distribution_adaptive,
     evaluate_adaptive_stop,
 )
+from src.analysis.null_stop import normalize_observed_metrics
 from src.data.registry import load_dataset_pairs
 from src.models.registry import build_model
 from src.pipeline.benchmark_config import (
@@ -30,17 +32,27 @@ from src.pipeline.benchmark_tables import (
     compute_metric_table_from_indices as _compute_metric_table_from_indices,
     load_activation_indices as _load_activation_indices,
 )
-from src.pipeline.extraction import run_extraction, run_joint_extraction
-from src.pipeline.joint_indices import build_joint_comparison_indices
-from src.utils.config import RunContext, cfg_to_container
+from src.pipeline.extraction import run_extraction
+from src.utils.config import RunContext, cfg_to_container, make_run_context, make_run_context_from_id
+from src.utils.distributed import (
+    all_gather_objects,
+    barrier,
+    broadcast_object,
+    concat_gathered_tables,
+    get_dist_context,
+    split_by_rank,
+)
 from src.utils.io import read_null_distribution, write_json, write_optional_parquet, write_table
-from src.utils.tracking import build_tracker
+from src.utils.tracking import NoopTracker, Tracker, build_tracker
 
 log = logging.getLogger(__name__)
 
 
 def _log(message: str) -> None:
     """Print a standardized info line for benchmark stages."""
+    dist_ctx = get_dist_context()
+    if dist_ctx.enabled and not dist_ctx.is_main:
+        return
     print(f"[INFO] {message}")
 
 
@@ -147,9 +159,19 @@ def _run_joint_pass_for_pair(
 def run_extraction_stage(cfg: DictConfig, run_ctx_override: RunContext | None = None) -> RunContext:
     """Run extraction for all resolved modality pairs."""
     cfg_dict = cfg_to_container(cfg)
+    dist_ctx = get_dist_context()
     resolved_pairs = _resolve_metric_pairs(cfg_dict["metrics"])
     cfg_dict["metrics"]["resolved_pairs"] = resolved_pairs
-    run_ctx = run_ctx_override or _resolve_run_ctx_for_extraction(cfg, cfg_dict)
+    if run_ctx_override is not None:
+        run_ctx = run_ctx_override
+    elif dist_ctx.enabled:
+        run_id = None
+        if dist_ctx.is_main:
+            run_id = make_run_context(cfg).run_id
+        run_id = broadcast_object(run_id, src=0, ctx=dist_ctx)
+        run_ctx = make_run_context_from_id(Path(cfg_dict["paths"]["runs_root"]), str(run_id))
+    else:
+        run_ctx = _resolve_run_ctx_for_extraction(cfg, cfg_dict)
     _log(f"Starting extraction stage: run_id={run_ctx.run_id}")
     model = build_model(cfg_dict["model"], cfg_dict["runtime"])
 
@@ -181,31 +203,50 @@ def run_extraction_stage(cfg: DictConfig, run_ctx_override: RunContext | None = 
             write_table(out_idx, activation_index)
             _log(f"Saved activation index for {pair_name}: rows={len(activation_index)}")
 
-        if joint_enabled:
-            _run_joint_pass_for_pair(
-                cfg_dict=cfg_dict,
-                model=model,
-                run_ctx=run_ctx,
-                left_mod=left_mod,
-                right_mod=right_mod,
-                samples=samples,
-                reuse_enabled=reuse_joint,
-            )
+        _log(f"Loading samples for pair {pair_name}")
+        samples = load_dataset_pairs(
+            dataset_name=cfg_dict["data"]["name"],
+            root=Path(cfg_dict["data"]["root"]),
+            modalities=(left_mod, right_mod),
+            n_scenes=int(cfg_dict["data"]["n_scenes"]),
+            scene_stride=int(cfg_dict["data"]["scene_stride"]),
+            exclude_scenes=list(cfg_dict["data"].get("exclude_scenes") or []),
+        )
+        local_samples = split_by_rank(samples, ctx=dist_ctx)
+        _log(
+            f"Pair {pair_name}: loaded_samples={len(samples)} local_samples={len(local_samples)}"
+        )
+        activation_index = run_extraction(
+            model=model,
+            samples=local_samples,
+            pair_name=pair_name,
+            run_id=run_ctx.run_id,
+            out_dir=run_ctx.activations_dir,
+            show_progress=dist_ctx.is_main,
+        )
+        gathered = all_gather_objects(activation_index, ctx=dist_ctx)
+        if dist_ctx.is_main:
+            frames = [g for g in gathered if isinstance(g, pd.DataFrame) and not g.empty]
+            merged = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+            write_table(out_idx, merged)
+            _log(f"Saved activation index for {pair_name}: rows={len(merged)}")
+        barrier()
 
-    write_json(run_ctx.run_dir / "resolved_config.json", cfg_dict)
-    write_json(
-        run_ctx.run_dir / "run_summary.json",
-        {
-            "run_id": run_ctx.run_id,
-            "dataset": cfg_dict["data"]["name"],
-            "pairs_mode": cfg_dict["metrics"].get("pairs_mode", "explicit"),
-            "pairs": resolved_pairs,
-            "joint_pass_enabled": joint_enabled,
-            "stage": "extraction",
-            "activation_indices": [str(p) for p in _list_activation_index_files(run_ctx)],
-        },
-    )
-    _log("Extraction stage completed.")
+    if dist_ctx.is_main:
+        write_json(run_ctx.run_dir / "resolved_config.json", cfg_dict)
+        write_json(
+            run_ctx.run_dir / "run_summary.json",
+            {
+                "run_id": run_ctx.run_id,
+                "dataset": cfg_dict["data"]["name"],
+                "pairs_mode": cfg_dict["metrics"].get("pairs_mode", "explicit"),
+                "pairs": resolved_pairs,
+                "stage": "extraction",
+                "activation_indices": [str(p) for p in _list_activation_index_files(run_ctx)],
+            },
+        )
+        _log("Extraction stage completed.")
+    barrier()
     return run_ctx
 
 
@@ -216,6 +257,7 @@ def run_null_stage(
 ) -> NullRunResult | None:
     """Run or resume adaptive null-distribution stage."""
     cfg_dict = cfg_to_container(cfg)
+    dist_ctx = get_dist_context()
     null_cfg = dict(cfg_dict.get("analysis", {}).get("null_distribution", {}))
     if not bool(null_cfg.get("enabled", False)):
         return None
@@ -251,7 +293,12 @@ def run_null_stage(
         _log("No activation index found for null stage. Skipping null computation.")
         return None
 
-    _log("Starting adaptive null-distribution stage...")
+    _log(
+        "Starting adaptive null-distribution stage... "
+        f"metrics={null_cfg.get('metrics_enabled', cfg_dict.get('metrics', {}).get('enabled', []))} "
+        f"draws_per_batch={null_cfg.get('draws_per_batch')} "
+        f"max_total_draws={null_cfg.get('max_total_draws')}"
+    )
     result = compute_null_distribution_adaptive(
         activation_index=activation_index,
         observed_metrics=observed_metric_table,
@@ -262,6 +309,17 @@ def run_null_stage(
         out_filename=null_artifact_path.name,
         existing_null_df=existing_null,
     )
+    barrier()
+    if dist_ctx.enabled and not dist_ctx.is_main and null_artifact_path.exists():
+        refreshed = read_null_distribution(null_artifact_path)
+        result = NullRunResult(
+            null_df=refreshed,
+            artifact_path=result.artifact_path,
+            state_path=result.state_path,
+            stop_reason=result.stop_reason,
+            is_partial=result.is_partial,
+            batches_completed=result.batches_completed,
+        )
     _log(
         f"Null stage completed: rows={len(result.null_df)} "
         f"stop_reason={result.stop_reason} partial={result.is_partial}"
@@ -274,6 +332,11 @@ def run_metrics_stage(
     run_ctx_override: RunContext | None = None,
     precomputed_metric_table: pd.DataFrame | None = None,
     null_result: NullRunResult | None = None,
+    tracker: Tracker | None = None,
+    log_config_to_tracker: bool = True,
+    finish_tracker: bool = True,
+    stage_durations_s: dict[str, float] | None = None,
+    run_start_perf_s: float | None = None,
 ) -> RunContext:
     """Run metrics, optional null enrichment, and tracker logging."""
     cfg_dict = cfg_to_container(cfg)
@@ -282,16 +345,29 @@ def run_metrics_stage(
     except Exception:
         pass
 
+    dist_ctx = get_dist_context()
     run_ctx = run_ctx_override or _resolve_run_ctx_for_metrics(cfg_dict)
     _log(f"Starting metrics stage for run_id={run_ctx.run_id}")
-    tracker = build_tracker(cfg=cfg_dict, run_id=run_ctx.run_id)
-    tracker.log_config(cfg_dict)
+    owned_tracker = False
+    if tracker is None:
+        if dist_ctx.enabled and not dist_ctx.is_main:
+            cfg_dict["tracking"]["wandb"]["enabled"] = False
+        tracker = build_tracker(cfg=cfg_dict, run_id=run_ctx.run_id)
+        owned_tracker = True
+    if log_config_to_tracker:
+        tracker.log_config(cfg_dict)
 
     metric_table = (
         precomputed_metric_table.copy()
         if precomputed_metric_table is not None
-        else _compute_metric_table_from_indices(cfg_dict, run_ctx, show_progress=True, log_fn=_log)
+        else _compute_metric_table_from_indices(
+            cfg_dict,
+            run_ctx,
+            show_progress=dist_ctx.is_main,
+            log_fn=_log,
+        )
     )
+    precomputed_is_global = precomputed_metric_table is not None and dist_ctx.enabled
 
     null_cfg = dict(cfg_dict.get("analysis", {}).get("null_distribution", {}))
     adaptive_cfg = dict(null_cfg.get("adaptive_stop", {}))
@@ -326,12 +402,16 @@ def run_metrics_stage(
             raise FileNotFoundError(msg)
         log.warning(msg)
 
-    write_table(run_ctx.metrics_dir / "metrics.csv", metric_table)
-    write_optional_parquet(
-        path=run_ctx.metrics_dir / "metrics.parquet",
-        table=metric_table,
-        enabled=bool(cfg_dict["metrics"]["output"]["save_parquet"]),
-    )
+    if not precomputed_is_global:
+        metric_table = concat_gathered_tables(metric_table, ctx=dist_ctx)
+
+    if dist_ctx.is_main:
+        write_table(run_ctx.metrics_dir / "metrics.csv", metric_table)
+        write_optional_parquet(
+            path=run_ctx.metrics_dir / "metrics.parquet",
+            table=metric_table,
+            enabled=bool(cfg_dict["metrics"]["output"]["save_parquet"]),
+        )
 
     run_summary = {
         "run_id": run_ctx.run_id,
@@ -346,10 +426,11 @@ def run_metrics_stage(
         "null_is_partial": bool(null_is_partial),
         "stage": "metrics",
     }
-    write_json(run_ctx.run_dir / "run_summary.json", run_summary)
-    write_json(run_ctx.run_dir / "resolved_config.json", cfg_dict)
+    if dist_ctx.is_main:
+        write_json(run_ctx.run_dir / "run_summary.json", run_summary)
+        write_json(run_ctx.run_dir / "resolved_config.json", cfg_dict)
 
-    if not metric_table.empty:
+    if dist_ctx.is_main and not metric_table.empty:
         tracker.log_table("metrics_table", metric_table)
         log_metric_plots(tracker=tracker, metric_table=metric_table)
         if has_significance:
@@ -372,34 +453,74 @@ def run_metrics_stage(
         summary["null_stop_reason"] = null_stop_reason
         summary["null_draws_used"] = int(null_draws_used)
         summary["null_is_partial"] = bool(null_is_partial)
+        if stage_durations_s:
+            for stage_name, elapsed_s in stage_durations_s.items():
+                summary[f"runtime/{stage_name}_seconds"] = float(elapsed_s)
+        if run_start_perf_s is not None:
+            summary["runtime/run_elapsed_seconds"] = float(time.perf_counter() - run_start_perf_s)
         tracker.log_summary(summary)
-    tracker.finish()
-    _log(f"Metrics stage completed. rows={len(metric_table)}")
+    if finish_tracker and (owned_tracker or tracker is not None):
+        tracker.finish()
+    if dist_ctx.is_main:
+        _log(f"Metrics stage completed. rows={len(metric_table)}")
+    barrier()
     return run_ctx
 
 
 def run_benchmark(cfg: DictConfig) -> RunContext:
     """Run extraction -> optional adaptive null -> metrics."""
+    run_start_perf_s = time.perf_counter()
     cfg_dict = cfg_to_container(cfg)
-    run_ctx = run_extraction_stage(cfg)
+    dist_ctx = get_dist_context()
+    if dist_ctx.enabled:
+        run_id = None
+        if dist_ctx.is_main:
+            run_id = make_run_context(cfg).run_id
+        run_id = broadcast_object(run_id, src=0, ctx=dist_ctx)
+        run_ctx = make_run_context_from_id(Path(cfg_dict["paths"]["runs_root"]), str(run_id))
+    else:
+        run_ctx = _resolve_run_ctx_for_extraction(cfg, cfg_dict)
+    tracker_cfg = cfg_to_container(cfg)
+    if dist_ctx.enabled and not dist_ctx.is_main:
+        tracker_cfg["tracking"]["wandb"]["enabled"] = False
+        tracker: Tracker = NoopTracker()
+    else:
+        tracker = build_tracker(cfg=tracker_cfg, run_id=run_ctx.run_id)
+        tracker.log_config(tracker_cfg)
+
+    stage_durations_s: dict[str, float] = {}
+
+    extraction_start = time.perf_counter()
+    run_ctx = run_extraction_stage(cfg, run_ctx_override=run_ctx)
+    stage_durations_s["extraction"] = time.perf_counter() - extraction_start
     cfg_dict["runtime"]["metrics_input_run_id"] = run_ctx.run_id
     cfg_dict["runtime"]["activation_input_run_id"] = run_ctx.run_id
     cfg_for_next = OmegaConf.create(cfg_dict)
 
+    observed_start = time.perf_counter()
     observed_metric_table = _compute_metric_table_from_indices(
         cfg_dict=cfg_dict,
         run_ctx=run_ctx,
-        show_progress=False,
+        show_progress=dist_ctx.is_main,
         log_fn=_log,
     )
+    observed_metric_table = concat_gathered_tables(observed_metric_table, ctx=get_dist_context())
+    stage_durations_s["observed_metrics"] = time.perf_counter() - observed_start
 
     null_result = None
     if bool(cfg_dict.get("analysis", {}).get("null_distribution", {}).get("enabled", False)):
+        null_start = time.perf_counter()
         null_result = run_null_stage(cfg=cfg_for_next, run_ctx=run_ctx, observed_metric_table=observed_metric_table)
+        stage_durations_s["null_distribution"] = time.perf_counter() - null_start
         if null_result is not None and not null_result.null_df.empty:
             adaptive_cfg = dict(cfg_dict.get("analysis", {}).get("null_distribution", {}).get("adaptive_stop", {}))
+            observed_for_stop = normalize_observed_metrics(
+                observed_metric_table,
+                metrics_cfg=cfg_dict.get("metrics", {}),
+                null_cfg=cfg_dict.get("analysis", {}).get("null_distribution", {}),
+            )
             should_stop, stop_eval = evaluate_adaptive_stop(
-                observed_metrics=observed_metric_table,
+                observed_metrics=observed_for_stop,
                 null_df=null_result.null_df,
                 alpha=float(adaptive_cfg.get("alpha", 0.05)),
                 correction=str(adaptive_cfg.get("correction", "bh_fdr")),
@@ -408,11 +529,17 @@ def run_benchmark(cfg: DictConfig) -> RunContext:
             )
             if not stop_eval.empty:
                 stop_eval["stop_criterion_met"] = bool(should_stop)
-                write_table(run_ctx.metrics_dir / "null_stop_evaluation.csv", stop_eval)
+                if get_dist_context().is_main:
+                    write_table(run_ctx.metrics_dir / "null_stop_evaluation.csv", stop_eval)
 
     return run_metrics_stage(
         cfg=cfg_for_next,
         run_ctx_override=run_ctx,
         precomputed_metric_table=observed_metric_table,
         null_result=null_result,
+        tracker=tracker,
+        log_config_to_tracker=False,
+        finish_tracker=True,
+        stage_durations_s=stage_durations_s,
+        run_start_perf_s=run_start_perf_s,
     )

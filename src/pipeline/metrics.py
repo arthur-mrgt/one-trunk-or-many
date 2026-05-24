@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +11,7 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 from src.metrics.registry import build_metric
+from src.utils.distributed import get_dist_context, split_by_rank
 
 
 def _stack_vectors(paths: list[str]) -> np.ndarray:
@@ -42,6 +44,7 @@ def run_metrics(
     metrics_cfg: dict[str, Any],
     pair_modalities: tuple[str, str],
     show_progress: bool = True,
+    log_fn: Any | None = None,
 ) -> pd.DataFrame:
     """Compute all enabled metrics per layer for a modality pair.
 
@@ -70,22 +73,34 @@ def run_metrics(
     cka_cfg: dict = metrics_cfg.get("cka", {})
     left_mod, right_mod = pair_modalities
     layers = sorted(activation_index["layer"].unique().tolist())
+    dist_ctx = get_dist_context()
+    local_layers = split_by_rank(layers, ctx=dist_ctx)
+    pair_name = f"{left_mod}-{right_mod}"
+
+    if log_fn is not None:
+        log_fn(
+            f"Metrics start for pair={pair_name}: "
+            f"metrics={metric_names} layers={len(layers)} local_layers={len(local_layers)}"
+        )
 
     rows: list[dict[str, Any]] = []
 
     for metric_name in metric_names:
+        metric_start = time.perf_counter()
         metric_meta = _metric_metadata(metric_name, metrics_cfg)
         metric_fn = build_metric(
             metric_name=metric_name,
             cka_cfg=cka_cfg,
             metrics_cfg=metrics_cfg,
         )
+        completed_layers = 0
 
         layer_iter = tqdm(
-            layers,
+            local_layers,
             desc=f"Metric[{metric_name}][{left_mod}-{right_mod}]",
             unit="layer",
-            disable=not show_progress,
+            disable=(not show_progress) or (dist_ctx.enabled and not dist_ctx.is_main),
+            dynamic_ncols=True,
         )
         for layer in layer_iter:
             left_df = activation_index[
@@ -130,7 +145,15 @@ def run_metrics(
                     "k": metric_meta["k"],
                 }
             )
+            completed_layers += 1
             if show_progress:
                 layer_iter.set_postfix_str(f"n={len(merged)}")
+
+        if log_fn is not None:
+            elapsed = time.perf_counter() - metric_start
+            log_fn(
+                f"Metrics completed for pair={pair_name} metric={metric_name}: "
+                f"rows={completed_layers} elapsed_s={elapsed:.1f}"
+            )
 
     return pd.DataFrame.from_records(rows)

@@ -17,6 +17,8 @@ pairs:
 cka:
   center_gram: true
   unbiased: false
+  backend: torch
+  device: cuda
 
 pwcca:
   eps: 1.0e-10
@@ -25,14 +27,27 @@ pwcca:
     n_components: 64
     seed: 0
     shared_basis: false
+    backend: torch
+    device: cuda
 
 knn_overlap:
   k: 10
+  backend: faiss
   pca:
     enabled: true
     n_components: 64
     seed: 0
     shared_basis: false
+    backend: torch
+    device: cuda
+  faiss:
+    mode: exact
+    use_gpu: true
+    nlist: 128
+    nprobe: 32
+    m: 16
+    nbits: 8
+    train_size: 20000
 
 output:
   save_csv: true

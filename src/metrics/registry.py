@@ -31,7 +31,15 @@ def build_metric(metric_name: str, cka_cfg: dict, metrics_cfg: dict | None = Non
 
     if metric_name == "cka":
         center_gram = bool(cka_cfg.get("center_gram", True))
-        return lambda x, y: linear_cka(x, y, center_gram=center_gram)
+        backend = str(cka_cfg.get("backend", "auto"))
+        device = str(cka_cfg.get("device", "auto"))
+        return lambda x, y: linear_cka(
+            x,
+            y,
+            center_gram=center_gram,
+            backend=backend,
+            device=device,
+        )
 
     if metric_name == "pwcca":
         cfg = metrics_cfg.get("pwcca", {})

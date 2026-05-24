@@ -71,6 +71,19 @@ def pca_reduce_independent(
     return _pca_single(x, n_components=n_components), _pca_single(y, n_components=n_components)
 
 
+def pca_reduce_independent_torch(
+    x: np.ndarray,
+    y: np.ndarray,
+    n_components: int,
+    device: str = "auto",
+) -> tuple[np.ndarray, np.ndarray]:
+    """Project x and y with separate PCA bases using torch."""
+    return (
+        _pca_single_torch(x, n_components=n_components, device=device),
+        _pca_single_torch(y, n_components=n_components, device=device),
+    )
+
+
 def _pca_single(a: np.ndarray, n_components: int) -> np.ndarray:
     """Project one matrix to at most n_components principal directions."""
     n, d = a.shape
@@ -80,6 +93,25 @@ def _pca_single(a: np.ndarray, n_components: int) -> np.ndarray:
     centered = a.astype(np.float64) - a.mean(axis=0)
     _, _, vt = np.linalg.svd(centered, full_matrices=False)
     return centered @ vt[:k].T
+
+
+def _pca_single_torch(a: np.ndarray, n_components: int, device: str = "auto") -> np.ndarray:
+    """Project one matrix with torch SVD and return numpy output."""
+    import torch
+
+    n, d = a.shape
+    k = min(int(n_components), n - 1, d)
+    if k <= 0:
+        return a
+    if device == "auto":
+        resolved = "cuda" if torch.cuda.is_available() else "cpu"
+    else:
+        resolved = str(device)
+    t = torch.as_tensor(a, dtype=torch.float32, device=resolved)
+    centered = t - t.mean(dim=0, keepdim=True)
+    _, _, vt = torch.linalg.svd(centered, full_matrices=False)
+    proj = centered @ vt[:k].T
+    return proj.detach().cpu().numpy()
 
 
 def maybe_reduce(
@@ -100,6 +132,16 @@ def maybe_reduce(
     n_components = int(pca_cfg.get("n_components", 64))
     seed = int(pca_cfg.get("seed", 0))
     shared_basis = bool(pca_cfg.get("shared_basis", False))
+    backend = str(pca_cfg.get("backend", "numpy")).lower()
+    device = str(pca_cfg.get("device", "auto")).lower()
+    if backend not in {"numpy", "torch"}:
+        raise ValueError("pca.backend must be one of: numpy, torch")
     if shared_basis:
+        if backend == "torch":
+            # Shared-basis torch backend falls back to numpy implementation.
+            # For independent-basis metrics this path is generally not used.
+            return pca_reduce(x, y, n_components=n_components, seed=seed)
         return pca_reduce(x, y, n_components=n_components, seed=seed)
+    if backend == "torch":
+        return pca_reduce_independent_torch(x, y, n_components=n_components, device=device)
     return pca_reduce_independent(x, y, n_components=n_components)
