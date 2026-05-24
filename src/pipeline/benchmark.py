@@ -197,6 +197,15 @@ def run_extraction_stage(cfg: DictConfig, run_ctx_override: RunContext | None = 
         _log(
             f"Pair {pair_name}: loaded_samples={len(samples)} local_samples={len(local_samples)}"
         )
+        if len(samples) == 0:
+            raise RuntimeError(
+                f"Pair {pair_name}: 0 samples available for modalities "
+                f"({left_mod}, {right_mod}). The required modality files are "
+                f"likely missing on disk. Re-run the dataset download with the "
+                f"appropriate --include-* flags (e.g. --include-normals) and "
+                f"ensure both modalities are present under "
+                f"resources/datasets/{cfg_dict['data']['name']}."
+            )
         activation_index = run_extraction(
             model=model,
             samples=local_samples,
