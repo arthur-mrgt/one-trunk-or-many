@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 
 from src.data.hypersim import PairSample
-from src.models.model_fourm import FourMMockEncoder
+from src.models.fourm_mock import FourMMockEncoder
 from src.pipeline.extraction import (
     joint_slice_modality_name,
     run_extraction,

@@ -5,7 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from src.models.model_fourm import FourMEncoder, FourMMockEncoder
+from src.models.fourm import FourMEncoder
+from src.models.fourm_mock import FourMMockEncoder
 
 
 def build_model(model_cfg: dict[str, Any], runtime_cfg: dict[str, Any]) -> Any:

@@ -15,11 +15,11 @@ Usage
 -----
 Auto-detect the latest run::
 
-    python -m src.plot_metrics_null
+    python -m src.plotting.metrics_null
 
 Explicit run id::
 
-    python -m src.plot_metrics_null --run-id rq1_full_pipeline-20260510-160357
+    python -m src.plotting.metrics_null --run-id rq1_full_pipeline-20260510-160357
 """
 
 from __future__ import annotations
