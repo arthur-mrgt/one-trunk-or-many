@@ -1,140 +1,112 @@
-# Benchmark Pipeline Guide
+# Pipeline Guide
 
-## Overview
+The benchmark is a Hydra-driven, single-orchestrator pipeline. Configuration
+options are documented in [`configs.md`](configs.md), output schemas in
+[`results.md`](results.md), and cluster launchers in
+[`cluster.md`](cluster.md). This document focuses on the **stages** and the
+**extension points**.
 
-The benchmark is Hydra-driven and fully YAML-configurable.
+## Stage flow
 
-- Dataset backend is selected via `data` config group.
-- Model backend is selected via `model` config group.
-- Metrics are selected via `metrics.enabled` and `metrics.pairs`.
-- Tracking is controlled via `tracking` config group.
+```text
+run_benchmark
+    │
+    ├── extraction stage
+    │     for each modality pair:
+    │       load_dataset_pairs(...)              ← honors data.n_scenes / max_total_samples / seed
+    │       split_by_rank(...)                   ← DDP sharding when runtime.distributed.enabled
+    │       run_extraction(model, samples)       ← writes .npy + activation_index_<pair>.csv
+    │
+    ├── observed-metrics stage
+    │     compute CKA / PWCCA / kNN-overlap per (pair, layer) from activations
+    │
+    ├── null-distribution stage              ← analysis.null_distribution.enabled
+    │     adaptive sampling of mismatched pairs until adaptive_stop or max_total_draws
+    │     checkpoints partial null_distribution.csv every batch
+    │
+    └── metrics-finalization stage
+          enrich observed metrics with p_value, p_value_adjusted, z_score, ...
+          write metrics.csv + log to W&B if enabled
+```
 
-Main end-to-end entrypoint (single orchestrator):
+All stages share a single `RUN_ID` and a single resolved config snapshot
+(`resolved_config.json`).
+
+## Stage entry points
+
+The full pipeline:
 
 ```bash
 python -m src.run_benchmark
 ```
 
-Optional stage entrypoints:
+Individual stages, useful when iterating without re-running extraction:
 
 ```bash
 python -m src.run_extraction
 python -m src.run_null_distribution runtime.metrics_input_run_id=<run_id>
-python -m src.run_metrics runtime.metrics_input_run_id=<run_id>
+python -m src.run_metrics            runtime.metrics_input_run_id=<run_id>
 ```
 
-## Config groups
+## Adaptive null distribution
 
-- `configs/default.yaml` - main composition and shared sections.
-- `configs/data/*.yaml` - dataset root/name/modality defaults.
-- `configs/model/*.yaml` - encoder backend and layer policy.
-- `configs/metrics/*.yaml` - enabled metrics and options.
-- `configs/tracking/*.yaml` - W&B on/off modes.
-- `configs/runtime/*.yaml` - batch/worker/device settings.
-- `configs/slurm/*.yaml` - cluster defaults.
+Controlled via the `analysis.null_distribution.*` block:
 
-## Output schema
+| Key | Role |
+|---|---|
+| `enabled` | Master switch. |
+| `metrics_enabled` | Subset of metrics for which a null is computed. |
+| `sampling_mode` | `cross_scene_type_random` (default), `within_scene_type_random`, or `within_scene_random`. See `configs/data/hypersim.yaml` for the trade-offs. |
+| `draws_per_batch` | Draws per checkpoint batch. |
+| `min_total_draws` / `max_total_draws` | Hard floor / cap on draws per hypothesis. |
+| `adaptive_stop.alpha` | Significance level for the early-stop test. |
+| `adaptive_stop.correction` | `bh_fdr` or `bonferroni`. |
+| `adaptive_stop.require_all_hypotheses` | If true, every hypothesis must satisfy the criterion. |
 
-Each run creates `results/runs/<run_id>/` with:
+`Ctrl-C` during the null stage persists the partial artifact and the pipeline
+continues to the metrics stage (`on_keyboard_interrupt: save_and_continue`).
 
-- `activations/` - saved vectors as `.npy`.
-- `artifacts/activation_index_<pair>.csv` - index of saved activations.
-- `metrics/metrics.csv` - metric table (`metric`, `pair`, `layer`, `value`, ...).
-- `metrics/null_stop_evaluation.csv` - adaptive null stop diagnostics (when null is enabled).
-- `run_summary.json` - run-level summary.
-- `resolved_config.json` - fully resolved config snapshot.
+## Reuse policies
 
-## Typical commands
-
-Local POC:
+`runtime.reuse.*` flags let you skip stages when artifacts already exist:
 
 ```bash
+# Reuse activations from the latest run, recompute null and metrics
+python -m src.run_benchmark runtime.reuse.activations=true
+
+# Reuse activations from a specific run
 python -m src.run_benchmark \
-  data.name=hypersim \
-  data.n_scenes=10 \
-  metrics.pairs='[[rgb,depth]]'
+  runtime.activation_input_run_id=<run_id> runtime.reuse.activations=true
+
+# Reuse a precomputed null artifact
+python -m src.run_benchmark runtime.reuse.null_distribution=true
 ```
-
-Enable W&B:
-
-```bash
-python -m src.run_benchmark tracking=wandb_on
-```
-
-Switch model backend config:
-
-```bash
-python -m src.run_benchmark model=fourm
-```
-
-Device controls:
-
-```bash
-# auto (default): cuda if available else cpu
-python -m src.run_benchmark runtime.device=auto
-
-# force cpu
-python -m src.run_benchmark runtime.device=cpu
-
-# force single-gpu
-python -m src.run_benchmark runtime.device=cuda
-
-# multi-gpu via DataParallel
-python -m src.run_benchmark runtime.device=cuda runtime.multi_gpu_strategy=data_parallel
-```
-
-## SLURM
-
-Submit any Hydra preset:
-
-```bash
-sbatch scripts/run/submit_slurm.sh                                       # final RQ1 preset
-PRESET=benchmark_rq1_smoke_hypersim sbatch scripts/run/submit_slurm.sh   # smoke preset
-```
-
-Adapt the `#SBATCH` directives in `scripts/run/submit_slurm.sh` (partition,
-`--gres`, `--time`, `--mem`) to your cluster.
-
-## Null distribution (adaptive)
-
-Null computation is now integrated into `python -m src.run_benchmark`:
-
-- Extraction runs first (or is reused if `runtime.reuse.activations=true` and artifacts exist).
-- Null draws run next when `analysis.null_distribution.enabled=true`.
-- Metrics stage runs last and adds significance columns (`p_value`, `p_value_adjusted`, `n_null_draws`, etc.) when null artifacts are available.
-
-Adaptive stop is controlled in YAML:
-
-- `analysis.null_distribution.adaptive_stop.alpha`
-- `analysis.null_distribution.adaptive_stop.correction`
-- `analysis.null_distribution.adaptive_stop.require_all_hypotheses`
-- `analysis.null_distribution.min_total_draws`
-- `analysis.null_distribution.max_total_draws`
-
-Manual interrupt:
-
-- `Ctrl+C` during null stage persists partial null artifacts and the benchmark still continues to metrics (default `on_keyboard_interrupt: save_and_continue`).
-
-Reuse behavior (YAML):
-
-- `runtime.reuse.activations=true`: reuse extraction artifacts instead of recomputing.
-- `runtime.activation_input_run_id=<run_id>`: if set, reuse activations from this run.
-- if `runtime.activation_input_run_id=null`, the latest run is used as activation source.
-- `runtime.reuse.null_distribution=true|false`: reuse/continue existing null artifact or force recomputation.
 
 ## Extension points
 
-- Add metrics by implementing a function and registering it in `src/metrics/registry.py`.
-- Add datasets by implementing a loader and wiring it in `src/data/registry.py`.
-- Null distribution internals are split across:
-  - `src/analysis/null_runner.py`
-  - `src/analysis/null_sampling.py`
-  - `src/analysis/null_artifacts.py`
-  - `src/analysis/null_stop.py`
-  - public API: `src/analysis/null_distribution.py`
-- Benchmark internals are split across:
-  - `src/pipeline/benchmark_config.py`
-  - `src/pipeline/benchmark_tables.py`
-  - `src/pipeline/benchmark_significance.py`
-  - `src/pipeline/benchmark_plots.py`
-  - stage orchestrator: `src/pipeline/benchmark.py`
+- **New metric** — implement a function and register it in
+  `src/metrics/registry.py`. Activate via `metrics.enabled`.
+- **New dataset** — implement a loader and wire it in
+  `src/data/registry.py`. Add a `configs/data/<name>.yaml`.
+- **New model backend** — add a class in `src/models/`, wire it in
+  `src/models/registry.py`, add a `configs/model/<name>.yaml`.
+
+## Internal module map
+
+Null distribution internals:
+
+- `src/analysis/null_runner.py` — adaptive loop and DDP coordination.
+- `src/analysis/null_sampling.py` — hypothesis caches and mismatched-sample drawing.
+- `src/analysis/null_artifacts.py` — CSV/Parquet checkpointing and state files.
+- `src/analysis/null_stop.py` — adaptive-stop decision logic.
+- `src/analysis/null_distribution.py` — public façade.
+
+Benchmark orchestrator (`src/pipeline/`):
+
+- `benchmark.py` — top-level stage runners.
+- `benchmark_config.py` — Hydra-derived path and pair resolution.
+- `benchmark_tables.py` — activation index loading and metric computation.
+- `benchmark_significance.py` — null-vs-observed enrichment.
+- `benchmark_plots.py` — W&B plot helpers.
+
+Distributed and tracking utilities live in `src/utils/`.
