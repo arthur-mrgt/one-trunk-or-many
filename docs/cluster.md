@@ -102,38 +102,74 @@ sbatch scripts/run/submit_slurm.sh EXTRA="paths.resources_root=/scratch/$USER/ot
 
 See [`docs/data.md`](data.md) for the expected resource layout.
 
-## Bypass slow shared filesystems for activations
+## Stage Hypersim to fast local storage (default on Izar)
 
-On HPC clusters with Lustre or other shared filesystems, the per-sample
-`.npy` writes for activations can become a serious bottleneck (each open is a
-metadata roundtrip, easily 100 ms on cold cache). Set `paths.activations_root`
-to a fast local path (e.g. `/tmp/$USER` or `$TMPDIR`) so activations are
-written to local SSD instead. All other artifacts (metrics, null
-distributions, configs) still live in `paths.runs_root` and are persisted.
+When `submit_slurm.sh` runs on Izar with `STAGE_HYPERSIM=1` (the default),
+the script copies `resources/datasets/hypersim/` to `/tmp/$USER/hypersim/`
+on the compute node before launching Python. This bypasses Lustre for the
+read-heavy HDF5 access during extraction:
 
-```bash
-# SLURM batch — write activations to compute-node local /tmp
-sbatch scripts/run/submit_slurm.sh \
-  EXTRA="paths.activations_root=/tmp/$USER/trunk_acts"
+| Source | Read speed | Notes |
+|---|---|---|
+| `/home` (Lustre) | ~100-500 MB/s | High per-file metadata latency |
+| `/tmp` (NVMe SSD, 2.9 TB) | ~3-5 GB/s | Local to compute node, ephemeral |
+
+For 100 Hypersim scenes (~70 GB), the initial `rsync` takes ~10-15 min, and
+the cache survives for the lifetime of the node — re-using the same compute
+node skips the stage entirely.
+
+The override is added automatically:
+
+```
+EXTRA="paths.datasets_root=/tmp/$USER ${EXTRA}"
 ```
 
+Disable when running on a different dataset:
+
 ```bash
-# Interactive
-PRESET=benchmark_rq1_smoke_hypersim \
-  EXTRA="paths.activations_root=/tmp/$USER/trunk_acts" \
-  bash scripts/run/run_interactive.sh
+STAGE_HYPERSIM=0 sbatch scripts/run/submit_slurm.sh
+```
+
+## Resuming a partial run
+
+Activations are written to `paths.results_root` (default
+`results/runs/<run_id>/activations/` on `/home`), so they persist across
+jobs. If a run crashes mid-way (timeout, node failure, etc.), relaunch
+with these overrides to skip what is already done:
+
+```bash
+sbatch scripts/run/submit_slurm.sh \
+  EXTRA="runtime.activation_input_run_id=<RUN_ID_OF_CRASHED_JOB> \
+         runtime.reuse.activations=true \
+         analysis.null_distribution.resume_if_partial=true"
+```
+
+What gets re-used:
+
+- **Per-pair activations** if `activation_index_<pair>.csv` is on disk in
+  the resolved run dir → that pair's extraction is skipped entirely.
+- **Partial null draws** stored in
+  `results/runs/null_distributions/<run_id>/null_distribution.csv` →
+  the adaptive sampler appends new draws on top of existing ones.
+
+The `RUN_ID_OF_CRASHED_JOB` is printed at the top of every run (e.g.
+`rq1_final_hypersim-20260524-205615`) and is also visible in W&B.
+
+## Force activations to a fast ephemeral path (advanced, fragile)
+
+For maximum extraction speed at the cost of resumability, you can also
+write activations to compute-node local storage:
+
+```bash
+sbatch scripts/run/submit_slurm.sh \
+  EXTRA="paths.activations_root=/tmp/$USER/trunk_acts"
 ```
 
 Trade-offs:
 
 - The activation files do **not** survive the SLURM job (compute-node `/tmp`
   is wiped). The `activation_index_*.csv` records absolute paths, so the
-  metrics and null stages must run in the same job as extraction (which is
-  the default behaviour). Set `runtime.reuse.activations=true` only when you
-  also keep the activations on shared storage.
-- Disk space on compute-node `/tmp` is typically limited (10-100 GB).
-  For 4000 samples × 3 pairs × 12 layers × 2 modalities × ~3 KB ≈ 850 MB,
-  comfortably small. If you scale up considerably, point at `$SCRATCH`
-  instead.
-- If the run crashes, activations on `/tmp` are lost. Consider running the
-  smoke preset first to validate the pipeline, then the final preset.
+  metrics and null stages must run in the same job as extraction.
+- Crashing during extraction or during the null stage means losing every
+  intermediate activation, with no way to resume.
+- Use only for short, low-risk runs (smoke testing).
