@@ -120,27 +120,48 @@ def _extract_scene_subset(
 def _ensure_metadata_csv(hypersim_dir: Path, tmp_repo: Path) -> Path:
     """Return the path to metadata_camera_trajectories.csv, cloning Apple repo if needed.
 
-    Downloads the CSV directly when the cloned repo is not available, so the
-    sampler can run without the full contrib downloader setup.
+    The file lives at the repo root in current apple/ml-hypersim, and used to
+    live under ``contrib/99991/``. We probe both locations, fall back to
+    locating it anywhere in the cloned repo, then to a direct HTTP download.
     """
     meta_dst = hypersim_dir / "metadata_camera_trajectories.csv"
     if meta_dst.exists():
         return meta_dst
 
-    meta_src = tmp_repo / "contrib" / "99991" / "metadata_camera_trajectories.csv"
-    if meta_src.exists():
-        shutil.copy2(meta_src, meta_dst)
-        print(f"[INFO] Copied metadata_camera_trajectories.csv → {meta_dst}")
-        return meta_dst
+    candidate_paths = [
+        tmp_repo / "metadata_camera_trajectories.csv",
+        tmp_repo / "contrib" / "99991" / "metadata_camera_trajectories.csv",
+    ]
+    for candidate in candidate_paths:
+        if candidate.exists():
+            shutil.copy2(candidate, meta_dst)
+            print(f"[INFO] Copied metadata_camera_trajectories.csv from {candidate} → {meta_dst}")
+            return meta_dst
 
-    url = (
-        "https://raw.githubusercontent.com/apple/ml-hypersim/main/"
-        "contrib/99991/metadata_camera_trajectories.csv"
-    )
-    print(f"[INFO] Downloading metadata CSV from {url}")
+    if tmp_repo.exists():
+        found = next(tmp_repo.rglob("metadata_camera_trajectories.csv"), None)
+        if found is not None:
+            shutil.copy2(found, meta_dst)
+            print(f"[INFO] Copied metadata_camera_trajectories.csv from {found} → {meta_dst}")
+            return meta_dst
+
+    candidate_urls = [
+        "https://raw.githubusercontent.com/apple/ml-hypersim/main/metadata_camera_trajectories.csv",
+        "https://raw.githubusercontent.com/apple/ml-hypersim/main/contrib/99991/metadata_camera_trajectories.csv",
+    ]
     hypersim_dir.mkdir(parents=True, exist_ok=True)
-    urllib.request.urlretrieve(url, meta_dst)
-    return meta_dst
+    for url in candidate_urls:
+        print(f"[INFO] Trying metadata CSV from {url}")
+        try:
+            urllib.request.urlretrieve(url, meta_dst)
+            print(f"[INFO] Downloaded metadata CSV → {meta_dst}")
+            return meta_dst
+        except urllib.error.HTTPError as exc:
+            print(f"[WARN] HTTP {exc.code} for {url}")
+
+    raise FileNotFoundError(
+        f"Could not locate metadata_camera_trajectories.csv (looked in {candidate_paths} and {candidate_urls})"
+    )
 
 
 def sample_scenes_stratified(
