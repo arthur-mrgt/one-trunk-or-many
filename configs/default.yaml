@@ -18,6 +18,14 @@ paths:
   models_root: ${paths.resources_root}/models/4m
   results_root: ./results
   runs_root: ${paths.results_root}/runs
+  # Optional override for activation .npy storage. When set (e.g. /tmp/$USER on
+  # SLURM compute nodes), activation files are written to
+  # `<activations_root>/<run_id>/activations/...` instead of the in-run-dir
+  # default. Useful to bypass slow shared filesystems (Lustre) on clusters.
+  # All other artifacts (metrics, null distributions, configs) stay in
+  # `runs_root` so results are persistent. The activation_index CSV records
+  # absolute paths so downstream stages find files regardless of the choice.
+  activations_root: null
 
 analysis:
   null_distribution:

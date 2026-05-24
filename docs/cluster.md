@@ -101,3 +101,39 @@ sbatch scripts/run/submit_slurm.sh EXTRA="paths.resources_root=/scratch/$USER/ot
 ```
 
 See [`docs/data.md`](data.md) for the expected resource layout.
+
+## Bypass slow shared filesystems for activations
+
+On HPC clusters with Lustre or other shared filesystems, the per-sample
+`.npy` writes for activations can become a serious bottleneck (each open is a
+metadata roundtrip, easily 100 ms on cold cache). Set `paths.activations_root`
+to a fast local path (e.g. `/tmp/$USER` or `$TMPDIR`) so activations are
+written to local SSD instead. All other artifacts (metrics, null
+distributions, configs) still live in `paths.runs_root` and are persisted.
+
+```bash
+# SLURM batch — write activations to compute-node local /tmp
+sbatch scripts/run/submit_slurm.sh \
+  EXTRA="paths.activations_root=/tmp/$USER/trunk_acts"
+```
+
+```bash
+# Interactive
+PRESET=benchmark_rq1_smoke_hypersim \
+  EXTRA="paths.activations_root=/tmp/$USER/trunk_acts" \
+  bash scripts/run/run_interactive.sh
+```
+
+Trade-offs:
+
+- The activation files do **not** survive the SLURM job (compute-node `/tmp`
+  is wiped). The `activation_index_*.csv` records absolute paths, so the
+  metrics and null stages must run in the same job as extraction (which is
+  the default behaviour). Set `runtime.reuse.activations=true` only when you
+  also keep the activations on shared storage.
+- Disk space on compute-node `/tmp` is typically limited (10-100 GB).
+  For 4000 samples × 3 pairs × 12 layers × 2 modalities × ~3 KB ≈ 850 MB,
+  comfortably small. If you scale up considerably, point at `$SCRATCH`
+  instead.
+- If the run crashes, activations on `/tmp` are lost. Consider running the
+  smoke preset first to validate the pipeline, then the final preset.

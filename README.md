@@ -26,9 +26,10 @@ GPU + FAISS are used end-to-end; single-node multi-GPU is supported via
 ## Quick start
 
 ```bash
-# 1. Environment
+# 1. Environment (creates env, installs pinned deps + fourm + faiss in the right order)
 conda create -n trunk python=3.11 -y && conda activate trunk
-python -m pip install -U pip && python -m pip install -r requirements.txt
+bash scripts/setup/install_python_deps.sh           # GPU FAISS (default)
+# bash scripts/setup/install_python_deps.sh --cpu   # CPU FAISS fallback
 
 # 2. Download the 4M-7B weights and the Hypersim subset
 bash scripts/setup/setup_base.sh EPFL-VILAB/4M-7_B_CC12M

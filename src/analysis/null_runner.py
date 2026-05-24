@@ -301,7 +301,7 @@ def compute_null_distribution_adaptive(
                             n_draws=n_chunk,
                             replace=replace,
                             sampling_mode=sampling_mode,
-                            scene_type_map=scene_type_map if use_type_constraint else {},
+                            scene_type_map=scene_type_map if needs_type_map else {},
                             rng=rng,
                             start_draw_id=count + drawn_for_hyp,
                             run_id=run_id,

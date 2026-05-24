@@ -9,7 +9,7 @@ from typing import Any
 
 from omegaconf import DictConfig
 
-from src.utils.config import RunContext, ensure_dir, make_run_context
+from src.utils.config import RunContext, _resolve_activations_dir, ensure_dir, make_run_context
 
 
 def normalize_pair(pair: Any) -> list[str]:
@@ -92,10 +92,15 @@ def resolve_run_ctx_for_metrics(cfg_dict: dict[str, Any]) -> RunContext:
                 "Run extraction first or set runtime.activation_input_run_id."
             )
         run_dir = candidates[-1]
+    activations_dir = _resolve_activations_dir(
+        cfg_dict.get("paths", {}),
+        run_id=run_dir.name,
+        default=run_dir / "activations",
+    )
     return RunContext(
         run_id=run_dir.name,
         run_dir=run_dir,
-        activations_dir=run_dir / "activations",
+        activations_dir=activations_dir,
         metrics_dir=ensure_dir(run_dir / "metrics"),
         artifacts_dir=ensure_dir(run_dir / "artifacts"),
     )

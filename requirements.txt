@@ -33,5 +33,19 @@ opencv-python-headless==4.9.0.80
 scikit-learn==1.4.2
 matplotlib==3.8.4
 
-# 4M model library (install separately):
-# pip install git+https://github.com/apple/ml-4m.git
+# ---------------------------------------------------------------------------
+# Two extra packages must be installed AFTER `pip install -r requirements.txt`
+# because their pip metadata pulls dependencies that conflict with this file
+# (fourm is not on PyPI; faiss-gpu-cu12 wheels >=1.10 require numpy>=2 which
+# breaks fourm). Install them with these exact commands, in this order:
+#
+#   pip install git+https://github.com/apple/ml-4m.git
+#   pip install --no-deps faiss-gpu-cu12==1.9.0.post1
+#
+# `--no-deps` is required to keep numpy 1.26.4 (the resolver would otherwise
+# upgrade to numpy 2.x and break the fourm runtime — torch ABI mismatch).
+#
+# CPU fallback if no GPU FAISS available (works everywhere, ~3-5x slower
+# k-NN; the pipeline auto-falls back to CPU when faiss-gpu is missing):
+#   pip install --no-deps faiss-cpu==1.8.0
+# ---------------------------------------------------------------------------

@@ -169,7 +169,11 @@ def run_extraction_stage(cfg: DictConfig, run_ctx_override: RunContext | None = 
         if dist_ctx.is_main:
             run_id = make_run_context(cfg).run_id
         run_id = broadcast_object(run_id, src=0, ctx=dist_ctx)
-        run_ctx = make_run_context_from_id(Path(cfg_dict["paths"]["runs_root"]), str(run_id))
+        run_ctx = make_run_context_from_id(
+            Path(cfg_dict["paths"]["runs_root"]),
+            str(run_id),
+            cfg_paths=cfg_dict.get("paths"),
+        )
     else:
         run_ctx = _resolve_run_ctx_for_extraction(cfg, cfg_dict)
     _log(f"Starting extraction stage: run_id={run_ctx.run_id}")
@@ -197,15 +201,6 @@ def run_extraction_stage(cfg: DictConfig, run_ctx_override: RunContext | None = 
         _log(
             f"Pair {pair_name}: loaded_samples={len(samples)} local_samples={len(local_samples)}"
         )
-        if len(samples) == 0:
-            raise RuntimeError(
-                f"Pair {pair_name}: 0 samples available for modalities "
-                f"({left_mod}, {right_mod}). The required modality files are "
-                f"likely missing on disk. Re-run the dataset download with the "
-                f"appropriate --include-* flags (e.g. --include-normals) and "
-                f"ensure both modalities are present under "
-                f"resources/datasets/{cfg_dict['data']['name']}."
-            )
         activation_index = run_extraction(
             model=model,
             samples=local_samples,
@@ -467,7 +462,11 @@ def run_benchmark(cfg: DictConfig) -> RunContext:
         if dist_ctx.is_main:
             run_id = make_run_context(cfg).run_id
         run_id = broadcast_object(run_id, src=0, ctx=dist_ctx)
-        run_ctx = make_run_context_from_id(Path(cfg_dict["paths"]["runs_root"]), str(run_id))
+        run_ctx = make_run_context_from_id(
+            Path(cfg_dict["paths"]["runs_root"]),
+            str(run_id),
+            cfg_paths=cfg_dict.get("paths"),
+        )
     else:
         run_ctx = _resolve_run_ctx_for_extraction(cfg, cfg_dict)
     tracker_cfg = cfg_to_container(cfg)
