@@ -2,13 +2,9 @@
 resources/
 
 # Optional external resource roots mirrored into repo
-data/
-datasets/
-models/
-!src/data/
-!src/data/registry.py
-!src/models/
-!src/models/registry.py
+/data/
+/datasets/
+/models/
 
 # Python cache
 __pycache__/
