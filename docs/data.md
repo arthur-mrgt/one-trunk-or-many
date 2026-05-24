@@ -169,9 +169,22 @@ Subset examples:
 Linux/SCITAS:
 
 ```bash
+# Explicit scene IDs
 bash scripts/data/download_hypersim_subset.sh \
   --scenes ai_001_001 ai_001_002 ai_001_003 \
   --include-rgb --include-depth --include-metadata
+
+# Random N scenes stratified by Scene type, reproducible via --seed.
+# The chosen IDs are also saved to resources/datasets/hypersim/scenes_<n>_seed<seed>.txt
+# so the same subset can be re-downloaded later with --scenes-file.
+bash scripts/data/download_hypersim_subset.sh \
+  --n-random 100 --seed 42 \
+  --include-rgb --include-depth --include-normals --include-metadata
+
+# Re-use a previously sampled list
+bash scripts/data/download_hypersim_subset.sh \
+  --scenes-file resources/datasets/hypersim/scenes_100_seed42.txt \
+  --include-rgb --include-depth --include-normals --include-metadata
 ```
 
 Windows:

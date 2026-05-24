@@ -32,7 +32,7 @@ python -m pip install -U pip && python -m pip install -r requirements.txt
 
 # 2. Download the 4M-7B weights and the Hypersim subset
 bash scripts/setup/setup_base.sh EPFL-VILAB/4M-7_B_CC12M
-bash scripts/data/download_hypersim_subset.sh --scenes ai_001_001 ai_001_002 \
+bash scripts/data/download_hypersim_subset.sh --n-random 100 --seed 42 \
   --include-rgb --include-depth --include-normals --include-metadata
 
 # 3. Run the smoke preset end-to-end (5 scenes, 200 samples, ~minutes)
