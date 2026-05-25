@@ -44,6 +44,7 @@ def load_dataset_pairs(
             environment=environment,
             exclude_scenes=exclude_scenes,
             frames_per_scene=frames_per_scene,
+            max_total_samples=max_total_samples,
             seed=seed,
         )
     raise ValueError(f"Unknown dataset: {dataset_name}")

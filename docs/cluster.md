@@ -102,33 +102,85 @@ sbatch scripts/run/submit_slurm.sh EXTRA="paths.resources_root=/scratch/$USER/ot
 
 See [`docs/data.md`](data.md) for the expected resource layout.
 
-## Stage Hypersim to fast local storage (default on Izar)
+## Stage the dataset to fast local storage (default on Izar)
 
-When `submit_slurm.sh` runs on Izar with `STAGE_HYPERSIM=1` (the default),
-the script copies `resources/datasets/hypersim/` to `/tmp/$USER/hypersim/`
-on the compute node before launching Python. This bypasses Lustre for the
-read-heavy HDF5 access during extraction:
+When `submit_slurm.sh` runs on Izar with `STAGE_DATASET=auto` (the default),
+the script picks the dataset to stage from the preset name:
+
+- `..._hypersim`  → stages `resources/datasets/hypersim/` to `/tmp/$USER/hypersim/`
+- `..._diode`     → stages `resources/datasets/diode/` to `/tmp/$USER/diode/`
+- otherwise       → no staging, reads from `./resources/datasets/` (Lustre)
+
+This bypasses Lustre for the read-heavy access during extraction:
 
 | Source | Read speed | Notes |
 |---|---|---|
 | `/home` (Lustre) | ~100-500 MB/s | High per-file metadata latency |
 | `/tmp` (NVMe SSD, 2.9 TB) | ~3-5 GB/s | Local to compute node, ephemeral |
 
-For 100 Hypersim scenes (~70 GB), the initial `rsync` takes ~10-15 min, and
-the cache survives for the lifetime of the node — re-using the same compute
+Initial `rsync` cost depends on dataset size — ~10-15 min for the full 70 GB
+Hypersim subset, a few minutes for a `--train-sample 2` DIODE pull. The
+cache survives for the lifetime of the node — re-using the same compute
 node skips the stage entirely.
 
-The override is added automatically:
+The override is added automatically once staging picks a target:
 
 ```
 EXTRA="paths.datasets_root=/tmp/$USER ${EXTRA}"
 ```
 
-Disable when running on a different dataset:
+Force a specific behaviour:
 
 ```bash
-STAGE_HYPERSIM=0 sbatch scripts/run/submit_slurm.sh
+STAGE_DATASET=hypersim sbatch scripts/run/submit_slurm.sh   # explicit
+STAGE_DATASET=diode    sbatch scripts/run/submit_slurm.sh   # explicit
+STAGE_DATASET=none     sbatch scripts/run/submit_slurm.sh   # skip staging
+STAGE_HYPERSIM=0       sbatch scripts/run/submit_slurm.sh   # legacy override
 ```
+
+## Running on DIODE instead of Hypersim
+
+The whole pipeline supports DIODE as a drop-in replacement for Hypersim. The
+Hydra preset `benchmark_rq1_final_diode` mirrors `benchmark_rq1_final_hypersim`
+exactly (same 3 modality pairs, same 3 metrics, same null-distribution
+config), but reads DIODE images and depth/normals .npy files instead.
+
+### 1) Download a DIODE subset on Izar
+
+The recommended subset for an RQ1 run is `--train-sample 2`: 2 random scans
+per scene from train (indoor + outdoor), giving ~50–60 distinct DIODE-scenes
+across both environments. The download is resumable and uses ~10–15 GB after
+extraction.
+
+```bash
+# On Izar, from the project root
+bash scripts/data/download_diode.sh --train-sample 2
+```
+
+State files under `resources/datasets/diode/` track which stage of the
+download (RGB+depth, then normals) is complete, so re-running the same
+command after a crash skips finished stages. See the script header for
+other modes (`--val`, `--scenes N`, `--full`).
+
+### 2) Smoke test then full run
+
+```bash
+# Smoke (1 GPU, ~15 min): validates the full DIODE wiring end-to-end
+PRESET=benchmark_rq1_smoke_diode sbatch \
+  --gres=gpu:1 --time=01:00:00 --mem=64G --cpus-per-task=10 \
+  --job-name=trunk-diode-smoke \
+  scripts/run/submit_slurm.sh
+
+# Final RQ1 DIODE run (2 GPUs, recommended)
+PRESET=benchmark_rq1_final_diode sbatch \
+  --gres=gpu:2 --time=12:00:00 --job-name=trunk-final-diode \
+  scripts/run/submit_slurm.sh
+```
+
+The auto-detection in `submit_slurm.sh` picks `STAGE_DATASET=diode`
+automatically because the preset name contains `_diode`. Activations
+land on `/tmp/$USER/trunk_acts` by default just like Hypersim runs, with
+the same snapshot watchdog and resume protocol described below.
 
 ## Resuming a partial run
 
@@ -240,5 +292,5 @@ Useful flags:
   replaced inside `activation_index_*.csv` (auto-derived from `--host`).
 
 After the script finishes, the local `activation_path` columns point to
-absolute local paths, so `notebooks/pvalue_diagnostics.ipynb` and
+absolute local paths, so `notebooks/rq1_results_analysis.ipynb` and
 `src.plotting.metrics_null` work offline without any further changes.

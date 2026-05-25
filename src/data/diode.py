@@ -112,6 +112,7 @@ def load_pairs(
     environment: str | Sequence[str] = "indoors",
     exclude_scenes: list[str] | None = None,
     frames_per_scene: int | None = None,
+    max_total_samples: int | None = None,
     seed: int = 42,
 ) -> list[PairSample]:
     """Load aligned pair samples for the requested modalities from DIODE.
@@ -162,6 +163,12 @@ def load_pairs(
         If set, randomly sample this many frames per scene.
         Scenes with fewer frames contribute all their frames.
         Pass ``None`` to keep every frame.
+    max_total_samples:
+        If set, after per-scene sampling, randomly subsample the global
+        pool of ``(scene, frame)`` tuples down to this many samples.
+        Sampling is done without replacement and is deterministic w.r.t.
+        ``seed``. Pass ``None`` (default) to skip the global cap. Mirrors
+        the same knob in the Hypersim adapter for parity across datasets.
     seed:
         Random seed for frame sampling.
     """
@@ -237,6 +244,10 @@ def load_pairs(
                 "DIODE %s/%s: %d samples from %d scenes",
                 split_name, env, len(output) - section_samples_before, len(sampled_scene_ids),
             )
+
+    if max_total_samples is not None and max_total_samples < len(output):
+        output = rng.sample(output, max_total_samples)
+        output.sort(key=lambda s: (s.scene_id, s.sample_key))
 
     log.info(
         "DIODE loaded %d samples | splits=%s | env=%s | scenes=%d",

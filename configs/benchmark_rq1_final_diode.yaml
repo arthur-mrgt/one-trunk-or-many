@@ -1,0 +1,51 @@
+# RQ1 final run preset (DIODE, train-sample 2, ~4000 random paired samples).
+#
+# Mirror of `benchmark_rq1_final_hypersim.yaml` but reading the DIODE dataset
+# instead of Hypersim. Expects DIODE to be downloaded with:
+#   bash scripts/data/download_diode.sh --train-sample 2
+# which gives 2 random scans/scene across all train indoor + outdoor scenes
+# (~50-60 distinct DIODE-scenes once downloaded). The `data.max_total_samples`
+# cap then randomly subsamples the global pool down to 4000 frames.
+#
+# Launches the full pipeline end-to-end with:
+#   - 3 modality pairs: rgb-depth, rgb-normals, depth-normals (from metrics=rq1)
+#   - 3 metrics: CKA, PWCCA, kNN_overlap with GPU + FAISS backends
+#   - adaptive null distribution with min_total_draws=1000 (low p-value floor)
+#
+# Run with:
+#   python -m src.run_benchmark --config-name benchmark_rq1_final_diode
+
+defaults:
+  - default
+  - override data: diode
+  - override runtime: full_gpu_faiss
+  - override tracking: wandb_on
+  - _self_
+
+project:
+  stage: rq1_final_diode
+
+data:
+  name: diode
+  split: train+val
+  environment: [indoors, outdoor]
+  n_scenes: 100             # per (split, env) cap; total = up to n_scenes * 4
+  scene_stride: 1
+  frames_per_scene: null
+  max_total_samples: 4000
+  seed: 42
+
+analysis:
+  null_distribution:
+    enabled: true
+    metrics_enabled: [cka, pwcca, knn_overlap]
+    draws_per_batch: 200
+    min_total_draws: 1000
+    max_total_draws: 5000
+    reuse_if_exists: false
+    resume_if_partial: false
+    adaptive_stop:
+      enabled: true
+      alpha: 0.01
+      correction: bh_fdr
+      require_all_hypotheses: true
