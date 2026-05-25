@@ -9,12 +9,19 @@
 #                        (same: resumable archives + state — skips finished stages)
 #   --full               Download the complete train + val splits  (~80 GB, not recommended)
 #
+# OPTIONAL FLAGS (can be combined with the modes above)
+#   --with-val           Also download the full val split after the selected
+#                        train mode finishes. Compatible with --scenes and
+#                        --train-sample. Useful when running with a Hydra
+#                        preset that uses split=train+val.
+#
 # EXAMPLES
-#   bash scripts/download_diode.sh                  # val split — change config: split: val
-#   bash scripts/download_diode.sh --scenes 10      # 10 train/indoors scenes
-#   bash scripts/download_diode.sh --train-sample   # 1 random scan/scene, train indoor+outdoor
-#   bash scripts/download_diode.sh --train-sample 3 # 3 random scans/scene
-#   bash scripts/download_diode.sh --full           # everything (slow, large)
+#   bash scripts/download_diode.sh                              # val split — change config: split: val
+#   bash scripts/download_diode.sh --scenes 10                  # 10 train/indoors scenes
+#   bash scripts/download_diode.sh --train-sample               # 1 random scan/scene, train indoor+outdoor
+#   bash scripts/download_diode.sh --train-sample 3             # 3 random scans/scene
+#   bash scripts/download_diode.sh --train-sample 2 --with-val  # train sample + full val (~13 GB)
+#   bash scripts/download_diode.sh --full                       # everything (slow, large)
 #
 # RESUME / COPY FROM ANOTHER MACHINE
 #   Partial .tar.gz files under resources/datasets/diode/_archives/ are resumed
@@ -45,6 +52,7 @@ set -euo pipefail
 MODE="val"
 N_SCENES=10
 N_SCANS_PER_SCENE=1
+WITH_VAL=0
 SAMPLE_SEED="${DIODE_SAMPLE_SEED:-42}"
 RESOURCES_ROOT="${OTM_RESOURCES_ROOT:-$(pwd)/resources}"
 DIODE_DIR="${RESOURCES_ROOT}/datasets/diode"
@@ -76,14 +84,23 @@ while [[ $# -gt 0 ]]; do
     --full)
       MODE="full"
       ;;
+    --with-val)
+      WITH_VAL=1
+      ;;
     *)
       echo "[ERROR] Unknown argument: $1"
-      echo "Usage: $0 [--val | --scenes N | --train-sample [N] | --full]"
+      echo "Usage: $0 [--val | --scenes N | --train-sample [N] | --full] [--with-val]"
       exit 1
       ;;
   esac
   shift
 done
+
+# --with-val only makes sense with the train-only modes; warn otherwise.
+if [[ "${WITH_VAL}" == "1" && ( "${MODE}" == "val" || "${MODE}" == "full" ) ]]; then
+  echo "[WARN] --with-val is redundant with --${MODE}; the val split is already included. Ignoring --with-val."
+  WITH_VAL=0
+fi
 
 mkdir -p "${DIODE_DIR}"
 mkdir -p "${ARCHIVE_DIR}"
@@ -417,4 +434,19 @@ elif [[ "${MODE}" == "full" ]]; then
   download_and_extract "${BASE_URL}/val_normals.tar.gz"
   echo ""
   echo "[DONE] Full DIODE dataset ready in ${DIODE_DIR}/"
+fi
+
+# ---------------------------------------------------------------------------
+# Optional: also pull the full val split when --with-val is set.
+# Compatible with --scenes and --train-sample. Idempotent: download_and_extract
+# uses the resumable archive directory and skips fully-extracted archives.
+# ---------------------------------------------------------------------------
+if [[ "${WITH_VAL}" == "1" ]]; then
+  echo ""
+  echo "[INFO] ── Also fetching VAL split (RGB + depth + normals) ──────────"
+  echo "[INFO] Estimated size: ~3 GB"
+  download_and_extract "${BASE_URL}/val.tar.gz"
+  download_and_extract "${BASE_URL}/val_normals.tar.gz"
+  echo ""
+  echo "[DONE] VAL split ready in ${DIODE_DIR}/val/"
 fi

@@ -147,20 +147,20 @@ config), but reads DIODE images and depth/normals .npy files instead.
 
 ### 1) Download a DIODE subset on Izar
 
-The recommended subset for an RQ1 run is `--train-sample 2`: 2 random scans
-per scene from train (indoor + outdoor), giving ~50–60 distinct DIODE-scenes
-across both environments. The download is resumable and uses ~10–15 GB after
-extraction.
+The recommended subset for an RQ1 run is `--train-sample 2 --with-val`:
+2 random scans per scene from train (indoor + outdoor) plus the full val
+split, giving 25 distinct DIODE-scenes (19 train + 6 val). The download is
+resumable and uses ~13 GB after extraction.
 
 ```bash
-# On Izar, from the project root
-bash scripts/data/download_diode.sh --train-sample 2
+# On Izar, from the project root — single invocation, both stages
+bash scripts/data/download_diode.sh --train-sample 2 --with-val
 ```
 
 State files under `resources/datasets/diode/` track which stage of the
-download (RGB+depth, then normals) is complete, so re-running the same
-command after a crash skips finished stages. See the script header for
-other modes (`--val`, `--scenes N`, `--full`).
+download (RGB+depth, then normals, then val) is complete, so re-running
+the same command after a crash skips finished stages. See the script
+header for other modes (`--val`, `--scenes N`, `--full`).
 
 ### 2) Smoke test then full run
 
