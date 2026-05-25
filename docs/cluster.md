@@ -212,3 +212,33 @@ EXTRA="paths.activations_root=/tmp/$USER/trunk_acts \
 The launcher prints `[INFO] Restoring activations from <tar>` then the
 pipeline replays only the missing pairs and resumes the partial null
 distribution.
+
+## Pulling a finished run back to a workstation
+
+Once a cluster run completes, mirror its outputs locally with a single
+command so the on-disk layout under `results/` matches what a local run
+would have produced (same `runs/<RUN_ID>/`, `wandb/`, `slurm/`, ...). The
+helper `scripts/data/recover_run_from_cluster.py` handles SCP, tar
+extraction of the activations snapshot, and the absolute-path rewrite in
+every `activation_index_*.csv`:
+
+```bash
+# Minimal — auto-detects W&B dir, SLURM job id, and old activation prefix
+python scripts/data/recover_run_from_cluster.py \
+  --host margeat@izar.epfl.ch \
+  --run-id rq1_final_hypersim-20260525-000411
+```
+
+Useful flags:
+
+- `--no-snapshot`  : skip the multi-GB activations tar (CSVs only — enough
+  for the diagnostics notebook and most plots).
+- `--no-wandb`     : skip the local W&B cache.
+- `--job-id 12345` : pin the SLURM job id when auto-detection fails.
+- `--wandb-dir offline-run-...` : pin a specific W&B run dir.
+- `--old-prefix /tmp/<remote_user>/trunk_acts` : override the prefix
+  replaced inside `activation_index_*.csv` (auto-derived from `--host`).
+
+After the script finishes, the local `activation_path` columns point to
+absolute local paths, so `notebooks/pvalue_diagnostics.ipynb` and
+`src.plotting.metrics_null` work offline without any further changes.
