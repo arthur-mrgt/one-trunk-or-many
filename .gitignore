@@ -15,6 +15,7 @@ results/**/activations/
 results/**/artifacts/
 results/runs/
 results/slurm/
+results/snapshots/
 results/wandb/
 
 # Legacy locations (kept for backwards compat)
