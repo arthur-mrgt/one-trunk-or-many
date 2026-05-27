@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" href="data:," />
 <title>One Trunk or Many? — Probing Representational Convergence in 4M</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -62,186 +63,148 @@
   .wrap {
     max-width: 920px;
     margin: 0 auto;
-    padding: 64px 32px 96px;
+    padding: 40px 32px 96px;
   }
 
-  /* ---------- Top navigation bar ---------- */
-  .topnav {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: rgba(253, 253, 251, 0.92);
-    backdrop-filter: saturate(140%) blur(8px);
-    -webkit-backdrop-filter: saturate(140%) blur(8px);
-    border-bottom: 1px solid var(--rule);
-    font-family: "Inter", system-ui, sans-serif;
-  }
-  .topnav.scrolled { box-shadow: 0 1px 0 var(--rule), 0 6px 18px rgba(0,0,0,0.04); }
-  .topnav-inner {
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 0 24px;
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    height: 54px;
-  }
-  .topnav-brand {
+  /* ---------- Corner brand (top-left fixed) ---------- */
+  .corner-brand {
+    position: fixed;
+    top: 18px;
+    left: 24px;
+    z-index: 101;
     font-family: "Source Serif 4", Georgia, serif;
-    font-size: 14.5px;
+    font-size: 13.5px;
     font-weight: 600;
     color: var(--ink);
     text-decoration: none;
     letter-spacing: -0.005em;
     white-space: nowrap;
     border: 0;
+    opacity: 0.85;
+    transition: opacity .15s ease;
   }
-  .topnav-brand em {
+  .corner-brand:hover { opacity: 1; }
+  .corner-brand em {
     font-style: italic;
     font-weight: 500;
-    color: #148989;
+    color: var(--c-accent);
   }
-  .topnav-links {
-    list-style: none;
+  @media (max-width: 820px) { .corner-brand { display: none; } }
+
+  /* ---------- Side navigation (vertical timeline, right edge) ---------- */
+  .sidenav {
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 220px;
+    z-index: 100;
+    pointer-events: none;
     display: flex;
-    gap: 2px;
-    padding: 0;
-    margin: 0 0 0 auto;
-    align-items: stretch;
-  }
-  .topnav-links > li { position: relative; display: flex; }
-  .topnav-link {
-    display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 0 11px;
-    font-size: 12.5px;
-    font-weight: 500;
-    color: var(--muted);
-    text-decoration: none;
-    border: 0;
-    border-radius: 4px;
-    transition: color .12s ease, background .12s ease;
-    white-space: nowrap;
+  }
+  .sidenav-inner {
+    pointer-events: all;
+    width: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 0;
+  }
+  .sidenav-track {
+    position: absolute;
+    right: 20px;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: var(--rule-strong);
+    pointer-events: none;
+  }
+  .sidenav-item {
+    position: relative;
     cursor: pointer;
   }
-  .topnav-link:hover { color: var(--ink); background: rgba(0,0,0,0.035); }
-  .topnav-link.active { color: var(--link); }
-  .topnav-link .num {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10.5px;
-    color: var(--muted-2);
-    font-weight: 500;
-  }
-  .topnav-link.active .num { color: var(--link); opacity: 0.7; }
-  .topnav-link .chev {
-    width: 8px; height: 8px;
-    margin-left: 1px;
-    opacity: 0.55;
-    transition: transform .15s ease;
-  }
-  .topnav-links > li:hover .topnav-link .chev,
-  .topnav-links > li:focus-within .topnav-link .chev { transform: rotate(180deg); }
-  /* Subsection dropdown */
-  .topnav-sub {
+  .sidenav-item.is-main { height: 34px; }
+  .sidenav-item.is-sub  { height: 26px; }
+
+  /* dots — centered on the track (track center = 20.5px from right)
+     9px dot → right: 16px → center = 16 + 4.5 = 20.5px ✓
+     5px dot → right: 18px → center = 18 + 2.5 = 20.5px ✓ */
+  .sidenav-dot {
     position: absolute;
-    top: 100%;
-    left: 0;
-    min-width: 240px;
-    padding: 6px;
-    background: #fff;
-    border: 1px solid var(--rule);
-    border-radius: 6px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-    list-style: none;
-    margin: 4px 0 0;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 1.5px solid var(--rule-strong);
+    z-index: 2;
+    transition: transform .28s cubic-bezier(.4,0,.2,1),
+                background .22s ease,
+                border-color .22s ease,
+                box-shadow .28s ease;
+  }
+  .sidenav-item.is-sub .sidenav-dot {
+    right: 18px;
+    width: 5px; height: 5px;
+    background: var(--rule-strong);
+    border: 0;
+  }
+  .sidenav-item:hover .sidenav-dot {
+    background: var(--c-accent);
+    border-color: var(--c-accent);
+    box-shadow: 0 0 0 4px rgba(81,140,140,0.18);
+    transform: translateY(-50%) scale(1.3);
+  }
+  .sidenav-item.is-main.active .sidenav-dot {
+    background: var(--c-accent);
+    border-color: var(--c-accent);
+    box-shadow: 0 0 0 5px rgba(81,140,140,0.2);
+    transform: translateY(-50%) scale(1.5);
+  }
+  .sidenav-item.is-sub.active .sidenav-dot {
+    background: var(--c-accent);
+    box-shadow: 0 0 0 3px rgba(81,140,140,0.18);
+    transform: translateY(-50%) scale(1.8);
+  }
+
+  /* labels — plain text, no box, all visible on timeline hover */
+  /* main dot left edge: 16+9=25px → label right edge: 25+10=35px */
+  .sidenav-label {
+    position: absolute;
+    right: 35px;
+    top: 50%;
+    transform: translateY(-50%) translateX(5px);
     opacity: 0;
-    visibility: hidden;
-    transform: translateY(-4px);
-    transition: opacity .14s ease, transform .14s ease, visibility 0s linear .14s;
-  }
-  .topnav-links > li:hover .topnav-sub,
-  .topnav-links > li:focus-within .topnav-sub {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-    transition: opacity .14s ease, transform .14s ease, visibility 0s;
-  }
-  .topnav-sub a {
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+    white-space: nowrap;
     display: flex;
     align-items: baseline;
-    gap: 8px;
-    padding: 7px 10px;
-    border-radius: 4px;
+    gap: 5px;
+    font-family: "Inter", sans-serif;
+    font-size: 11.5px;
+    font-weight: 500;
     color: var(--ink-soft);
-    text-decoration: none;
-    font-size: 12.5px;
-    border: 0;
-    line-height: 1.4;
   }
-  .topnav-sub a:hover { background: var(--panel); color: var(--ink); }
-  .topnav-sub a.active { color: var(--link); background: var(--accent-soft); }
-  .topnav-sub a .num {
-    font-family: "JetBrains Mono", monospace;
+  /* sub dot left edge: 18+5=23px → label right edge: 23+10=33px */
+  .sidenav-item.is-sub .sidenav-label {
+    right: 33px;
     font-size: 10.5px;
+    font-weight: 400;
+    color: var(--muted);
+  }
+  .sidenav-label .sn-num {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9.5px;
     color: var(--muted-2);
-    flex: 0 0 24px;
   }
-  /* Mobile toggle (hamburger) */
-  .topnav-toggle {
-    display: none;
-    margin-left: auto;
-    background: none;
-    border: 1px solid var(--rule-strong);
-    border-radius: 4px;
-    padding: 6px 9px;
-    cursor: pointer;
-    color: var(--ink);
+  /* all labels visible on timeline hover */
+  .sidenav-inner:hover .sidenav-label {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
   }
-  .topnav-toggle .bars {
-    display: block;
-    width: 16px; height: 2px;
-    background: currentColor;
-    position: relative;
-  }
-  .topnav-toggle .bars::before,
-  .topnav-toggle .bars::after {
-    content: ""; position: absolute; left: 0;
-    width: 16px; height: 2px; background: currentColor;
-  }
-  .topnav-toggle .bars::before { top: -5px; }
-  .topnav-toggle .bars::after  { top: 5px; }
-
-  @media (max-width: 820px) {
-    .topnav-toggle { display: inline-flex; align-items: center; }
-    .topnav-links {
-      position: absolute;
-      top: 54px;
-      left: 0; right: 0;
-      flex-direction: column;
-      gap: 0;
-      padding: 8px 10px 14px;
-      background: #fff;
-      border-bottom: 1px solid var(--rule);
-      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-      display: none;
-      margin: 0;
-    }
-    .topnav.menu-open .topnav-links { display: flex; }
-    .topnav-links > li { width: 100%; }
-    .topnav-link { padding: 10px 12px; font-size: 13.5px; width: 100%; }
-    .topnav-sub {
-      position: static;
-      box-shadow: none;
-      border: 0;
-      padding: 0 0 0 22px;
-      opacity: 1;
-      visibility: visible;
-      transform: none;
-      transition: none;
-      margin: 0 0 4px 0;
-    }
-  }
+  @media (max-width: 1100px) { .sidenav { display: none; } }
 
   /* ---------- Header ---------- */
   header.hero {
@@ -415,8 +378,8 @@
   .iconlink svg { width: 14px; height: 14px; }
 
   /* ---------- Section headings ---------- */
-  section { margin: 56px 0; scroll-margin-top: 80px; }
-  h3[id]    { scroll-margin-top: 80px; }
+  section { margin: 56px 0; scroll-margin-top: 24px; }
+  h3[id]    { scroll-margin-top: 24px; }
   h2 {
     font-family: "Inter", sans-serif;
     font-weight: 600;
@@ -2061,6 +2024,87 @@
     .rq1-charts { grid-template-columns: 1fr; }
   }
 
+  /* ---------- §6.3 modality imprint ---------- */
+  .imprint-toolbar {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    margin: 18px 0 14px;
+  }
+  .imprint-ctrl { display: inline-flex; align-items: center; gap: 8px; }
+  .imprint-ctrl-label {
+    font-family: "Inter", sans-serif;
+    font-size: 11.5px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .imprint-dataset-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px 6px 14px;
+    background: var(--ink);
+    color: #fff;
+    border: 1px solid var(--ink);
+    border-radius: 999px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .12s ease, color .12s ease;
+  }
+  .imprint-dataset-btn:hover { background: #000; }
+  .imprint-dataset-btn .imprint-swap {
+    width: 14px; height: 14px; opacity: 0.85;
+  }
+  .imprint-legend {
+    display: inline-flex; align-items: center; gap: 14px;
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .imprint-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+  .imprint-legend-line {
+    width: 22px; height: 0; flex: 0 0 22px;
+    border-top: 2px solid var(--ink-soft);
+  }
+  .imprint-legend-line.dashed { border-top-style: dashed; }
+  .imprint-legend .mono sub { font-size: 0.8em; color: var(--muted); margin-left: 1px; }
+  .imprint-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 4px 0 6px;
+  }
+  .imprint-card {
+    border: 1px solid var(--rule);
+    background: #fff;
+    border-radius: 4px;
+    padding: 12px 14px 10px;
+    min-width: 0;
+  }
+  .imprint-card h4 {
+    font-family: "Inter", sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 6px;
+    letter-spacing: 0.005em;
+  }
+  .imprint-card h4 sub {
+    font-size: 0.72em;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+    margin-left: 1px;
+  }
+  .imprint-chart {
+    width: 100%;
+    height: 200px;
+  }
+  @media (max-width: 820px) {
+    .imprint-grid { grid-template-columns: 1fr; }
+  }
+
   /* ---------- Activation entropy panels ---------- */
   /* Reuses .pdist-panel / .pdist-pill markup; this rule just adapts the pill
      row so the "active" state behaves like a radio (one pair always selected
@@ -2177,65 +2221,105 @@
 </head>
 <body style="background-color: rgb(252, 252, 252)">
 
-<!-- ========== TOP NAVIGATION ========== -->
-<nav class="topnav" id="topnav" aria-label="Section navigation">
-  <div class="topnav-inner">
-    <a href="#top" class="topnav-brand">One Trunk or Many? <em>· 4M</em></a>
-    <button type="button" class="topnav-toggle" id="topnav-toggle" aria-label="Toggle navigation" aria-expanded="false">
-      <span class="bars" aria-hidden="true"></span>
-    </button>
-    <ul class="topnav-links" id="topnav-links">
-      <li><a class="topnav-link" href="#abstract"><span class="num">01</span>Abstract</a></li>
-      <li><a class="topnav-link" href="#intro"><span class="num">02</span>Intro</a></li>
-      <li>
-        <a class="topnav-link" href="#related-work">
-          <span class="num">03</span>Related
-          <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 L6 8 L9.5 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-        <ul class="topnav-sub">
-          <li><a href="#related-multimodal"><span class="num">3.1</span>Multimodal representation learning</a></li>
-          <li><a href="#related-similarity"><span class="num">3.2</span>Representational similarity analysis</a></li>
-          <li><a href="#related-platonic"><span class="num">3.3</span>Platonic Representation Hypothesis</a></li>
-        </ul>
-      </li>
-      <li>
-        <a class="topnav-link" href="#method">
-          <span class="num">04</span>Method
-          <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 L6 8 L9.5 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-        <ul class="topnav-sub">
-          <li><a href="#method-model"><span class="num">4.1</span>Model, modalities, datasets</a></li>
-          <li><a href="#method-pipeline"><span class="num">4.2</span>Pipeline overview</a></li>
-          <li><a href="#method-geometry"><span class="num">4.3</span>Activation geometry visualization</a></li>
-          <li><a href="#method-metrics"><span class="num">4.4</span>Similarity metrics</a></li>
-          <li><a href="#method-null"><span class="num">4.5</span>Permutation null &amp; multiple testing</a></li>
-        </ul>
-      </li>
-      <li>
-        <a class="topnav-link" href="#exploration">
-          <span class="num">05</span>Exploration
-          <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 L6 8 L9.5 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-        <ul class="topnav-sub">
-          <li><a href="#exploration-tsne"><span class="num">5.1</span>Activation space geometry (t-SNE)</a></li>
-          <li><a href="#exploration-distance"><span class="num">5.2</span>Paired-sample distances</a></li>
-          <li><a href="#exploration-entropy"><span class="num">5.3</span>Activation entropy</a></li>
-        </ul>
-      </li>
-      <li>
-        <a class="topnav-link" href="#results">
-          <span class="num">06</span>Results
-          <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 L6 8 L9.5 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-        <ul class="topnav-sub">
-          <li><a href="#results-metrics"><span class="num">6.1</span>Cross-modality similarity (RQ1)</a></li>
-          <li><a href="#joint-processing"><span class="num">6.2</span>Joint processing</a></li>
-        </ul>
-      </li>
-      <li><a class="topnav-link" href="#discussion"><span class="num">07</span>Discussion</a></li>
-      <li><a class="topnav-link" href="#conclusion"><span class="num">08</span>Conclusion</a></li>
-      <li><a class="topnav-link" href="#references"><span class="num">09</span>References</a></li>
-    </ul>
+<!-- ========== CORNER BRAND ========== -->
+<a href="#top" class="corner-brand" aria-label="Back to top">One Trunk or Many? <em>· 4M</em></a>
+
+<!-- ========== SIDE NAVIGATION ========== -->
+<nav class="sidenav" id="sidenav" aria-label="Section navigation">
+  <div class="sidenav-inner">
+    <div class="sidenav-track"></div>
+    <div class="sidenav-item is-main" data-href="#abstract" tabindex="0" role="link" aria-label="Abstract">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">01</span>Abstract</span>
+    </div>
+    <div class="sidenav-item is-main" data-href="#intro" tabindex="0" role="link" aria-label="Introduction">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">02</span>Introduction</span>
+    </div>
+    <div class="sidenav-item is-main" data-href="#related-work" tabindex="0" role="link" aria-label="Related Work">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">03</span>Related Work</span>
+    </div>
+    <div class="sidenav-item is-sub" data-href="#related-multimodal" tabindex="0" role="link" aria-label="Multimodal learning">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">3.1</span>Multimodal learning</span>
+    </div>
+    <div class="sidenav-item is-sub" data-href="#related-similarity" tabindex="0" role="link" aria-label="Similarity analysis">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">3.2</span>Similarity analysis</span>
+    </div>
+    <div class="sidenav-item is-sub" data-href="#related-platonic" tabindex="0" role="link" aria-label="Platonic hypothesis">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">3.3</span>Platonic hypothesis</span>
+    </div>
+    <div class="sidenav-item is-main" data-href="#method" tabindex="0" role="link" aria-label="Methodology">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">04</span>Methodology</span>
+    </div>
+    <div class="sidenav-item is-sub" data-href="#method-model" tabindex="0" role="link" aria-label="Model and datasets">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">4.1</span>Model &amp; datasets</span>
+    </div>
+    <div class="sidenav-item is-sub" data-href="#method-pipeline" tabindex="0" role="link" aria-label="Pipeline">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">4.2</span>Pipeline</span>
+    </div>
+    <div class="sidenav-item is-sub" data-href="#method-geometry" tabindex="0" role="link" aria-label="Geometry visualization">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">4.3</span>Geometry viz</span>
+    </div>
+    <div class="sidenav-item is-sub" data-href="#method-metrics" tabindex="0" role="link" aria-label="Metrics">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">4.4</span>Metrics</span>
+    </div>
+    <div class="sidenav-item is-sub" data-href="#method-null" tabindex="0" role="link" aria-label="Null distribution">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">4.5</span>Null distribution</span>
+    </div>
+    <div class="sidenav-item is-main" data-href="#exploration" tabindex="0" role="link" aria-label="Exploration">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">05</span>Exploration</span>
+    </div>
+    <div class="sidenav-item is-sub" data-href="#exploration-tsne" tabindex="0" role="link" aria-label="t-SNE geometry">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">5.1</span>t-SNE geometry</span>
+    </div>
+    <div class="sidenav-item is-sub" data-href="#exploration-distance" tabindex="0" role="link" aria-label="Paired distances">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">5.2</span>Paired distances</span>
+    </div>
+    <div class="sidenav-item is-sub" data-href="#exploration-entropy" tabindex="0" role="link" aria-label="Entropy">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">5.3</span>Entropy</span>
+    </div>
+    <div class="sidenav-item is-main" data-href="#results" tabindex="0" role="link" aria-label="Results">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">06</span>Results</span>
+    </div>
+    <div class="sidenav-item is-sub" data-href="#results-metrics" tabindex="0" role="link" aria-label="Cross-modal similarity">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">6.1</span>Cross-modal similarity</span>
+    </div>
+    <div class="sidenav-item is-sub" data-href="#joint-processing" tabindex="0" role="link" aria-label="Joint processing">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">6.2</span>Joint processing</span>
+    </div>
+    <div class="sidenav-item is-sub" data-href="#modality-imprint" tabindex="0" role="link" aria-label="Modality imprint">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">6.3</span>Modality imprint</span>
+    </div>
+    <div class="sidenav-item is-main" data-href="#discussion" tabindex="0" role="link" aria-label="Discussion">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">07</span>Discussion</span>
+    </div>
+    <div class="sidenav-item is-main" data-href="#conclusion" tabindex="0" role="link" aria-label="Conclusion">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">08</span>Conclusion</span>
+    </div>
+    <div class="sidenav-item is-main" data-href="#references" tabindex="0" role="link" aria-label="References">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">09</span>References</span>
+    </div>
   </div>
 </nav>
 
@@ -2528,72 +2612,42 @@
 
     <div class="tsne-block">
 
-      <!-- HYPERSIM -->
+      <!-- MERGED single panel with dataset switch -->
       <div class="tsne-panel">
         <div class="tsne-panel-head">
           <div class="tsne-panel-title">
-            <span class="chip chip--hypersim"><span class="swatch"></span>Hypersim</span>
-            <span class="tsne-subtitle">synthetic indoor · 100 scenes</span>
+            <button type="button" class="imprint-dataset-btn" id="tsne-dataset" data-dataset="hypersim">
+              <span class="tsne-ds-label">Hypersim</span>
+              <svg class="imprint-swap" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M3 6 L13 6 M10 3 L13 6 L10 9 M13 10 L3 10 M6 13 L3 10 L6 7"
+                      fill="none" stroke="currentColor" stroke-width="1.4"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <span class="tsne-subtitle" id="tsne-ds-subtitle">synthetic indoor · 100 scenes</span>
           </div>
           <div class="tsne-controls">
             <label class="tsne-ctrl">
               <span class="tsne-ctrl-label">Color by</span>
-              <select id="hyp-colorby" class="tsne-select">
+              <select id="tsne-colorby" class="tsne-select">
                 <option value="modality">Modality</option>
                 <option value="scene_category">Scene category</option>
               </select>
             </label>
           </div>
         </div>
-        <div class="tsne-plot-area" id="hyp-plot" data-panel="hyp">
-          <button type="button" class="tsne-play-btn" id="hyp-play" aria-label="Play paired-line animation">
+        <div class="tsne-plot-area" id="tsne-plot" data-panel="tsne">
+          <button type="button" class="tsne-play-btn" id="tsne-play" aria-label="Play paired-line animation">
             <span class="icon" aria-hidden="true"></span>
             <span class="label">Pair lines</span>
           </button>
         </div>
         <div class="tsne-slider-row">
-          <label class="tsne-ctrl-label" for="hyp-layer">Encoder layer</label>
-          <input type="range" id="hyp-layer" min="0" max="11" value="11" class="tsne-slider" />
-          <span class="tsne-layer-val mono" id="hyp-layer-val">L11</span>
-          <label class="tsne-ctrl-label" style="margin-left:20px" for="hyp-pair">Modality pair</label>
-          <select id="hyp-pair" class="tsne-select">
-            <option value="rgb-depth">RGB ↔ Depth</option>
-            <option value="rgb-normals">RGB ↔ Normals</option>
-            <option value="depth-normals">Depth ↔ Normals</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- DIODE -->
-      <div class="tsne-panel">
-        <div class="tsne-panel-head">
-          <div class="tsne-panel-title">
-            <span class="chip chip--diode"><span class="swatch"></span>DIODE</span>
-            <span class="tsne-subtitle">real indoor + outdoor · 25 scenes</span>
-          </div>
-          <div class="tsne-controls">
-            <label class="tsne-ctrl">
-              <span class="tsne-ctrl-label">Color by</span>
-              <select id="dio-colorby" class="tsne-select">
-                <option value="modality">Modality</option>
-                <option value="scene_category">Scene category</option>
-                <option value="scene">Scene type</option>
-              </select>
-            </label>
-          </div>
-        </div>
-        <div class="tsne-plot-area" id="dio-plot" data-panel="dio">
-          <button type="button" class="tsne-play-btn" id="dio-play" aria-label="Play paired-line animation">
-            <span class="icon" aria-hidden="true"></span>
-            <span class="label">Pair lines</span>
-          </button>
-        </div>
-        <div class="tsne-slider-row">
-          <label class="tsne-ctrl-label" for="dio-layer">Encoder layer</label>
-          <input type="range" id="dio-layer" min="0" max="11" value="11" class="tsne-slider" />
-          <span class="tsne-layer-val mono" id="dio-layer-val">L11</span>
-          <label class="tsne-ctrl-label" style="margin-left:20px" for="dio-pair">Modality pair</label>
-          <select id="dio-pair" class="tsne-select">
+          <label class="tsne-ctrl-label" for="tsne-layer">Encoder layer</label>
+          <input type="range" id="tsne-layer" min="0" max="11" value="11" class="tsne-slider" />
+          <span class="tsne-layer-val mono" id="tsne-layer-val">L11</span>
+          <label class="tsne-ctrl-label" style="margin-left:20px" for="tsne-pair">Modality pair</label>
+          <select id="tsne-pair" class="tsne-select">
             <option value="rgb-depth">RGB ↔ Depth</option>
             <option value="rgb-normals">RGB ↔ Normals</option>
             <option value="depth-normals">Depth ↔ Normals</option>
@@ -2604,23 +2658,39 @@
       <div class="tsne-caption figcap">Each point is one token activation. Points are colored by the selected granularity. Use the layer slider to observe how the activation geometry evolves across the 12 encoder layers.</div>
     </div>
 
-    <div class="aside">
+    <div class="aside" id="tsne-interp">
       <span class="label">Interpretive note</span>
-      <p><em>[Placeholder — add interpretation once figures are injected.]</em> Expected finding: at later layers, points cluster by modality rather than by scene, indicating that modality identity remains the dominant axis of variation in absolute geometry — even as CKA and k-NN show the cross-modal gap is smaller than chance would predict.</p>
+      <p id="tsne-interp-text" style="margin:0; line-height:1.7;"></p>
+    </div>
+
+    <div class="aside" style="margin-top:12px; border-left:none; background: color-mix(in oklch, var(--c-accent) 10%, transparent);">
+      <span class="label">Summary</span>
+      <p>Taken together, the three t-SNE colourings build a coherent and increasingly precise picture. The modality colouring establishes that the encoder never merges the two clouds — the modality boundary holds at every layer, across both datasets. The category colouring shows that both clouds develop matching internal semantic organisation, with scene-type subclusters emerging within each modality independently. The scene identity colouring shows that by the deep layers, the two clouds have developed matching fine-grained scene-level geography: the same internal map, drawn twice.</p>
+      <p style="margin-bottom:0">The overall picture is not convergence into one space, but the progressive development of two parallel spaces with shared structure. The similarity metrics quantify that growing correspondence; the t-SNE visualisations show what it looks like geometrically.</p>
     </div>
 
     <!-- ========== 4a (cont.) — Paired-sample distance analysis ========== -->
     <h3 id="exploration-distance" style="margin-top:42px"><span class="sub-num">5.2</span>Paired-sample distances per layer</h3>
     <p class="pdist-intro">
-      The t-SNE figures above show how each modality's whole cloud moves; here we measure the <b>per-sample</b> picture: for every image we compute the Euclidean distance between its two paired modality embeddings (in PCA-50 space) at each encoder layer. A shrinking distance over depth means a given image's representations under different sensors are being pulled together. We overlay the mean curve for the three modality pairs, and offer the per-pair box plots one click away.
+      The t-SNE figures above show how each modality's whole cloud moves. Here we measure the per-sample picture. For each scene, we compute the Euclidean distance in PCA-2 space between the representations of two modalities at each encoder layer. The boxplot shows how those per-scene distances are distributed across all scenes at each layer. A decreasing median means same-scene representations from different modalities are getting geometrically closer as depth increases. A shrinking IQR means that convergence is consistent across scenes rather than driven by a few outliers. A Wilcoxon signed-rank test comparing L00 and L11 is reported for each pair.
+    </p>
+    <p class="pdist-intro" style="margin-top:0">
+      The boxplots provide the quantitative geometric counterpart to the t-SNE. The modality clouds do not merge, but same-scene pairs do get closer across layers, and that convergence is statistically significant for all three pairs.
     </p>
 
     <div class="pdist-block">
 
-      <!-- HYPERSIM panel -->
-      <div class="pdist-panel" data-pdist-panel="hyp" data-dataset="hypersim">
+      <!-- MERGED panel -->
+      <div class="pdist-panel" data-pdist-panel="merged" data-dataset="hypersim">
         <div class="pdist-panel-head">
-          <span class="chip chip--hypersim"><span class="swatch"></span>Hypersim</span>
+          <button type="button" class="imprint-dataset-btn" id="pdist-dataset-btn">
+            <span class="tsne-ds-label">Hypersim</span>
+            <svg class="imprint-swap" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3 6 L13 6 M10 3 L13 6 L10 9 M13 10 L3 10 M6 13 L3 10 L6 7"
+                    fill="none" stroke="currentColor" stroke-width="1.4"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
           <span class="pdist-subtitle">paired distance vs. encoder layer</span>
         </div>
         <div class="pdist-figure">
@@ -2642,7 +2712,7 @@
             Depth <span class="pair-sep">↔</span> Normals
           </button>
         </div>
-        <div class="pdist-detail" data-pdist-detail="hyp">
+        <div class="pdist-detail" data-pdist-detail="merged">
           <div class="pdist-detail-inner">
             <div class="pdist-detail-content">
               <div class="pdist-chart" data-pdist-box></div>
@@ -2651,79 +2721,37 @@
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- DIODE panel -->
-      <div class="pdist-panel" data-pdist-panel="dio" data-dataset="diode">
-        <div class="pdist-panel-head">
-          <span class="chip chip--diode"><span class="swatch"></span>DIODE</span>
-          <span class="pdist-subtitle">paired distance vs. encoder layer</span>
-        </div>
-        <div class="pdist-figure">
-          <div class="pdist-chart" data-pdist-overlaid></div>
-          <div class="pdist-figcap">Mean paired distance across layers 0–11, one curve per modality pair. Lower = closer agreement between paired samples.</div>
-        </div>
-        <div class="pdist-pills-row">
-          <span class="pdist-label">Show distribution for</span>
-          <button class="pdist-pill" type="button" data-pair="rgb-depth" aria-expanded="false">
-            <span class="pdist-dot" style="background: var(--c-rgb-depth)"></span>
-            RGB <span class="pair-sep">↔</span> Depth
-          </button>
-          <button class="pdist-pill" type="button" data-pair="rgb-normals" aria-expanded="false">
-            <span class="pdist-dot" style="background: var(--c-rgb-normals)"></span>
-            RGB <span class="pair-sep">↔</span> Normals
-          </button>
-          <button class="pdist-pill" type="button" data-pair="depth-normals" aria-expanded="false">
-            <span class="pdist-dot" style="background: var(--c-depth-normals)"></span>
-            Depth <span class="pair-sep">↔</span> Normals
-          </button>
-        </div>
-        <div class="pdist-detail" data-pdist-detail="dio">
-          <div class="pdist-detail-inner">
-            <div class="pdist-detail-content">
-              <div class="pdist-chart" data-pdist-box></div>
-              <div class="pdist-detail-cap" data-pdist-cap></div>
-            </div>
-          </div>
-        </div>
-      </div>
+    </div><!-- end pdist-block -->
+
+    <div class="aside" style="margin-top:12px">
+      <span class="label">Interpretive note</span>
+      <p>The three pairs converge in distinct ways, each consistent with what the similarity metrics and t-SNE already suggested.</p>
+      <p><b>RGB ↔ Depth</b> converges continuously and accelerates in the deep layers. The distance is still decreasing at layer 11, suggesting the network has not finished aligning by the final layer. The IQR also shrinks substantially, meaning this is not driven by a few easy scenes. The encoder is systematically pulling same-scene RGB and depth representations together across the entire dataset.</p>
+      <p><b>Depth ↔ Normals</b> converges fast and early, then plateaus. The encoder exploits the shared geometric structure between the two modalities within the first few layers and makes little further progress beyond that. The encoder stops pushing the representations closer once that structure is exhausted.</p>
+      <p style="margin-bottom:0"><b>RGB ↔ Normals</b> converges slowly and modestly throughout. The shallow slope reflects the difficulty of bridging appearance and geometry. The encoder makes progress at every layer but absolute distances remain larger than for the other two pairs.</p>
     </div>
 
     <!-- ========== 4a (cont.) — Activation entropy per modality ========== -->
     <h3 id="exploration-entropy" style="margin-top:42px"><span class="sub-num">5.3</span>Activation entropy per modality</h3>
     <p class="pdist-intro">
-      For each encoder layer we bin the PCA-2 projection of one modality's activations into 60 bins and compute the Shannon entropy (in bits). Higher = the activations are more diffuse across the projection; lower = they concentrate into fewer cells. We plot the per-layer entropy curve for each modality of a pair separately, so the gap between the two curves measures whether 4M processes the two streams with similar complexity.
+      The distance plots show how close same-scene representations from different modalities are in space. Shannon entropy asks a complementary question: how internally varied is each modality's cloud at each layer? A tight, compact cloud has low entropy — the encoder is producing similar representations for all scenes under that modality. A diffuse, spread-out cloud has high entropy — the encoder is producing more varied, discriminative representations. Full convergence would require not just that the two clouds move closer together, but that the encoder processes both modalities with similar internal complexity.
     </p>
 
     <div class="pdist-block">
 
-      <!-- HYPERSIM entropy panel -->
-      <div class="pdist-panel" data-entropy-panel="hyp" data-dataset="hypersim">
+      <!-- MERGED entropy panel -->
+      <div class="pdist-panel" data-entropy-panel="merged" data-dataset="hypersim">
         <div class="pdist-panel-head">
-          <span class="chip chip--hypersim"><span class="swatch"></span>Hypersim</span>
-          <span class="pdist-subtitle">activation entropy vs. encoder layer</span>
-        </div>
-        <div class="pdist-pills-row" style="border-top:0;background:#fff;padding-bottom:6px">
-          <span class="pdist-label">Pair</span>
-          <button class="pdist-pill entropy-pill active" type="button" data-pair="rgb-depth" aria-pressed="true">
-            RGB <span class="pair-sep">↔</span> Depth
+          <button type="button" class="imprint-dataset-btn" id="entropy-dataset-btn">
+            <span class="tsne-ds-label">Hypersim</span>
+            <svg class="imprint-swap" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3 6 L13 6 M10 3 L13 6 L10 9 M13 10 L3 10 M6 13 L3 10 L6 7"
+                    fill="none" stroke="currentColor" stroke-width="1.4"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </button>
-          <button class="pdist-pill entropy-pill" type="button" data-pair="rgb-normals" aria-pressed="false">
-            RGB <span class="pair-sep">↔</span> Normals
-          </button>
-          <button class="pdist-pill entropy-pill" type="button" data-pair="depth-normals" aria-pressed="false">
-            Depth <span class="pair-sep">↔</span> Normals
-          </button>
-        </div>
-        <div class="pdist-figure">
-          <div class="entropy-chart" data-entropy-chart></div>
-          <div class="pdist-figcap" data-entropy-cap></div>
-        </div>
-      </div>
-
-      <!-- DIODE entropy panel -->
-      <div class="pdist-panel" data-entropy-panel="dio" data-dataset="diode">
-        <div class="pdist-panel-head">
-          <span class="chip chip--diode"><span class="swatch"></span>DIODE</span>
           <span class="pdist-subtitle">activation entropy vs. encoder layer</span>
         </div>
         <div class="pdist-pills-row" style="border-top:0;background:#fff;padding-bottom:6px">
@@ -2744,6 +2772,23 @@
         </div>
       </div>
     </div>
+    </div><!-- end entropy pdist-block -->
+
+    <div class="aside" style="margin-top:12px">
+      <span class="label">Interpretive note</span>
+      <p>The most striking pattern across all three pairs is how compact the geometric modalities are right after tokenisation. Depth and normals enter the network as tight, low-variance clouds while RGB is already diffuse. In the first one or two layers, the geometric modalities expand rapidly — depth nearly doubles its entropy by L02, closing most of the initial gap with RGB. This early expansion is not alignment; it is transformation. The encoder is unpacking the compact geometric encoding into a richer, more distributed representation.</p>
+      <p>What happens after that expansion differs across pairs.</p>
+      <p>For <em>depth ↔ normals</em>, the two clouds reach similar entropy levels early and the gap remains small throughout — consistent with fast, early convergence.</p>
+      <p>For <em>RGB ↔ depth</em>, depth stays more diffuse than RGB through most of the network, only converging at L11 — consistent with late-accelerating alignment where the deep layers are doing the hardest work.</p>
+      <p>For <em>RGB ↔ normals</em>, the two modalities interleave closely from around layer 5 onward — consistent with the slow, steady convergence observed in the distance plots.</p>
+      <p style="margin-bottom:0">One anomaly is worth noting: depth drops sharply at L01 in the depth ↔ normals pair before recovering. This produces a brief spike in the entropy gap at that layer. A plausible explanation is that the first transformer layer temporarily compresses depth representations before expanding them again, but this does not affect the overall trajectory in any meaningful way.</p>
+    </div>
+
+    <div class="aside" style="margin-top:12px; border-left:none; background: color-mix(in oklch, var(--c-accent) 10%, transparent);">
+      <span class="label">Summary</span>
+      <p>Taken together, the entropy figures add a final nuance to the main question. The partial alignment we observe across the network is not just a matter of the two clouds moving closer in space. The encoder also reshapes the internal complexity of each modality's representations across layers, bringing them toward similar levels of diffuseness. Even this convergence is only partial and pair-dependent. At layer 11, each modality retains a distinct representational character: RGB remains the most varied, normals consistently more diffuse than depth, depth the most variable across datasets. The encoder brings these characters closer together, but never erases them.</p>
+    </div>
+
   </section>
 
   <!-- ========== RESULTS ========== -->
@@ -3092,6 +3137,65 @@
       </tbody>
     </table>
     <div class="figcap" style="margin-top:8px"><b>Table 2.</b> Joint-vs-joint peak CKA across L0–L11, per pair × dataset.</div>
+
+    <!-- ========== 6.3 — Modality imprint under joint processing ========== -->
+    <h3 id="modality-imprint" style="margin-top:42px"><span class="sub-num">6.3</span>Does the partner leave an imprint?</h3>
+    <p>
+      Joint processing is only interesting if the encoder actually <em>uses</em> the partner. Here we compare each modality's representation when processed alone against its representation when processed jointly with a partner. <b>A value near 1 means the partner was effectively ignored; a value well below 1 means the partner left a detectable imprint on the modality's representation.</b> Each chart's title reads as X<sub>y</sub>: modality X alone versus X when bundled with y.
+    </p>
+
+    <div class="imprint-toolbar">
+      <label class="imprint-ctrl">
+        <span class="imprint-ctrl-label">Metric</span>
+        <select id="imprint-metric" class="tsne-select">
+          <option value="cka">CKA</option>
+          <option value="knn_overlap">k-NN overlap</option>
+          <option value="pwcca">PWCCA</option>
+        </select>
+      </label>
+      <button type="button" class="imprint-dataset-btn" id="imprint-dataset" data-dataset="hypersim">
+        <span class="imprint-ds-label">Hypersim</span>
+        <svg class="imprint-swap" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M3 6 L13 6 M10 3 L13 6 L10 9 M13 10 L3 10 M6 13 L3 10 L6 7"
+                fill="none" stroke="currentColor" stroke-width="1.4"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <span class="imprint-legend">
+        <span class="imprint-legend-item"><span class="imprint-legend-line solid"></span><span class="mono">X<sub>y</sub></span></span>
+      </span>
+    </div>
+
+    <div class="imprint-grid">
+      <div class="imprint-card" data-mod="rgb" data-partner="depth">
+        <h4>RGB<sub>depth</sub></h4>
+        <div class="imprint-chart"></div>
+      </div>
+      <div class="imprint-card" data-mod="rgb" data-partner="normals">
+        <h4>RGB<sub>normals</sub></h4>
+        <div class="imprint-chart"></div>
+      </div>
+      <div class="imprint-card" data-mod="depth" data-partner="rgb">
+        <h4>Depth<sub>rgb</sub></h4>
+        <div class="imprint-chart"></div>
+      </div>
+      <div class="imprint-card" data-mod="depth" data-partner="normals">
+        <h4>Depth<sub>normals</sub></h4>
+        <div class="imprint-chart"></div>
+      </div>
+      <div class="imprint-card" data-mod="normals" data-partner="rgb">
+        <h4>Normals<sub>rgb</sub></h4>
+        <div class="imprint-chart"></div>
+      </div>
+      <div class="imprint-card" data-mod="normals" data-partner="depth">
+        <h4>Normals<sub>depth</sub></h4>
+        <div class="imprint-chart"></div>
+      </div>
+    </div>
+
+    <p class="figcap" style="margin-top:8px">
+      Each curve is the layer-wise similarity (selected metric) between the modality fed alone and the same modality slice from a joint forward pass. The horizontal dotted reference at <span class="mono">1.0</span> marks "partner ignored"; deviation downward marks "imprint".
+    </p>
   </section>
 
   <!-- ========== DISCUSSION ========== -->
@@ -3172,7 +3276,7 @@
     </div>
     <div class="lightbox-stage" id="lb-stage">
       <div class="lightbox-stage-inner">
-        <img id="lb-img" src="" alt="" />
+        <img id="lb-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" />
       </div>
     </div>
     <div class="lightbox-thumbs" id="lb-thumbs"></div>
@@ -3181,90 +3285,49 @@
 
 <script>
 /* =========================================================
-   Top navigation — mobile toggle, scroll shadow, active link
-   tracking via IntersectionObserver.
+   Side navigation — vertical timeline with scroll-spy
    ========================================================= */
 (function () {
-  const nav = document.getElementById("topnav");
-  if (!nav) return;
-  const toggle = document.getElementById("topnav-toggle");
-  const links = nav.querySelectorAll("a[href^='#']");
+  const items = Array.from(document.querySelectorAll(".sidenav-item[data-href]"));
+  if (!items.length) return;
 
-  // Mobile menu toggle
-  if (toggle) {
-    toggle.addEventListener("click", () => {
-      const open = nav.classList.toggle("menu-open");
-      toggle.setAttribute("aria-expanded", open ? "true" : "false");
-    });
-  }
-  // Close mobile menu after clicking a link
-  links.forEach((a) => {
-    a.addEventListener("click", () => {
-      nav.classList.remove("menu-open");
-      if (toggle) toggle.setAttribute("aria-expanded", "false");
+  // Click / keyboard navigation
+  items.forEach((item) => {
+    const handler = () => {
+      const target = document.querySelector(item.dataset.href);
+      if (!target) return;
+      const top = target.getBoundingClientRect().top + window.scrollY - 24;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    };
+    item.addEventListener("click", handler);
+    item.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handler(); }
     });
   });
 
-  // Drop shadow on scroll
-  const onScroll = () => {
-    nav.classList.toggle("scrolled", window.scrollY > 4);
-  };
-  onScroll();
-  window.addEventListener("scroll", onScroll, { passive: true });
+  // Scroll-spy: find the last anchor whose top is above 35% of viewport height
+  const anchors = items
+    .map((item) => ({ href: item.dataset.href, el: document.querySelector(item.dataset.href) }))
+    .filter((a) => a.el);
 
-  // Active-section tracking — observe both <section> blocks (top-level)
-  // and h3[id] (subsections). The link whose target is currently most
-  // visible gets `.active`.
-  const targets = Array.from(
-    document.querySelectorAll("section[id], h3[id]")
-  );
-  const linksByHash = new Map();
-  links.forEach((a) => {
-    const hash = a.getAttribute("href");
-    if (!linksByHash.has(hash)) linksByHash.set(hash, []);
-    linksByHash.get(hash).push(a);
-  });
-
-  const setActive = (hash) => {
-    links.forEach((a) => a.classList.remove("active"));
-    if (!hash) return;
-    const matched = linksByHash.get(hash) || [];
-    matched.forEach((a) => a.classList.add("active"));
-    // Also mark the parent top-level link when a subsection is active.
-    matched.forEach((a) => {
-      const li = a.closest(".topnav-links > li");
-      if (li) {
-        const top = li.querySelector(":scope > .topnav-link");
-        if (top) top.classList.add("active");
-      }
-    });
-  };
-
-  if ("IntersectionObserver" in window && targets.length) {
-    const visible = new Map();
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) visible.set(e.target.id, e.intersectionRatio);
-          else visible.delete(e.target.id);
-        });
-        // Pick the visible target highest on the page; clear active state
-        // when nothing is in the band (e.g. at scrollY=0 before the first
-        // section enters the viewport).
-        if (visible.size === 0) { setActive(null); return; }
-        let bestId = null, bestTop = Infinity;
-        visible.forEach((_, id) => {
-          const el = document.getElementById(id);
-          if (!el) return;
-          const t = el.getBoundingClientRect().top;
-          if (t < bestTop) { bestTop = t; bestId = id; }
-        });
-        if (bestId) setActive("#" + bestId);
-      },
-      { rootMargin: "-80px 0px -55% 0px", threshold: [0, 0.25, 0.5, 1] }
-    );
-    targets.forEach((t) => io.observe(t));
+  let currentHref = null;
+  function setActive(href) {
+    if (href === currentHref) return;
+    currentHref = href;
+    items.forEach((item) => item.classList.toggle("active", item.dataset.href === href));
   }
+
+  function updateActive() {
+    const threshold = window.innerHeight * 0.35;
+    let best = null;
+    for (const { href, el } of anchors) {
+      if (el.getBoundingClientRect().top <= threshold) best = href;
+    }
+    setActive(best);
+  }
+
+  window.addEventListener("scroll", updateActive, { passive: true });
+  updateActive();
 })();
 
 /* =========================================================
@@ -3327,6 +3390,7 @@
       },
       yaxis: {
         title: { text: "paired distance (PCA-2)", font: { size: 11, color: "#6b6b6b" }, standoff: 8 },
+        range: [0, 80],
         gridcolor: "#eeeeea",
         gridwidth: 1,
         zeroline: false,
@@ -3397,23 +3461,25 @@
     return {
       traces: [trace],
       layout: Object.assign(commonLayout(payload.layers), {
-        margin: { l: 56, r: 16, t: 24, b: 38 },
+        margin: { l: 56, r: 16, t: 40, b: 38 },
         boxmode: "group",
-        // Switch off "x unified" — boxes already carry their own multi-line
-        // hover, and unified mode bleeds the neighbouring box's stats into
-        // the tooltip.
         hovermode: "closest",
         hoverlabel: {
           bgcolor: "rgba(255,255,255,0.96)",
           bordercolor: "rgba(0,0,0,0.15)",
           font: { color: "#1a1a1a", size: 11, family: "Inter, sans-serif" },
         },
-        xaxis: Object.assign(commonLayout(payload.layers).xaxis, {
-          // Box plot uses Plotly's categorical x — the precomputed stats above
-          // use layer labels directly, so we drop the numeric tick override.
-          tickmode: undefined, tickvals: undefined, ticktext: undefined,
-          range: undefined,
+        yaxis: Object.assign(commonLayout(payload.layers).yaxis, {
+          range: [0, 80],
         }),
+        annotations: [{
+          text: "<b>Wilcoxon signed rank test L00 vs L11: <i>p</i> &lt; 1e&#8209;4 &nbsp;***</b>",
+          xref: "paper", yref: "paper",
+          x: 0.5, y: 1.0,
+          xanchor: "center", yanchor: "bottom",
+          showarrow: false,
+          font: { size: 10.5, color: "#4a4a4a", family: "Inter, sans-serif" },
+        }],
       }),
     };
   }
@@ -3427,25 +3493,42 @@
   }
 
   async function setupPanel(panel) {
-    const dataset = panel.dataset.dataset; // "hypersim" | "diode"
+    let currentDataset = panel.dataset.dataset; // "hypersim" | "diode"
     const overlaidEl = panel.querySelector("[data-pdist-overlaid]");
     const detail     = panel.querySelector(".pdist-detail");
     const boxEl      = detail.querySelector("[data-pdist-box]");
     const cap        = detail.querySelector("[data-pdist-cap]");
     const pills      = panel.querySelectorAll(".pdist-pill");
+    const dsBtn      = document.getElementById("pdist-dataset-btn");
 
-    let payload;
-    try {
-      payload = await loadDataset(dataset);
-    } catch (e) {
-      overlaidEl.innerHTML = `<div style="padding:18px;color:#b51f1f;font-family:Inter,sans-serif;font-size:13px">Failed to load distances for ${dataset}: ${e.message}</div>`;
-      return;
+    async function renderOverlaid() {
+      let payload;
+      try {
+        payload = await loadDataset(currentDataset);
+      } catch (e) {
+        overlaidEl.innerHTML = `<div style="padding:18px;color:#b51f1f;font-family:Inter,sans-serif;font-size:13px">Failed to load distances for ${currentDataset}: ${e.message}</div>`;
+        return null;
+      }
+      const { traces, layout } = buildOverlaid(payload);
+      await Plotly.react(overlaidEl, traces, layout, { displayModeBar: false, responsive: true });
+      return payload;
     }
 
-    const { traces, layout } = buildOverlaid(payload);
-    await Plotly.react(overlaidEl, traces, layout, {
-      displayModeBar: false, responsive: true,
-    });
+    let payload = await renderOverlaid();
+
+    // Dataset toggle
+    if (dsBtn) {
+      dsBtn.addEventListener("click", async () => {
+        const prevPair = currentPair;
+        const prevPill = prevPair ? panel.querySelector(`.pdist-pill[data-pair="${prevPair}"]`) : null;
+        currentDataset = currentDataset === "hypersim" ? "diode" : "hypersim";
+        const lbl = dsBtn.querySelector(".tsne-ds-label");
+        if (lbl) lbl.textContent = currentDataset === "hypersim" ? "Hypersim" : "DIODE";
+        payload = await renderOverlaid();
+        // Re-open box plot for same pair if one was open
+        if (prevPair && prevPill && payload) open(prevPair, prevPill);
+      });
+    }
 
     let currentPair = null;
     function close() {
@@ -3457,15 +3540,13 @@
       currentPair = null;
     }
     async function open(pair, pill) {
+      if (!payload) return;
       const { traces, layout } = buildBox(payload, pair);
       detail.classList.add("open");
-      // Wait one frame so the container has its final height before drawing.
       await new Promise(requestAnimationFrame);
-      await Plotly.react(boxEl, traces, layout, {
-        displayModeBar: false, responsive: true,
-      });
+      await Plotly.react(boxEl, traces, layout, { displayModeBar: false, responsive: true });
       cap.textContent =
-        `Per-layer distribution of paired distances · ${PAIR_LABEL[pair]} · ${DATASET_LABEL[dataset]}.`;
+        `Per-layer distribution of paired distances · ${PAIR_LABEL[pair]} · ${DATASET_LABEL[currentDataset]}.`;
       pills.forEach((p) => {
         const isActive = p === pill;
         p.classList.toggle("active", isActive);
@@ -3480,11 +3561,14 @@
         else open(pair, pill);
       });
     });
+    // Open rgb-depth by default
+    const defaultPill = panel.querySelector(".pdist-pill[data-pair='rgb-depth']");
+    if (defaultPill && payload) open("rgb-depth", defaultPill);
   }
 
   function init() {
     if (typeof Plotly === "undefined") return;
-    document.querySelectorAll(".pdist-panel").forEach(setupPanel);
+    document.querySelectorAll("[data-pdist-panel]").forEach(setupPanel);
     window.addEventListener("resize", () => {
       document.querySelectorAll(".pdist-chart").forEach((el) => {
         if (el && el.data) Plotly.Plots.resize(el);
@@ -3579,20 +3663,29 @@
   }
 
   async function setupPanel(panel) {
-    const dataset = panel.dataset.dataset;
+    let dataset = panel.dataset.dataset;
     const chartEl = panel.querySelector("[data-entropy-chart]");
     const capEl   = panel.querySelector("[data-entropy-cap]");
     const pills   = panel.querySelectorAll(".entropy-pill");
+    const dsBtn   = document.getElementById("entropy-dataset-btn");
 
     let payload;
-    try {
-      payload = await loadDataset(dataset);
-    } catch (e) {
-      chartEl.innerHTML = `<div style="padding:18px;color:#b51f1f;font-family:Inter,sans-serif;font-size:13px">Failed to load entropy for ${dataset}: ${e.message}</div>`;
-      return;
+    async function loadPayload() {
+      try {
+        payload = await loadDataset(dataset);
+      } catch (e) {
+        chartEl.innerHTML = `<div style="padding:18px;color:#b51f1f;font-family:Inter,sans-serif;font-size:13px">Failed to load entropy for ${dataset}: ${e.message}</div>`;
+        payload = null;
+      }
     }
 
+    await loadPayload();
+
+    let currentPair = "rgb-depth";
+
     async function render(pair) {
+      if (!payload) return;
+      currentPair = pair;
       const traces = buildEntropyTraces(payload, pair);
       const layout = buildEntropyLayout(payload.layers);
       await Plotly.react(chartEl, traces, layout, {
@@ -3611,6 +3704,16 @@
       pill.addEventListener("click", () => render(pill.dataset.pair));
     });
 
+    if (dsBtn) {
+      dsBtn.addEventListener("click", async () => {
+        dataset = dataset === "hypersim" ? "diode" : "hypersim";
+        const lbl = dsBtn.querySelector(".tsne-ds-label");
+        if (lbl) lbl.textContent = dataset === "hypersim" ? "Hypersim" : "DIODE";
+        await loadPayload();
+        render(currentPair);
+      });
+    }
+
     // Render whichever pill is initially marked active (default: rgb-depth).
     const initial = panel.querySelector(".entropy-pill.active") || pills[0];
     render(initial.dataset.pair);
@@ -3621,6 +3724,173 @@
     document.querySelectorAll("[data-entropy-panel]").forEach(setupPanel);
     window.addEventListener("resize", () => {
       document.querySelectorAll(".entropy-chart").forEach((el) => {
+        if (el && el.data) Plotly.Plots.resize(el);
+      });
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+
+/* =========================================================
+   §6.3 — Modality imprint under joint processing. Six tiny
+   line charts (one per modality × partner) showing per-layer
+   self-vs-joint similarity. A horizontal "partner ignored"
+   reference is drawn at y=1.
+   ========================================================= */
+(function () {
+  const MOD_COLOR = {
+    rgb:     "#ea5e00", // --c-rgb
+    depth:   "#007ba5", // --c-depth
+    normals: "#990165", // --c-normals
+  };
+  // Pair colors — used for the second line (the "X_y" joint variant).
+  const PAIR_COLOR = {
+    "rgb-depth":     "#8972d5",
+    "rgb-normals":   "#1bb5b5",
+    "depth-normals": "#6fba01",
+  };
+  // Each panel maps to one canonical solo pair for the "X" line.
+  const PANEL_TO_SOLO_PAIR = {
+    rgb_depth:     "rgb-depth",
+    rgb_normals:   "rgb-normals",
+    depth_rgb:     "rgb-depth",
+    depth_normals: "depth-normals",
+    normals_rgb:   "rgb-normals",
+    normals_depth: "depth-normals",
+  };
+  const METRIC_LABEL = { cka: "CKA", knn_overlap: "k-NN overlap", pwcca: "PWCCA" };
+  const MOD_LABEL    = { rgb: "RGB", depth: "Depth", normals: "Normals" };
+  const DS_LABEL     = { hypersim: "Hypersim", diode: "DIODE" };
+
+  const cache = new Map();
+  async function loadDataset(name) {
+    if (cache.has(name)) return cache.get(name);
+    const p = fetch(`assets/metrics/${name}.json`, { cache: "no-store" }).then((r) => {
+      if (!r.ok) throw new Error(`Failed to load ${name}: ${r.status}`);
+      return r.json();
+    });
+    cache.set(name, p);
+    return p;
+  }
+
+  function buildChart(payload, mod, partner, metric) {
+    const panelKey  = `${mod}_${partner}`;
+    // "X_y" : self-vs-joint similarity X-alone ↔ X-joint-with-y (from `self_vs_joint`).
+    const valuesXY = ((payload.self_vs_joint && payload.self_vs_joint[panelKey] && payload.self_vs_joint[panelKey][metric]) || [])
+      .map((row) => row.value);
+
+    const x = payload.layers.map((_, i) => i);
+    const color    = MOD_COLOR[mod];
+    const subLabel = MOD_LABEL[partner].toLowerCase();
+    const xyLabel  = `${MOD_LABEL[mod]}<sub>${subLabel}</sub>`;
+
+    // y-range: always show y=1 mark; pad a little below the min.
+    const all  = valuesXY.filter((v) => v != null);
+    const minV = all.length ? Math.min(...all) : 0;
+    const yLo  = Math.max(0, Math.min(0.9, minV - 0.05));
+
+    const traces = [
+      // Reference line at y = 1.
+      {
+        type: "scatter", mode: "lines",
+        x: [x[0], x[x.length - 1]], y: [1, 1],
+        line: { color: "#cfcfcc", width: 1, dash: "2px,4px" },
+        hoverinfo: "skip", showlegend: false,
+      },
+      // Line "X_y" — self-vs-joint imprint on X (solid, modality color).
+      {
+        type: "scatter", mode: "lines+markers",
+        name: xyLabel,
+        x, y: valuesXY,
+        line: { color, width: 2.2, shape: "linear" },
+        marker: { color, size: 5, line: { color: "#fff", width: 1 } },
+        hovertemplate: `<b>${MOD_LABEL[mod]}<sub>${subLabel}</sub></b> · self-vs-joint<br>L%{x}: %{y:.3f}<extra></extra>`,
+        showlegend: false,
+      },
+    ];
+
+    const layout = {
+      paper_bgcolor: "#ffffff",
+      plot_bgcolor:  "#ffffff",
+      font: { family: "Inter, system-ui, sans-serif", size: 10.5, color: "#1a1a1a" },
+      margin: { l: 38, r: 8, t: 4, b: 28 },
+      hovermode: "x",
+      showlegend: false,
+      xaxis: {
+        tickmode: "array",
+        tickvals: x,
+        ticktext: payload.layers,
+        range: [-0.4, x.length - 0.6],
+        showgrid: false, zeroline: false,
+        linecolor: "#cfcfcc", ticks: "outside", tickcolor: "#cfcfcc",
+        tickfont: { family: "JetBrains Mono, monospace", size: 9, color: "#888" },
+      },
+      yaxis: {
+        range: [0, 1.05],
+        gridcolor: "#eeeeea", gridwidth: 1, zeroline: false,
+        linecolor: "#cfcfcc",
+        tickfont: { size: 9.5, color: "#6b6b6b" },
+        tickformat: ".2f",
+      },
+    };
+    return { traces, layout };
+  }
+
+  function init() {
+    if (typeof Plotly === "undefined") return;
+    const cards = Array.from(document.querySelectorAll(".imprint-card"));
+    if (cards.length === 0) return;
+
+    const metricSel = document.getElementById("imprint-metric");
+    const dsBtn     = document.getElementById("imprint-dataset");
+    const dsLabel   = dsBtn && dsBtn.querySelector(".imprint-ds-label");
+
+    let dataset = "hypersim";
+    let metric  = metricSel ? metricSel.value : "cka";
+
+    async function renderAll() {
+      let payload;
+      try {
+        payload = await loadDataset(dataset);
+      } catch (e) {
+        cards.forEach((card) => {
+          card.querySelector(".imprint-chart").innerHTML =
+            `<div style="padding:10px;color:#b51f1f;font-size:12px;font-family:Inter,sans-serif">Failed to load ${dataset}: ${e.message}</div>`;
+        });
+        return;
+      }
+      for (const card of cards) {
+        const mod = card.dataset.mod;
+        const partner = card.dataset.partner;
+        const el = card.querySelector(".imprint-chart");
+        const { traces, layout } = buildChart(payload, mod, partner, metric);
+        await Plotly.react(el, traces, layout, { displayModeBar: false, responsive: true });
+      }
+    }
+
+    if (metricSel) {
+      metricSel.addEventListener("change", () => {
+        metric = metricSel.value;
+        renderAll();
+      });
+    }
+    if (dsBtn) {
+      dsBtn.addEventListener("click", () => {
+        dataset = dataset === "hypersim" ? "diode" : "hypersim";
+        dsBtn.dataset.dataset = dataset;
+        if (dsLabel) dsLabel.textContent = DS_LABEL[dataset];
+        renderAll();
+      });
+    }
+    renderAll();
+
+    window.addEventListener("resize", () => {
+      document.querySelectorAll(".imprint-chart").forEach((el) => {
         if (el && el.data) Plotly.Plots.resize(el);
       });
     });
@@ -3658,7 +3928,7 @@
   const cache = new Map();
   async function loadDataset(name) {
     if (cache.has(name)) return cache.get(name);
-    const p = fetch(`assets/metrics/${name}.json`).then((r) => {
+    const p = fetch(`assets/metrics/${name}.json`, { cache: "no-store" }).then((r) => {
       if (!r.ok) throw new Error(`Failed to load ${name} metrics: ${r.status}`);
       return r.json();
     });
@@ -3853,23 +4123,13 @@
   ];
 
   const PANELS = {
-    hyp: {
-      dataset: "hypersim",
-      sliderId: "hyp-layer",
-      sliderValId: "hyp-layer-val",
-      pairId: "hyp-pair",
-      colorById: "hyp-colorby",
-      plotId: "hyp-plot",
-      playId: "hyp-play",
-    },
-    dio: {
-      dataset: "diode",
-      sliderId: "dio-layer",
-      sliderValId: "dio-layer-val",
-      pairId: "dio-pair",
-      colorById: "dio-colorby",
-      plotId: "dio-plot",
-      playId: "dio-play",
+    tsne: {
+      sliderId:   "tsne-layer",
+      sliderValId:"tsne-layer-val",
+      pairId:     "tsne-pair",
+      colorById:  "tsne-colorby",
+      plotId:     "tsne-plot",
+      playId:     "tsne-play",
     },
   };
 
@@ -3878,8 +4138,7 @@
   // trail at a given distance behind the head, with decreasing opacity and
   // width — so collectively they look like a fading comet tail.
   const playState = {
-    hyp: { playing: false, raf: null, t0: 0, cometStartIdx: null },
-    dio: { playing: false, raf: null, t0: 0, cometStartIdx: null },
+    tsne: { playing: false, raf: null, t0: 0, cometStartIdx: null },
   };
   const COMET_CYCLE_MS = 6800;        // forward + backward total
   const COMET_TRAIL_FRAC = 0.9;       // long trail — line stays visible most of the cycle
@@ -3900,8 +4159,7 @@
   // vertical axis after the first render and stop the moment the user
   // interacts with the scene (drag, wheel, touch, or any Plotly relayout).
   const rotationState = {
-    hyp: { angle: Math.PI * 0.75, raf: null, rotating: false, attached: false },
-    dio: { angle: Math.PI * 0.75, raf: null, rotating: false, attached: false },
+    tsne: { angle: Math.PI * 0.75, raf: null, rotating: false, attached: false },
   };
   const ROTATE_RADIUS = Math.hypot(1.25, 1.25);
   const ROTATE_Z = 0.85;
@@ -4222,7 +4480,7 @@
     sliderVal.textContent = "L" + slider.value.padStart(2, "0");
 
     try {
-      const payload = await loadPair(cfg.dataset, pair);
+      const payload = await loadPair(currentDataset, pair);
       const traces = buildTraces(payload, layerIdx, colorBy);
       const layout = buildLayout(payload, elem, layerIdx);
       // Append the static pair lines plus the animated comet shells when this
@@ -4266,17 +4524,86 @@
     }
   }
 
+  let currentDataset = "hypersim";
+
+  const DS_META = {
+    hypersim: { label: "Hypersim", subtitle: "synthetic indoor · 100 scenes" },
+    diode:    { label: "DIODE",    subtitle: "real indoor + outdoor · 25 scenes" },
+  };
+
+  const COLORBY_TEXT = {
+    hypersim: {
+      modality: `<em>Do the modalities separate?</em><br><br>Can the encoder tell apart modalities at each layer?<br><br>Each point is one token activation from a scene frame. Colour reveals modality. A clean separation means the encoder produces fundamentally different representations per modality regardless of scene content. Overlap means it has converged toward a shared space. Across both datasets and all 12 layers, the two modality clouds remain persistently separated. This is the most direct geometric answer to the convergence question: <em>no strong unification</em> in a spatial sense. Even if the clouds are not merging, we should inspect in more detail if there is some similar internal geometry while remaining in distinct regions of space.`,
+      scene_category: `<em>Does scene type organise the space?</em><br><br>With the same point positions now coloured by scene category, the question is whether semantic scene type structures the representation space within each modality cloud. No clear subclusters are visible in the early layers. The modality boundary remains present throughout (i.e. RGB and depth clouds stay separated) but within each cloud, points from different room categories appear largely mixed. In the deepest layers, small subclusters begin to emerge gradually, suggesting the encoder does develop some scene-level organisation, though it remains subtle. This may partly be a consequence of having more categories with fewer points each, making any emerging substructure harder to see visually.`,
+    },
+    diode: {
+      modality: `<em>Do the modalities separate?</em><br><br>Can the encoder tell apart modalities at each layer?<br><br>Each point is one token activation from a scene frame. Colour reveals modality. A clean separation means the encoder produces fundamentally different representations per modality regardless of scene content. Overlap means it has converged toward a shared space. Across both datasets and all 12 layers, the two modality clouds remain persistently separated. This is the most direct geometric answer to the convergence question: <em>no strong unification</em> in a spatial sense. Even if the clouds are not merging, we should inspect in more detail if there is some similar internal geometry while remaining in distinct regions of space.`,
+      scene_category: `<em>Does scene type organise the space?</em><br><br>With the same point positions now coloured by scene category (indoor / outdoor), the question is whether semantic scene type is a stronger organising axis than modality. It is not. Modality separation persists at every layer for all pairs. What changes across layers is the internal structure within each modality cloud — indoor and outdoor scenes gradually form distinct subclusters inside their respective clouds.<br><br>This happens at different rates depending on the modality. Depth and normals develop these subclusters from the very first layer, while RGB only develops them around layer 6. This is consistent with the nature of the signals. Depth and normals are sparse, low-frequency geometric descriptions of a scene, making scene category easy to extract early. RGB carries richer and more variable information (colour, texture, lighting, objects), so the encoder requires more processing depth before it can organise scenes semantically.`,
+      scene: `<em>Does the encoder align specific scenes across modalities?</em><br><br>By the deep layers, do representations of the same scene, captured by different modalities, sit near each other?<br><br>Colouring each point by its unique scene ID is the most demanding version of the convergence question. It asks not just whether the encoder organises by coarse scene type, but whether it tracks the identity of specific scenes across the modality boundary.<br><br>It does, partially. From around layer 8–9, same-scene points from different modalities begin pulling toward matching positions, but always on their respective sides of the modality boundary. At no layer do same-scene points from different modalities actually merge. RGB points remain in the RGB cloud and depth points in the depth cloud throughout all 12 layers. The encoder has learned that scene 22 RGB and scene 22 depth belong to the same real-world scene, but it encodes that correspondence as a shared internal organisation rather than a shared location in space.<br><br>Scene structure is also visibly tighter and more consistent on the RGB side than on the depth or normals side, consistent with RGB developing richer internal organisation in the deeper layers, as seen in the previous two visualisations.`,
+    },
+  };
+
+  function updateInterpText(colorBy, dataset) {
+    const el = document.getElementById("tsne-interp-text");
+    if (el) el.innerHTML = ((COLORBY_TEXT[dataset] || {})[colorBy]) || "";
+  }
+
   function init() {
     Object.entries(PANELS).forEach(([key, cfg]) => {
-      const slider = document.getElementById(cfg.sliderId);
-      const pairSel = document.getElementById(cfg.pairId);
+      const slider   = document.getElementById(cfg.sliderId);
+      const pairSel  = document.getElementById(cfg.pairId);
       const colorSel = document.getElementById(cfg.colorById);
-      const playBtn = document.getElementById(cfg.playId);
+      const playBtn  = document.getElementById(cfg.playId);
+      const dsBtn    = document.getElementById("tsne-dataset");
+      const dsSubtitle = document.getElementById("tsne-ds-subtitle");
       if (!slider || !pairSel || !colorSel) return;
+
+      // Initial interpretive text
+      updateInterpText(colorSel.value, currentDataset);
 
       slider.addEventListener("input", () => renderPanel(key));
       pairSel.addEventListener("change", () => renderPanel(key));
-      colorSel.addEventListener("change", () => renderPanel(key));
+      colorSel.addEventListener("change", () => {
+        updateInterpText(colorSel.value, currentDataset);
+        renderPanel(key);
+      });
+
+      if (dsBtn) {
+        dsBtn.addEventListener("click", () => {
+          currentDataset = currentDataset === "hypersim" ? "diode" : "hypersim";
+          const meta = DS_META[currentDataset];
+          const lbl = dsBtn.querySelector(".tsne-ds-label");
+          if (lbl) lbl.textContent = meta.label;
+          if (dsSubtitle) dsSubtitle.textContent = meta.subtitle;
+          // Add/remove "Scene identity" option depending on dataset
+          const existing = colorSel.querySelector("option[value='scene']");
+          if (currentDataset === "diode" && !existing) {
+            const opt = document.createElement("option");
+            opt.value = "scene"; opt.textContent = "Scene identity";
+            colorSel.appendChild(opt);
+            // If coming from Hypersim "scene_category", map to DIODE "scene"
+            if (colorSel.value === "scene_category") {
+              colorSel.value = "scene";
+              updateInterpText("scene", currentDataset);
+            }
+          } else if (currentDataset === "hypersim" && existing) {
+            // If coming from DIODE "scene", map to Hypersim "scene_category"
+            if (colorSel.value === "scene") {
+              existing.remove();
+              colorSel.value = "scene_category";
+              updateInterpText("scene_category", currentDataset);
+            } else {
+              existing.remove();
+            }
+          }
+          // Reset rotation so new dataset starts fresh
+          const st = rotationState[key];
+          if (st) { stopAutoRotate(key); st.attached_started = false; st.attached = false; }
+          updateInterpText(colorSel.value, currentDataset);
+          renderPanel(key);
+        });
+      }
+
       if (playBtn) {
         playBtn.addEventListener("click", () => {
           const ps = playState[key];
