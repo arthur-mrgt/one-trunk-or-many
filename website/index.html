@@ -49,7 +49,7 @@
   body {
     margin: 0;
     font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
-    font-size: 17.5px;
+    font-size: 16px;
     line-height: 1.65;
     color: var(--ink);
     font-feature-settings: "kern", "liga", "onum";
@@ -422,6 +422,49 @@
   p a, li a { color: var(--link); text-decoration: none; border-bottom: 1px solid rgba(0,129,207,0.28); }
   p a:hover { border-bottom-color: var(--link); }
 
+  /* Justified body copy in main content */
+  .wrap p,
+  .wrap ul.clean li,
+  .wrap ol.intro-subq .intro-subq-body,
+  .wrap ol.refs li,
+  .wrap .figcap,
+  .wrap .method-spec p,
+  .wrap .modality-stack-desc,
+  .wrap .sd-body p {
+    text-align: justify;
+    hyphens: none;
+  }
+
+  /* Left or centered: UI chrome, short labels, figures */
+  .hero,
+  .hero p,
+  .hero-visual,
+  .abstract-kicker,
+  .ev-figcap,
+  .intro-unified-note,
+  .intro-subq-intro,
+  .intro-subq-letter,
+  .rq1-question,
+  .rq1-question p,
+  .intro-mainq,
+  .intro-mainq p,
+  .intro-subq-target,
+  .stat-note,
+  .rq1-pre-finding-claim,
+  .method-sub-lead,
+  .modality-stack-fig figcaption,
+  .method-tile h4,
+  .sd-step,
+  footer,
+  footer p,
+  .author-contribution,
+  .author-contribution p,
+  .encoder-viz-control,
+  .tldr,
+  .tldr p {
+    text-align: left;
+  }
+
   ul.clean { margin: 0 0 14px; padding-left: 22px; }
   ul.clean li { margin-bottom: 6px; }
 
@@ -451,6 +494,8 @@
   }
   .abstract-section .abstract-card p {
     margin: 0;
+    text-align: justify;
+    hyphens: none;
   }
   .sidenav-item.is-abstract .sidenav-label {
     font-style: italic;
@@ -1376,70 +1421,47 @@
     .gap-row .gr-label { font-size: 11.5px; }
   }
 
-  /* ---------- §2.1 Accordion cards ---------- */
-  .spec-accordion {
-    margin: 18px 0 4px;
-    border-top: 1px solid var(--rule);
-    border-bottom: 1px solid var(--rule);
+  /* ---------- §3.1 Experimental setup bento ---------- */
+  .method-spec {
+    margin: 4px 0 8px;
   }
-  .spec-card {
-    border-bottom: 1px solid var(--rule);
-    position: relative;
-    transition: background .15s ease;
+  .method-bento {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 28px;
   }
-  .spec-card:last-child { border-bottom: 0; }
-  .spec-card.open { background: #fafaf8; }
-  .spec-card::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: var(--c-accent);
-    transform: scaleY(0);
-    transform-origin: center;
-    transition: transform .25s cubic-bezier(.4,0,.2,1);
-  }
-  .spec-card.open::before { transform: scaleY(1); }
-  .spec-head {
-    appearance: none;
-    background: none;
-    border: 0;
-    width: 100%;
-    text-align: left;
-    padding: 18px 22px;
+  .method-bento-top {
     display: grid;
-    grid-template-columns: 180px 1fr 18px;
-    align-items: center;
-    gap: 24px;
-    cursor: pointer;
-    font: inherit;
-    color: inherit;
-    transition: background .12s ease;
+    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
   }
-  .spec-card:not(.open) .spec-head:hover { background: rgba(0,0,0,0.018); }
-  .spec-head:focus-visible {
-    outline: 2px solid var(--c-accent);
-    outline-offset: -2px;
+  .method-tile {
+    margin: 0;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 18px 20px 20px;
+    background: #fff;
   }
-  .spec-label {
+  .method-tile h4 {
     font-family: "Inter", sans-serif;
-    font-size: 13px;
     font-weight: 600;
+    font-size: 15px;
     color: var(--ink);
-    letter-spacing: 0.005em;
+    letter-spacing: 0.01em;
+    margin: 0 0 8px;
   }
-  .spec-summary {
+  .method-tile > p:last-child { margin-bottom: 0; }
+  .method-tile .dataset-grid { margin-bottom: 12px; }
+  .method-sub-lead {
     font-family: "Inter", sans-serif;
     font-size: 13.5px;
-    color: var(--muted);
+    color: var(--muted-2);
     line-height: 1.5;
-    min-width: 0;
-    transition: color .15s ease;
+    margin: 0 0 14px;
   }
-  .spec-card.open .spec-summary { color: var(--muted-2); }
-  .spec-summary .tag {
+  .method-sub-lead .tag {
     font-family: "JetBrains Mono", monospace;
     font-size: 11px;
     background: var(--code-bg);
@@ -1448,63 +1470,65 @@
     color: var(--ink-soft);
     margin-right: 4px;
   }
-  .spec-chev {
-    width: 14px; height: 14px;
-    color: var(--muted-2);
-    transition: transform .3s cubic-bezier(.4,0,.2,1), color .15s ease;
-    justify-self: end;
-  }
-  .spec-card.open .spec-chev {
-    transform: rotate(180deg);
-    color: var(--ink);
-  }
-  .spec-body {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows .28s cubic-bezier(.4,0,.2,1);
-    overflow: hidden;
-  }
-  .spec-card.open .spec-body { grid-template-rows: 1fr; }
-  .spec-body-clip {
-    overflow: hidden;
-    min-height: 0;
-  }
-  .spec-body-inner {
-    padding: 0 22px 24px;
-    margin-left: 180px;
-    padding-left: 24px;
-    max-width: 760px;
-    font-family: "Source Serif 4", Georgia, serif;
-    font-size: 15.5px;
-    line-height: 1.65;
-    color: var(--ink-soft);
-  }
-  .spec-body-inner > *:first-child { margin-top: 0 !important; }
-  .spec-body-inner > *:last-child { margin-bottom: 0 !important; }
-  .spec-body-inner p { margin: 0 0 12px; }
-  .spec-body-inner em { color: var(--ink); font-style: italic; }
+  .method-spec p em,
+  .method-tile p em { color: var(--ink); font-style: italic; }
 
-  /* Modality list inside expanded cards */
-  .modality-list {
+  /* Modality list (§3.1 bento — stacked rows, thumb + text) */
+  .method-tile--modalities {
+    --modality-thumb-w: 96px;
+  }
+  .modality-stack {
     list-style: none;
     padding: 0;
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
   }
-  .modality-list li {
+  .modality-stack-item {
     display: grid;
-    grid-template-columns: 100px 1fr;
-    gap: 18px;
-    align-items: start;
-    font-size: 15px;
-    line-height: 1.55;
-    color: var(--ink-soft);
+    grid-template-columns: var(--modality-thumb-w) minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
   }
-  .modality-list li .chip {
-    align-self: start;
-    margin-top: 1px;
+  .modality-stack-fig {
+    margin: 0;
+    width: var(--modality-thumb-w);
+    flex-shrink: 0;
+    position: relative;
+    line-height: 0;
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+  }
+  .modality-stack-fig img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    display: block;
+  }
+  .modality-stack-fig figcaption {
+    position: absolute;
+    top: 7px;
+    left: 7px;
+    line-height: 1;
+  }
+  .modality-stack-fig .chip {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    font-size: 11px;
+    padding: 2px 8px 2px 7px;
+  }
+  .modality-stack-fig .chip .swatch { width: 8px; height: 8px; }
+  .modality-stack-desc {
+    margin: 0;
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--ink-soft);
   }
 
   /* Datasets two-column layout */
@@ -1598,13 +1622,6 @@
     padding: 2px 7px;
     border-radius: 2px;
     letter-spacing: 0.02em;
-  }
-  .ds-caption {
-    font-family: "Inter", sans-serif;
-    font-size: 12.5px;
-    color: var(--muted);
-    font-style: italic;
-    margin-top: 2px;
   }
   .regime-list {
     margin: 4px 0 0;
@@ -2013,13 +2030,38 @@
     font-style: italic;
   }
 
-  /* ---------- §1.1 Perfect vs. partially unified encoder (interactive) ---------- */
+  /* ---------- §1.1 Two-column layout + encoder viz ---------- */
+  .intro-unified-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 24px 28px;
+    align-items: start;
+    margin-top: 10px;
+  }
+  .intro-unified-copy p:last-child {
+    margin-bottom: 0;
+  }
+  .intro-unified-note {
+    margin-top: 14px;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
   .encoder-viz {
     margin: 26px 0 8px;
     padding: 22px 22px 18px;
     background: color-mix(in oklch, var(--c-accent) 5%, #fff);
     border: 1px solid color-mix(in oklch, var(--c-accent) 18%, #fff);
     border-radius: 12px;
+  }
+  .encoder-viz.encoder-viz--compact {
+    margin: 0;
+    padding: 12px 10px 10px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
   }
   .encoder-viz-svg {
     display: block;
@@ -2028,6 +2070,19 @@
     max-width: 720px;
     margin: 0 auto;
     font-family: "Inter", sans-serif;
+  }
+  .encoder-viz--compact .encoder-viz-chart {
+    flex: 0 0 auto;
+    width: 100%;
+    line-height: 0;
+    margin-bottom: 0;
+  }
+  .encoder-viz--compact .encoder-viz-chart .encoder-viz-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: none;
+    margin: 0;
   }
 
   /* SVG palette */
@@ -2141,6 +2196,58 @@
     max-width: 560px;
     font-family: "Inter", sans-serif;
   }
+  .encoder-viz--compact .encoder-viz-control {
+    margin: 2px 0 0;
+    max-width: 100%;
+  }
+  .encoder-viz--compact .encoder-viz-control .ev-control-label {
+    font-size: 10.5px;
+    margin-bottom: 4px;
+  }
+  .encoder-viz--compact .encoder-viz-control .ev-control-value {
+    font-size: 12px;
+  }
+  .encoder-viz--compact .encoder-viz-control {
+    overflow: hidden;
+    padding: 0 2px;
+  }
+  .encoder-viz--compact .encoder-viz-control .ev-ticks {
+    height: 40px;
+    margin-top: 4px;
+  }
+  .encoder-viz--compact .encoder-viz-control .ev-tick {
+    width: auto;
+    max-width: 46%;
+  }
+  .encoder-viz--compact .encoder-viz-control .ev-tick[data-u="0"] {
+    left: 0;
+    transform: none;
+    text-align: left;
+  }
+  .encoder-viz--compact .encoder-viz-control .ev-tick[data-u="100"] {
+    left: auto;
+    right: 0;
+    transform: none;
+    text-align: right;
+  }
+  .encoder-viz--compact .encoder-viz-control .ev-tick[data-u="0"] .ev-tick-marker {
+    margin-left: 0;
+    margin-right: auto;
+  }
+  .encoder-viz--compact .encoder-viz-control .ev-tick[data-u="100"] .ev-tick-marker {
+    margin-left: auto;
+    margin-right: 0;
+  }
+  .encoder-viz--compact .encoder-viz-control .ev-tick-label {
+    font-size: 9px;
+    line-height: 1.2;
+    white-space: normal;
+  }
+  .encoder-viz--compact .ev-figcap {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.45;
+  }
   .encoder-viz-control .ev-control-label {
     display: flex;
     justify-content: space-between;
@@ -2251,31 +2358,6 @@
   .encoder-viz .ev-figcap a:hover { color: var(--ink); border-bottom-color: var(--ink); }
 
   /* ---------- §1.2 Intro research-question block ---------- */
-  .intro-pullquote {
-    margin: 22px 0 18px;
-    padding: 14px 22px;
-    border-left: 3px solid color-mix(in oklch, var(--c-accent) 70%, transparent);
-    background: color-mix(in oklch, var(--c-accent) 4%, #fff);
-    border-radius: 0 6px 6px 0;
-  }
-  .intro-pullquote p {
-    margin: 0;
-    font-family: "Source Serif 4", Georgia, serif;
-    font-size: 17px;
-    font-style: italic;
-    line-height: 1.5;
-    color: var(--ink);
-  }
-  .intro-pullquote cite {
-    display: block;
-    margin-top: 6px;
-    font-family: "Inter", sans-serif;
-    font-size: 12px;
-    font-style: normal;
-    font-weight: 600;
-    color: #5a6270;
-    letter-spacing: 0.04em;
-  }
   .intro-mainq {
     background: color-mix(in oklch, var(--c-accent) 14%, #fff);
     border-left-width: 4px;
@@ -2291,7 +2373,7 @@
     font-style: italic;
   }
   .intro-subq-intro {
-    margin: 16px 0 8px;
+    margin: 24px 0 14px;
     font-family: "Source Serif 4", Georgia, serif;
     font-size: 15px;
     color: #4a5563;
@@ -2299,36 +2381,29 @@
   .intro-subq {
     list-style: none;
     padding: 0;
-    margin: 0;
-    counter-reset: subq;
+    margin: 0 0 8px;
   }
   .intro-subq > li {
     display: grid;
-    grid-template-columns: 28px 1fr;
-    gap: 12px;
-    align-items: start;
-    padding: 12px 14px;
-    margin: 8px 0;
-    background: #f7f8f9;
-    border-radius: 6px;
-    border-left: 2px solid color-mix(in oklch, var(--c-accent) 35%, transparent);
+    grid-template-columns: 2.25em 1fr;
+    gap: 0 10px;
+    align-items: baseline;
+    padding: 0;
+    margin: 0 0 1.15em;
   }
   .intro-subq-letter {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px; height: 26px;
-    border-radius: 50%;
-    background: var(--c-accent);
-    color: #fff;
     font-family: "Inter", sans-serif;
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-accent);
+    text-align: right;
   }
+  .intro-subq-letter::before { content: "("; }
+  .intro-subq-letter::after { content: ")"; }
   .intro-subq-body {
     font-family: "Source Serif 4", Georgia, serif;
     font-size: 15px;
-    line-height: 1.5;
+    line-height: 1.55;
     color: var(--ink);
   }
   .intro-subq-target {
@@ -2338,6 +2413,7 @@
     font-size: 12.5px;
     color: #5a6270;
     white-space: nowrap;
+    text-align: left;
   }
   .intro-subq-target a {
     color: var(--c-accent);
@@ -2346,6 +2422,17 @@
   }
   .intro-subq-target a:hover { color: var(--ink); border-bottom-color: var(--ink); }
 
+  @media (max-width: 900px) {
+    .intro-unified-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    .encoder-viz--compact {
+      max-width: min(100%, 540px);
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
   @media (max-width: 720px) {
     .encoder-viz { padding: 16px 12px; }
     .encoder-viz-control .ev-tick { width: 92px; font-size: 10px; }
@@ -3009,12 +3096,8 @@
     .interactive-row { grid-template-columns: 1fr; }
     .charts-row { grid-template-columns: 1fr; }
     .specgrid { grid-template-columns: 110px 1fr; font-size: 14.5px; }
-    .spec-head { grid-template-columns: 1fr 18px; gap: 12px; padding: 16px 18px; }
-    .spec-head .spec-label { grid-column: 1 / -1; margin-bottom: 4px; }
-    .spec-head .spec-summary { grid-column: 1 / 2; }
-    .spec-head .spec-chev { grid-column: 2 / 3; grid-row: 1 / 3; align-self: center; }
-    .spec-body-inner { margin-left: 0; padding: 0 18px 22px; }
-    .modality-list li { grid-template-columns: 1fr; gap: 4px; }
+    .method-bento-top { grid-template-columns: 1fr; }
+    .modality-stack-desc { font-size: 13.5px; }
     .dataset-grid { grid-template-columns: 1fr; }
   }
 
@@ -3104,25 +3187,33 @@
       <span class="sidenav-dot"></span>
       <span class="sidenav-label"><span class="sn-num">03</span>Methodology</span>
     </div>
-    <div class="sidenav-item is-sub" data-href="#method-model" tabindex="0" role="link" aria-label="Model and datasets">
+    <div class="sidenav-item is-sub" data-href="#method-model" tabindex="0" role="link" aria-label="Experimental setup">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">3.1</span>Model &amp; datasets</span>
+      <span class="sidenav-label"><span class="sn-num">3.1</span>Setup</span>
     </div>
     <div class="sidenav-item is-sub" data-href="#method-pipeline" tabindex="0" role="link" aria-label="Pipeline">
       <span class="sidenav-dot"></span>
       <span class="sidenav-label"><span class="sn-num">3.2</span>Pipeline</span>
     </div>
+    <div class="sidenav-item is-sub" data-href="#method-passes" tabindex="0" role="link" aria-label="Modality passes">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">3.3</span>Passes</span>
+    </div>
     <div class="sidenav-item is-sub" data-href="#method-geometry" tabindex="0" role="link" aria-label="Geometry visualization">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">3.3</span>Geometry viz</span>
+      <span class="sidenav-label"><span class="sn-num">3.4</span>Geometry</span>
     </div>
     <div class="sidenav-item is-sub" data-href="#method-metrics" tabindex="0" role="link" aria-label="Metrics">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">3.4</span>Metrics</span>
+      <span class="sidenav-label"><span class="sn-num">3.5</span>Metrics</span>
     </div>
     <div class="sidenav-item is-sub" data-href="#method-null" tabindex="0" role="link" aria-label="Null distribution">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">3.5</span>Null distribution</span>
+      <span class="sidenav-label"><span class="sn-num">3.6</span>Null</span>
+    </div>
+    <div class="sidenav-item is-sub" data-href="#method-triangulation" tabindex="0" role="link" aria-label="Transmodal triangulation">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">3.7</span>Triangulation</span>
     </div>
     <div class="sidenav-item is-main" data-href="#results" tabindex="0" role="link" aria-label="Results">
       <span class="sidenav-dot"></span>
@@ -3225,17 +3316,21 @@
   <section id="intro">
     <h2><span class="num">01</span>Introduction &amp; Motivation</h2>
     <div class="section-rule"></div>
-    <p>4M-21 is designed around the idea of <em>one shared trunk</em>. Each modality &mdash; RGB, depth, surface normals, and more &mdash; gets its own small <b>tokenizer</b> that converts raw pixels (or per-pixel depth, per-pixel normals&hellip;) into a sequence of discrete tokens. From there, every modality flows through the <b>same 12-layer transformer encoder, with shared weights</b> for every block, attention head, and MLP. There is no per-modality routing inside the trunk.</p>
-    <p>But <em>shared weights are not the same thing as a shared representation</em>. The same encoder, applied to two very different token distributions, could still carve out two largely disjoint regions of its latent space &mdash; one per modality &mdash; and operate as a <b>hidden ensemble</b> of modality-specific sub-networks. Whether 4M actually escapes that failure mode is an empirical question that downstream task performance cannot answer on its own. We open the trunk and measure, layer by layer, how similarly the encoder describes the same scene observed through different sensors.</p>
+    <p>4M-21 is designed around the idea of <em>one shared trunk</em>. Each modality (RGB, depth, surface normals, and more) gets its own small tokenizer that converts raw pixels (or per-pixel depth, per-pixel normals&hellip;) into a sequence of discrete tokens. From there, every modality flows through the <b>same 12-layer transformer encoder, with shared weights</b> for every block, attention head, and MLP. There is no per-modality routing inside the trunk.</p>
+    <p>But <em>shared weights are not the same thing as a shared representation</em>. The same encoder, applied to two very different token distributions, could still carve out two largely disjoint regions of its latent space, for each modality, and operate as a <b>hidden ensemble</b> of modality-specific sub-networks. Whether 4M actually escapes that failure mode is an empirical question that downstream task performance cannot answer on its own. We open the trunk and measure, layer by layer, how similarly the encoder describes the same scene observed through different sensors.</p>
 
-    <!-- ========== 1.1 — What does "unified" actually mean? ========== -->
+    <!-- ========== 1.1 What does "unified" actually mean? ========== -->
     <h3 id="intro-unified" style="margin-top:36px"><span class="sub-num">1.1</span>What does &ldquo;unified&rdquo; actually mean?</h3>
 
-    <p>&ldquo;Unified encoder&rdquo; is a useful but fuzzy phrase. We make it concrete by sketching what each modality's latent subspace would have to look like for the encoder to be considered unified.</p>
-    <p>Any modality's latent subspace can be split into two parts: <b>modality-specific information</b> (e.g. color and style for RGB, absolute scale for depth) and <b>shared cross-modal information</b> (e.g. scene structure, layout, surfaces). A <em>perfectly unified</em> encoder maps the shared-information part of both modalities into the <em>same</em> sub-region of latent space. In practice, we operationalise this via the <b>linear probing convention</b>: shared information is considered unified if it is linearly recoverable from each modality's representation. A <em>partially unified</em> encoder maps each modality's shared information into geometrically correlated but not fully aligned subspaces: the same &ldquo;scene structure&rdquo; content is encoded in similar but not identical directions for RGB and for depth. We label that misalignment <b>unaligned shared information</b>.</p>
+    <div class="intro-unified-grid">
+      <div class="intro-unified-copy">
+        <p>&ldquo;Unified encoder&rdquo; is a useful but fuzzy phrase. We make it concrete by sketching what each modality's latent subspace would have to look like for the encoder to be considered unified.</p>
+        <p>Any modality's latent subspace can be split into two parts: <b>modality-specific information</b> (e.g. color and style for RGB, absolute scale for depth) and <b>shared cross-modal information</b> (e.g. scene structure, layout, surfaces). A <em>perfectly unified</em> encoder maps the shared-information part of both modalities into the <em>same</em> sub-region of latent space. In practice, we operationalise this via the <b>linear probing convention</b>: shared information is considered unified if it is linearly recoverable from each modality's representation. A <em>partially unified</em> encoder maps each modality's shared information into geometrically correlated but not fully aligned subspaces: the same &ldquo;scene structure&rdquo; content is encoded in similar but not identical directions for RGB and for depth. We label that misalignment <b>unaligned shared information</b>.</p>
+      </div>
 
-    <figure class="encoder-viz" id="encoder-viz" data-state="partial" aria-labelledby="encoder-viz-title">
-      <svg class="encoder-viz-svg" viewBox="0 0 640 550" role="img" aria-labelledby="encoder-viz-title">
+    <figure class="encoder-viz encoder-viz--compact" id="encoder-viz" data-state="partial" aria-labelledby="encoder-viz-title">
+      <div class="encoder-viz-chart">
+      <svg class="encoder-viz-svg" viewBox="28 0 584 550" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="encoder-viz-title">
         <title id="encoder-viz-title">Perfect vs. partially unified encoder &mdash; interactive diagram</title>
 
         <defs>
@@ -3249,10 +3344,10 @@
 
         <!-- Scene input: two thumbnail modalities + caption below -->
         <g class="ev-scene-group">
-          <image href="assets/hypersim_rgb.png"   x="182" y="10" width="130" height="98" preserveAspectRatio="xMidYMid slice"/>
-          <rect class="ev-scene-img-frame"        x="182" y="10" width="130" height="98" rx="3"/>
-          <image href="assets/hypersim_depth.png" x="328" y="10" width="130" height="98" preserveAspectRatio="xMidYMid slice"/>
-          <rect class="ev-scene-img-frame"        x="328" y="10" width="130" height="98" rx="3"/>
+          <image href="assets/hypersim_rgb.png"   x="158" y="10" width="148" height="98" preserveAspectRatio="xMidYMid slice"/>
+          <rect class="ev-scene-img-frame"        x="158" y="10" width="148" height="98" rx="3"/>
+          <image href="assets/hypersim_depth.png" x="334" y="10" width="148" height="98" preserveAspectRatio="xMidYMid slice"/>
+          <rect class="ev-scene-img-frame"        x="334" y="10" width="148" height="98" rx="3"/>
           <text class="ev-scene-label" x="320" y="128" text-anchor="middle">SCENE S (RGB, Depth)</text>
         </g>
 
@@ -3260,40 +3355,40 @@
         <line class="ev-arrow-line" x1="320" y1="138" x2="320" y2="170" marker-end="url(#ev-arrow)"/>
 
         <!-- Encoder diamond -->
-        <polygon class="ev-encoder" points="320,178 460,248 320,318 180,248"/>
+        <polygon class="ev-encoder" points="320,178 478,248 320,318 162,248"/>
         <text class="ev-encoder-label" x="320" y="242" text-anchor="middle">
           <tspan class="ev-encoder-line1" x="320" dy="0">PARTIALLY UNIFIED</tspan>
           <tspan class="ev-encoder-line2" x="320" dy="20">ENCODER</tspan>
         </text>
 
         <!-- Two branching arrows from encoder to latent stack -->
-        <line class="ev-arrow-line ev-branch-left"  x1="240" y1="300" x2="170" y2="370" marker-end="url(#ev-arrow)"/>
-        <line class="ev-arrow-line ev-branch-right" x1="400" y1="300" x2="470" y2="370" marker-end="url(#ev-arrow)"/>
+        <line class="ev-arrow-line ev-branch-left"  x1="248" y1="300" x2="120" y2="370" marker-end="url(#ev-arrow)"/>
+        <line class="ev-arrow-line ev-branch-right" x1="392" y1="300" x2="520" y2="370" marker-end="url(#ev-arrow)"/>
 
-        <!-- Latent-subspace stack (5 rects, 440 wide, all at y=380, h=80) -->
+        <!-- Latent-subspace stack (widened; positions driven by slider JS) -->
         <g class="ev-stack">
-          <rect class="ev-rgb-specific"   x="100" y="380" width="123" height="80"/>
-          <rect class="ev-unalign-left"   x="223" y="380" width="18"  height="80"/>
-          <rect class="ev-shared"         x="241" y="380" width="158" height="80"/>
-          <rect class="ev-unalign-right"  x="399" y="380" width="18"  height="80"/>
-          <rect class="ev-depth-specific" x="417" y="380" width="123" height="80"/>
+          <rect class="ev-rgb-specific"   x="35" y="380" width="150" height="80"/>
+          <rect class="ev-unalign-left"   x="185" y="380" width="48"  height="80"/>
+          <rect class="ev-shared"         x="233" y="380" width="174" height="80"/>
+          <rect class="ev-unalign-right"  x="407" y="380" width="48"  height="80"/>
+          <rect class="ev-depth-specific" x="455" y="380" width="150" height="80"/>
 
-          <text class="ev-box-label ev-rgb-label"    x="161" y="413" text-anchor="middle">SPECIFIC</text>
-          <text class="ev-box-label ev-rgb-label"    x="161" y="429" text-anchor="middle">INFORMATION</text>
-          <text class="ev-box-sub   ev-rgb-label"    x="161" y="445" text-anchor="middle">(Color, Style)</text>
+          <text class="ev-box-label ev-rgb-label"    x="110" y="413" text-anchor="middle">SPECIFIC</text>
+          <text class="ev-box-label ev-rgb-label"    x="110" y="429" text-anchor="middle">INFORMATION</text>
+          <text class="ev-box-sub   ev-rgb-label"    x="110" y="445" text-anchor="middle">(Color, Style)</text>
 
           <text class="ev-box-label ev-shared-label" x="320" y="413" text-anchor="middle">UNIFIED SHARED</text>
           <text class="ev-box-label ev-shared-label" x="320" y="429" text-anchor="middle">INFORMATION</text>
           <text class="ev-box-sub   ev-shared-label" x="320" y="445" text-anchor="middle">(Scene Structure)</text>
 
-          <text class="ev-box-label ev-depth-label"  x="478" y="413" text-anchor="middle">SPECIFIC</text>
-          <text class="ev-box-label ev-depth-label"  x="478" y="429" text-anchor="middle">INFORMATION</text>
-          <text class="ev-box-sub   ev-depth-label"  x="478" y="445" text-anchor="middle">(Absolute Scale)</text>
+          <text class="ev-box-label ev-depth-label"  x="530" y="413" text-anchor="middle">SPECIFIC</text>
+          <text class="ev-box-label ev-depth-label"  x="530" y="429" text-anchor="middle">INFORMATION</text>
+          <text class="ev-box-sub   ev-depth-label"  x="530" y="445" text-anchor="middle">(Absolute Scale)</text>
         </g>
 
         <!-- Subspace captions under the stack -->
-        <text class="ev-subspace-label ev-rgb-cap"   x="161" y="482" text-anchor="middle">RGB SUBSPACE</text>
-        <text class="ev-subspace-label ev-depth-cap" x="478" y="482" text-anchor="middle">DEPTH SUBSPACE</text>
+        <text class="ev-subspace-label ev-rgb-cap"   x="110" y="482" text-anchor="middle">RGB SUBSPACE</text>
+        <text class="ev-subspace-label ev-depth-cap" x="530" y="482" text-anchor="middle">DEPTH SUBSPACE</text>
 
         <!-- "Unaligned shared information" callout (hidden when u=1.0 via CSS) -->
         <g class="ev-unalign-callout">
@@ -3302,6 +3397,7 @@
           <text class="ev-callout-label" x="320" y="540" text-anchor="middle">UNALIGNED SHARED INFORMATION</text>
         </g>
       </svg>
+      </div>
 
       <div class="encoder-viz-control">
         <label for="encoder-slider" class="ev-control-label">
@@ -3312,27 +3408,21 @@
         <div class="ev-ticks" aria-hidden="true">
           <span class="ev-tick" data-u="0">
             <span class="ev-tick-marker"></span>
-            <span class="ev-tick-label">Hidden ensemble<br><em>0</em></span>
+            <span class="ev-tick-label">Hidden ens.<br><em>0</em></span>
           </span>
           <span class="ev-tick" data-u="100">
             <span class="ev-tick-marker"></span>
-            <span class="ev-tick-label">Perfectly unified<br><em>1.0</em></span>
+            <span class="ev-tick-label">Perfect<br><em>1.0</em></span>
           </span>
         </div>
       </div>
 
-      <figcaption class="figcap ev-figcap">
-        Drag the slider to interpolate between a fully <b>modality-specific</b> encoder (no shared subspace &mdash; the hidden-ensemble failure mode), a <b>partially unified</b> encoder (some shared subspace, some unaligned wedges), and a <b>perfectly unified</b> encoder (no unaligned wedges). This conceptual axis is what we will measure quantitatively in §5.
-      </figcaption>
+    
     </figure>
+    </div>
 
-    <!-- ========== 1.2 — Research question ========== -->
+    <!-- ========== 1.2 Research question ========== -->
     <h3 id="intro-rq" style="margin-top:42px"><span class="sub-num">1.2</span>Research question</h3>
-
-    <blockquote class="intro-pullquote">
-      <p>&ldquo;We think that secretly, under the hood, the models cheat and create a little ensemble of independent models&hellip;&rdquo;</p>
-      <cite>&mdash; Prof. Amir Zamir</cite>
-    </blockquote>
 
     <div class="rq1-question intro-mainq">
       <span class="rq1-question-label">Main question</span>
@@ -3345,29 +3435,29 @@
       <li>
         <span class="intro-subq-letter">a</span>
         <span class="intro-subq-body">
-          What does the layer-by-layer activation geometry of each modality look like &mdash; in t-SNE projections, in paired-sample distances, and in per-modality entropy &mdash; and does it qualitatively reveal a progressive cross-modal alignment of paired scenes?
-          <span class="intro-subq-target">&rarr; <a href="#exploration-tsne">&sect;4.1</a>&ndash;<a href="#exploration-entropy">&sect;4.3</a></span>
+          What does the layer-by-layer activation geometry of each modality look like and does it qualitatively reveal a progressive cross-modal alignment of paired scenes?
+          <span class="intro-subq-target">[<a href="#exploration-tsne">&sect;4.1</a>&ndash;<a href="#exploration-entropy">&sect;4.3</a>]</span>
         </span>
       </li>
       <li>
         <span class="intro-subq-letter">b</span>
         <span class="intro-subq-body">
-          Do paired activations of the same scene across modalities become quantitatively more similar than mismatched activations as we go deeper into the encoder &mdash; and where does this convergence emerge?
-          <span class="intro-subq-target">&rarr; <a href="#results-metrics">&sect;4.4</a></span>
+          Do paired activations of the same scene across modalities become quantitatively more similar than mismatched activations as we go deeper into the encoder ?
+          <span class="intro-subq-target">[<a href="#results-metrics">&sect;4.4</a>]</span>
         </span>
       </li>
       <li>
         <span class="intro-subq-letter">c</span>
         <span class="intro-subq-body">
           Does processing two modalities <em>jointly</em> (in one forward pass) further amplify cross-modal alignment, and does it leave any measurable imprint on each modality's solo representation?
-          <span class="intro-subq-target">&rarr; <a href="#joint-processing">&sect;4.5</a>&ndash;<a href="#modality-imprint">&sect;4.6</a></span>
+          <span class="intro-subq-target">[<a href="#joint-processing">&sect;4.5</a>&ndash;<a href="#modality-imprint">&sect;4.6</a>]</span>
         </span>
       </li>
       <li>
         <span class="intro-subq-letter">d</span>
         <span class="intro-subq-body">
-          How <em>complete</em> is the convergence &mdash; specifically, what fraction of the cross-modal geometric structure remains linearly inaccessible from a modality's representation after optimal linear projection, and does this residual fragmentation differ across pairs and layers?
-          <span class="intro-subq-target">&rarr; <a href="#rq2-triangulation">&sect;4.7</a></span>
+          How <em>complete</em> is the convergence ? Specifically, what fraction of the cross-modal geometric structure remains linearly inaccessible from a modality's representation after optimal linear projection, and does this residual fragmentation differ across pairs and layers?
+          <span class="intro-subq-target">[<a href="#rq2-triangulation">&sect;4.7</a>]</span>
         </span>
       </li>
     </ol>
@@ -3398,122 +3488,82 @@
     <h2><span class="num">03</span>Methodology</h2>
     <div class="section-rule"></div>
 
-    <h3 id="method-model"><span class="sub-num">3.1</span>Model, modalities, datasets</h3>
-    <div class="spec-accordion" id="spec-accordion">
+    <p>We probe whether 4M-21&rsquo;s shared encoder unifies RGB, depth, and surface normals across layers. After the experimental setup (§3.1), we describe the end-to-end pipeline (§3.2), how modalities are passed through the encoder (§3.3), and three analysis layers: activation geometry (§3.4), scalar similarity with permutation testing (§3.5&ndash;3.6), and transmodal triangulation for how <em>complete</em> that unification is (§3.7).</p>
 
-      <!-- ROW 1 — MODEL -->
-      <div class="spec-card open" data-spec-key="model">
-        <button class="spec-head" aria-expanded="true" aria-controls="spec-body-model">
-          <div class="spec-label">Model</div>
-          <div class="spec-summary"><span class="tag">4M-21</span> EPFL VILAB · shared transformer encoder · 12 layers · 768-dim</div>
-          <svg class="spec-chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 L6 8 L9.5 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <div class="spec-body" id="spec-body-model">
-          <div class="spec-body-clip">
-            <div class="spec-body-inner">
-              <p>4M-21 is a multimodal foundation model developed at EPFL VILAB. It uses a shared transformer encoder that processes all input modalities &mdash; images, depth, normals, and more &mdash; in a unified architecture. The encoder has 12 layers and a hidden dimension of 768 per token.</p>
-              <p>This shared design is the core assumption our project tests: <em>does the encoder actually learn one representation for all modalities, or does it keep them separate?</em></p>
-            </div>
-          </div>
+    <h3 id="method-model"><span class="sub-num">3.1</span>Experimental setup</h3>
+    <div class="method-spec">
+      <div class="method-bento">
+        <div class="method-bento-top">
+          <article class="method-tile method-tile--model" id="method-4m">
+            <h4>Model</h4>
+            <p class="method-sub-lead"><span class="tag">4M-21</span> EPFL VILAB · shared transformer encoder · 12 layers · 768-dim</p>
+            <p>4M-21 is a multimodal foundation model developed at EPFL VILAB. It uses a shared transformer encoder that processes all input modalities (images, depth, normals, and more) in a unified architecture. The encoder has 12 layers and a hidden dimension of 768 per token.</p>
+            <p>This shared design is the core assumption our project tests: <em>does the encoder actually learn one representation for all modalities, or does it keep them separate?</em></p>
+          </article>
+
+          <article class="method-tile method-tile--modalities" id="method-modalities">
+            <h4>Modalities</h4>
+            <p class="method-sub-lead">Same scene, three maps</p>
+            <ul class="modality-stack">
+              <li class="modality-stack-item">
+                <figure class="modality-stack-fig">
+                  <img src="assets/hypersim_rgb.png" alt="RGB view of a Hypersim scene" loading="lazy">
+                  <figcaption><span class="chip chip--rgb"><span class="swatch"></span>RGB</span></figcaption>
+                </figure>
+                <p class="modality-stack-desc">Standard 3-channel color image, what a camera sees.</p>
+              </li>
+              <li class="modality-stack-item">
+                <figure class="modality-stack-fig">
+                  <img src="assets/hypersim_depth.png" alt="Depth map of the same scene" loading="lazy">
+                  <figcaption><span class="chip chip--depth"><span class="swatch"></span>Depth</span></figcaption>
+                </figure>
+                <p class="modality-stack-desc">A map of how far each surface point is from the camera.</p>
+              </li>
+              <li class="modality-stack-item">
+                <figure class="modality-stack-fig">
+                  <img src="assets/hypersim_normals.png" alt="Surface normals of the same scene" loading="lazy">
+                  <figcaption><span class="chip chip--normals"><span class="swatch"></span>Normals</span></figcaption>
+                </figure>
+                <p class="modality-stack-desc">Which direction each surface patch faces in 3D (e.g. floor up, wall sideways).</p>
+              </li>
+            </ul>
+          </article>
         </div>
-      </div>
 
-      <!-- ROW 2 — MODALITIES -->
-      <div class="spec-card" data-spec-key="modalities">
-        <button class="spec-head" aria-expanded="false" aria-controls="spec-body-modalities">
-          <div class="spec-label">Modalities</div>
-          <div class="spec-summary">RGB · Depth · Surface Normals</div>
-          <svg class="spec-chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 L6 8 L9.5 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <div class="spec-body" id="spec-body-modalities">
-          <div class="spec-body-clip">
-            <div class="spec-body-inner">
-              <ul class="modality-list">
-                <li>
-                  <span class="chip chip--rgb"><span class="swatch"></span>RGB</span>
-                  <span>Standard 3-channel color image, what a camera sees.</span>
-                </li>
-                <li>
-                  <span class="chip chip--depth"><span class="swatch"></span>Depth</span>
-                  <span>A map of how far each surface point is from the camera.</span>
-                </li>
-                <li>
-                  <span class="chip chip--normals"><span class="swatch"></span>Normals</span>
-                  <span>A map of which direction each surface patch faces in 3D space (e.g. floor faces up, wall faces sideways).</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ROW 3 — DATASETS -->
-      <div class="spec-card" data-spec-key="datasets">
-        <button class="spec-head" aria-expanded="false" aria-controls="spec-body-datasets">
-          <div class="spec-label">Datasets</div>
-          <div class="spec-summary">Hypersim (synthetic, 100 scenes · 4 000 paired samples) · DIODE (real, indoor + outdoor, train + val splits)</div>
-          <svg class="spec-chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 L6 8 L9.5 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <div class="spec-body" id="spec-body-datasets">
-          <div class="spec-body-clip">
-            <div class="spec-body-inner">
-              <div class="dataset-grid">
-                <article class="dataset-card">
-                  <header>
-                    <span class="chip chip--hypersim"><span class="swatch"></span>Hypersim</span>
-                    <span class="ds-type">synthetic · indoor</span>
-                  </header>
-                  <p>Indoor scenes rendered in 3D · 100 scenes randomly sampled from the full dataset of 461 · 4 000 paired samples (seed = 42) · HDF5 format.</p>
-                  <div class="ds-gallery">
-                    <div class="ds-thumb"><img src="assets/hypersim_rgb.png" alt="Hypersim RGB example" loading="lazy"><span class="ds-thumb-tag">RGB</span></div>
-                    <div class="ds-thumb"><img src="assets/hypersim_depth.png" alt="Hypersim depth example" loading="lazy"><span class="ds-thumb-tag">Depth</span></div>
-                    <div class="ds-thumb"><img src="assets/hypersim_normals.png" alt="Hypersim surface normals example" loading="lazy"><span class="ds-thumb-tag">Normals</span></div>
-                  </div>
-                </article>
-                <article class="dataset-card">
-                  <header>
-                    <span class="chip chip--diode"><span class="swatch"></span>DIODE</span>
-                    <span class="ds-type">real · indoor + outdoor</span>
-                  </header>
-                  <p>Real indoor and outdoor photographs · drawn from the official train + val splits (indoor + outdoor) · PNG/npy format. Used as a real-world replication of the Hypersim findings.</p>
-                  <div class="ds-gallery">
-                    <div class="ds-thumb"><img src="assets/diode_rgb.jpg" alt="DIODE RGB example" loading="lazy"><span class="ds-thumb-tag">RGB</span></div>
-                    <div class="ds-thumb"><img src="assets/diode_depth.jpg" alt="DIODE depth example" loading="lazy"><span class="ds-thumb-tag">Depth</span></div>
-                    <div class="ds-thumb"><img src="assets/diode_normals.jpg" alt="DIODE surface normals example" loading="lazy"><span class="ds-thumb-tag">Normals</span></div>
-                  </div>
-                </article>
+        <article class="method-tile method-tile--wide" id="method-datasets">
+          <h4>Datasets</h4>
+          <p>We use Hypersim for synthetic indoor scenes (100 scenes, 4&nbsp;000 paired samples) and DIODE for real indoor and outdoor photographs (official train and validation splits), so representational convergence can be assessed across simulation and captured data.</p>
+          <div class="dataset-grid">
+            <article class="dataset-card">
+              <header>
+                <span class="chip chip--hypersim"><span class="swatch"></span>Hypersim</span>
+                <span class="ds-type">synthetic · indoor</span>
+              </header>
+              <div class="ds-gallery">
+                <div class="ds-thumb"><img src="assets/hypersim_rgb.png" alt="Hypersim RGB example" loading="lazy"><span class="ds-thumb-tag">RGB</span></div>
+                <div class="ds-thumb"><img src="assets/hypersim_depth.png" alt="Hypersim depth example" loading="lazy"><span class="ds-thumb-tag">Depth</span></div>
+                <div class="ds-thumb"><img src="assets/hypersim_normals.png" alt="Hypersim surface normals example" loading="lazy"><span class="ds-thumb-tag">Normals</span></div>
               </div>
-              <div class="ds-caption">One synthetic, one real, so findings can be verified across data distributions.</div>
-            </div>
+            </article>
+            <article class="dataset-card">
+              <header>
+                <span class="chip chip--diode"><span class="swatch"></span>DIODE</span>
+                <span class="ds-type">real · indoor + outdoor</span>
+              </header>
+              <div class="ds-gallery">
+                <div class="ds-thumb"><img src="assets/diode_rgb.jpg" alt="DIODE RGB example" loading="lazy"><span class="ds-thumb-tag">RGB</span></div>
+                <div class="ds-thumb"><img src="assets/diode_depth.jpg" alt="DIODE depth example" loading="lazy"><span class="ds-thumb-tag">Depth</span></div>
+                <div class="ds-thumb"><img src="assets/diode_normals.jpg" alt="DIODE surface normals example" loading="lazy"><span class="ds-thumb-tag">Normals</span></div>
+              </div>
+            </article>
           </div>
-        </div>
+        </article>
       </div>
-
-      <!-- ROW 4 — JOINT-MODALITY PASSES -->
-      <div class="spec-card" data-spec-key="joint">
-        <button class="spec-head" aria-expanded="false" aria-controls="spec-body-joint">
-          <div class="spec-label">Modality passes</div>
-          <div class="spec-summary">Separate passes · Self-vs-joint · Joint-vs-joint</div>
-          <svg class="spec-chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 L6 8 L9.5 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <div class="spec-body" id="spec-body-joint">
-          <div class="spec-body-clip">
-            <div class="spec-body-inner">
-              <p>Beyond encoding each modality separately, we also run joint forward passes where two modalities are fed into the encoder simultaneously. We test three regimes:</p>
-              <ol class="regime-list">
-                <li><b>Separate passes</b> : each modality encoded alone.</li>
-                <li><b>Self-vs-joint</b> : comparing a modality's representation alone vs. with a partner, to test whether the partner shifts it.</li>
-                <li><b>Joint-vs-joint</b> : comparing the two modality slices from one shared forward pass, to measure how unified they become when processed together.</li>
-              </ol>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
 
     <h3 id="method-pipeline"><span class="sub-num">3.2</span>Pipeline overview</h3>
-    <p class="sans" style="color:var(--muted);font-size:13.5px;margin:-4px 0 14px">Click any step below for details.</p>
+    <p>Each modality is tokenized independently and run through the same shared encoder (under the separate and joint forward passes in <a href="#method-passes">§3.3</a>). At every one of the 12 layers we collect per-token activations from paired Hypersim and DIODE scenes (<a href="#method-model">§3.1</a>), then pursue two branches shown below: geometry visualizations (<a href="#method-geometry">§3.4</a>) and three similarity scores tested against a permutation null built from mismatched scene pairs (<a href="#method-metrics">§3.5</a>&ndash;<a href="#method-null">§3.6</a>). Cross-modal <em>completeness</em> is assessed separately via transmodal triangulation (<a href="#method-triangulation">§3.7</a>), which is not drawn in the schematic.</p>
+    <p class="sans" style="color:var(--muted);font-size:13.5px;margin:-4px 0 14px">Click any step in the diagram for details.</p>
     <div class="diagram" role="img" aria-label="Method pipeline diagram">
       <div class="diagram-row diagram-row--forked">
         <div class="dbox dbox--scene-stack" data-step="scene" tabindex="0" role="button" aria-label="Scene step">
@@ -3566,7 +3616,6 @@
           </div>
         </div>
       </div>
-      <div class="diagram-caption sans">Each modality is tokenized independently and run through the same shared encoder. At every one of the 12 layers we collect per-token activations, then compute geometry visualizations and three similarity scores against a permutation null distribution built from mismatched scene pairs.</div>
       <div class="step-detail" id="step-detail" aria-live="polite">
         <div class="step-detail-inner">
           <div class="step-detail-card">
@@ -3584,18 +3633,33 @@
       </div>
     </div>
 
-    <h3 id="method-geometry"><span class="sub-num">3.3</span>Activation geometry visualization</h3>
-    <p>To complement the scalar similarity metrics, we directly visualize the geometry of the activation space at each encoder layer using dimensionality reduction. We apply PCA to 50 components as a denoising step, then run t-SNE to produce a 2D or 3D embedding. Points represent individual token activations, colored by modality, scene category, or scene identity depending on the selected granularity. This lets us see whether modality identity, scene type, or individual scene is the dominant organizing principle in the encoder's representation space at each layer.</p>
+    <h3 id="method-passes"><span class="sub-num">3.3</span>Modality passes</h3>
+    <p>Beyond encoding each modality separately, we also run joint forward passes where two modalities are fed into the encoder simultaneously (the encoder step in §3.2). We test three regimes:</p>
+    <ol class="regime-list">
+      <li><b>Separate passes</b> : Each modality of a scene is encoded in its own forward pass. This is the baseline for layer-wise similarity.</li>
+      <li><b>Self-vs-joint</b> : At each layer, compare activations for modality <span class="mono">A</span> from a solo pass vs. the <span class="mono">A</span> slice from a joint pass with a partner. This tests whether the partner shifts <span class="mono">A</span>&rsquo;s representation.</li>
+      <li><b>Joint-vs-joint</b> : Compare the two modality slices from one shared forward pass. This tests whether co-processing aligns them more than separate passes.</li>
+    </ol>
 
-    <h3 id="method-metrics"><span class="sub-num">3.4</span>Similarity metrics</h3>
+    <h3 id="method-geometry"><span class="sub-num">3.4</span>Activation geometry visualization</h3>
+    <p>As the qualitative branch of the pipeline, we directly visualize the geometry of the activation space at each encoder layer using dimensionality reduction. We apply PCA to 50 components as a denoising step, then run t-SNE to produce a 2D or 3D embedding. Points represent individual token activations, colored by modality, scene category, or scene identity depending on the selected granularity. This lets us see whether modality identity, scene type, or individual scene is the dominant organizing principle in the encoder's representation space at each layer (§4.1&ndash;4.3).</p>
+
+    <h3 id="method-metrics"><span class="sub-num">3.5</span>Similarity metrics</h3>
+    <p>On the scalar branch of the pipeline we compare paired activations of the same scene across modalities at each layer using three standard representational similarity scores (§4.4&ndash;4.6):</p>
     <ul class="clean">
       <li><b>CKA</b>&nbsp; (Centered Kernel Alignment) : Compares two activation matrices via a kernel inner product; invariant to orthogonal transforms and isotropic scaling.</li>
       <li><b>PWCCA</b>&nbsp; (Projection-Weighted CCA) : A canonical-correlation score in which each direction is weighted by the L1-norm of its projection onto the activations, emphasizing the directions the data actually uses.</li>
       <li><b>k-NN overlap</b>&nbsp; : For each anchor token, fraction of its <span class="mono">k</span> nearest neighbours in modality <span class="mono">A</span> that also appear among its <span class="mono">k</span> nearest neighbours in modality <span class="mono">B</span>.</li>
     </ul>
 
-    <h3 id="method-null"><span class="sub-num">3.5</span>Permutation null &amp; multiple testing</h3>
-    <p>For every (layer, metric, modality-pair) combination we construct a null distribution by repeatedly pairing activations from <em>different</em> scenes (shuffling scene identities while keeping per-modality batches intact). To avoid inflating the null with intra-category similarity, the two scenes in each shuffled pair are constrained to come from <em>different scene categories</em> (e.g. bathroom vs. office, drawn from Hypersim's trajectory metadata). We sample <span class="mono">n = 1000</span> mismatched draws per (layer, metric, pair) and apply adaptive stopping at <span class="mono">α = 0.01</span> with <b>Benjamini–Hochberg FDR</b> correction across the 12 layers × 3 metrics tested simultaneously. Observed paired-scene scores are reported as z-scores against this null along with BH-corrected p-values.</p>
+    <h3 id="method-null"><span class="sub-num">3.6</span>Permutation null &amp; multiple testing</h3>
+    <p>For CKA, PWCCA, and k-NN overlap only, we construct a null distribution for every (layer, metric, modality-pair) combination by repeatedly pairing activations from <em>different</em> scenes (shuffling scene identities while keeping per-modality batches intact). To avoid inflating the null with intra-category similarity, the two scenes in each shuffled pair are constrained to come from <em>different scene categories</em> (e.g. bathroom vs. office, drawn from Hypersim's trajectory metadata). We sample <span class="mono">n = 1000</span> mismatched draws per (layer, metric, pair) and apply adaptive stopping at <span class="mono">α = 0.01</span> with <b>Benjamini–Hochberg FDR</b> correction across the 12 layers × 3 metrics tested simultaneously. Observed paired-scene scores are reported as z-scores against this null along with BH-corrected p-values.</p>
+
+    <h3 id="method-triangulation"><span class="sub-num">3.7</span>Transmodal triangulation</h3>
+    <p>If two modalities look aligned at a layer, a natural question is whether that alignment is <em>direct</em> or only mediated through a third (e.g. Depth and Normals both tracking RGB). <b>Transmodal triangulation</b> tests this: shared cross-modal structure counts as unified only if it is linearly recoverable through another modality&rsquo;s representation.</p>
+    <p>To quantify <em>how complete</em> that unification is (<a href="#intro-rq">RQ2</a>; <a href="#rq2-triangulation">&sect;4.7</a>), we adapt subspace projection logic [11, 13] to a three-modality setting under the linear probing convention [7, 8]. For each ordered triplet <span class="mono">(A<sub>target</sub>, B<sub>projected</sub>, C<sub>witness</sub>)</span> and encoder layer, we measure how much of the geometric structure shared between modalities <span class="mono">A</span> and <span class="mono">C</span> remains after optimally linearly projecting <span class="mono">A</span> onto the representation subspace of modality <span class="mono">B</span>.</p>
+    <p>Concretely, we compute a <b>CKA fragmentation score</b>: the fraction of the <span class="mono">A</span>&ndash;<span class="mono">C</span> alignment that <em>cannot</em> be recovered through <span class="mono">B</span>'s linear span. A score of 0 means the full <span class="mono">A</span>&ndash;<span class="mono">C</span> linear structure is accessible via <span class="mono">B</span>; a score of 1 means <span class="mono">B</span> is irrelevant to that cross-modal structure. We symmetrise each unordered pair by averaging the two projection directions (which modality serves as projector vs. witness), report layer-wise curves for all three modality pairs, and summarise unification at layer 11 as <span class="mono">1 &minus; frag<sub>L11</sub></span>.</p>
+    <p>Significance is assessed with a separate <b>permutation null</b> over shuffled triplets (<span class="mono">n = 1000</span> draws, BH-FDR corrected), analogous to §3.6 but at the triplet level. This yields a conservative lower bound on linearly unified cross-modal structure: shared information counted only if it is recoverable through a third modality's representation. Layer-wise fragmentation curves and unification bounds are reported in <a href="#rq2-triangulation">&sect;4.7</a> (see the triangulation figure there).</p>
   </section>
 
   <!-- ========== RESULTS ========== -->
@@ -6327,29 +6391,6 @@
 })();
 
 /* =========================================================
-   §2.1 — Accordion cards (single-open behaviour)
-   ========================================================= */
-(function () {
-  const accordion = document.getElementById("spec-accordion");
-  if (!accordion) return;
-  const heads = accordion.querySelectorAll(".spec-head");
-  heads.forEach((head) => {
-    head.addEventListener("click", () => {
-      const card = head.closest(".spec-card");
-      const isOpen = card.classList.contains("open");
-      accordion.querySelectorAll(".spec-card.open").forEach((c) => {
-        c.classList.remove("open");
-        c.querySelector(".spec-head").setAttribute("aria-expanded", "false");
-      });
-      if (!isOpen) {
-        card.classList.add("open");
-        head.setAttribute("aria-expanded", "true");
-      }
-    });
-  });
-})();
-
-/* =========================================================
    Lightbox — clickable & scrollable dataset images
    ========================================================= */
 (function () {
@@ -6543,7 +6584,8 @@
     scene: {
       step: "STEP 01 · Input",
       title: "Scene & modalities",
-      body: `<p>Each scene contributes three aligned views: an <b>RGB image</b>, a <b>depth map</b> (z-buffer for Hypersim, sensor depth for DIODE), and a <b>surface-normal map</b>. Spatial alignment is exact — the same pixel index in any two modalities refers to the same world point.</p>`,
+      body: `<p>Each scene contributes three aligned views: an <b>RGB image</b>, a <b>depth map</b> (z-buffer for Hypersim, sensor depth for DIODE), and a <b>surface-normal map</b>.</p>
+             <p>See <a href="#method-passes">&sect;3.3 Modality passes</a> for how these modalities are fed through the encoder (separate vs. joint forward passes).</p>`,
       specs: ["RGB · 3-channel uint8", "Depth · float32, z-score truncated", "Normals · [-1, 1] unit vector"]
     },
     tokenizer: {
@@ -6658,10 +6700,19 @@
   const lblLine2  = fig.querySelector(".ev-encoder-line2");
   const sharedLbls = fig.querySelectorAll(".ev-shared-label");
 
-  // Geometry constants (SVG-px). 2*S + T = 440 = total stack width.
-  const S  = 123;   // fixed width of each specific (blue/yellow) flank
-  const T  = 194;   // total budget for shared + unaligned wedges
-  const X0 = 100;   // left edge of the stack
+  // Geometry constants (SVG-px). 2*S + T = stack width; centered near x=320.
+  const S  = 150;   // width of each modality-specific flank
+  const T  = 270;   // budget for shared + unaligned wedges
+  const X0 = 35;    // left edge of the stack (35 + 150 + 135 = 320 = stack center)
+
+  const rgbCap     = fig.querySelector(".ev-rgb-cap");
+  const depthCap   = fig.querySelector(".ev-depth-cap");
+  const calloutLines = fig.querySelectorAll(".ev-unalign-callout .ev-callout-line");
+  const calloutLbl = fig.querySelector(".ev-callout-label");
+
+  function setTextX(selector, x) {
+    fig.querySelectorAll(selector).forEach((el) => el.setAttribute("x", x));
+  }
 
   function setState(u) {
     if (u >= 0.99)      fig.dataset.state = "perfect";
@@ -6709,7 +6760,28 @@
     depthR.setAttribute("width", S);
 
     // Hide green text labels if the green box is too narrow to fit them
-    fig.dataset.sharedNarrow = green < 80 ? "true" : "false";
+    fig.dataset.sharedNarrow = green < 90 ? "true" : "false";
+
+    const xRgb    = X0 + S / 2;
+    const xShared = X0 + S + red + green / 2;
+    const xDepth  = X0 + S + red + green + red + S / 2;
+    setTextX(".ev-rgb-label", xRgb);
+    setTextX(".ev-shared-label", xShared);
+    setTextX(".ev-depth-label", xDepth);
+    if (rgbCap)   rgbCap.setAttribute("x", xRgb);
+    if (depthCap) depthCap.setAttribute("x", xDepth);
+
+    if (calloutLines[0] && red > 2) {
+      const xL = X0 + S + red / 2;
+      calloutLines[0].setAttribute("x1", xL);
+      calloutLines[0].setAttribute("x2", xL);
+    }
+    if (calloutLines[1] && red > 2) {
+      const xR = X0 + S + red + green + red / 2;
+      calloutLines[1].setAttribute("x1", xR);
+      calloutLines[1].setAttribute("x2", xR);
+    }
+    if (calloutLbl) calloutLbl.setAttribute("x", X0 + S + red + green / 2);
 
     // Update slider readout
     if (valueOut) valueOut.textContent = u.toFixed(2);
@@ -6723,8 +6795,48 @@
     setState(u);
   }
 
-  slider.addEventListener("input", (e) => render(+e.target.value / 100));
+  slider.addEventListener("input", (e) => {
+    render(+e.target.value / 100);
+    pauseAuto();
+  });
+  slider.addEventListener("pointerdown", pauseAuto);
+
   render(+slider.value / 100);
+
+  /* Auto-cycle unification level when visible (respect reduced motion) */
+  let autoPaused = false;
+  let autoResumeTimer = null;
+  let autoVisible = false;
+  let animStart = null;
+  const CYCLE_SEC = 9;
+
+  function pauseAuto() {
+    autoPaused = true;
+    clearTimeout(autoResumeTimer);
+    autoResumeTimer = setTimeout(() => { autoPaused = false; animStart = null; }, 5000);
+  }
+
+  function autoU(ts) {
+    if (!animStart) animStart = ts;
+    const t = ((ts - animStart) / 1000) % CYCLE_SEC;
+    return (1 - Math.cos((2 * Math.PI * t) / CYCLE_SEC)) / 2;
+  }
+
+  function autoFrame(ts) {
+    if (autoVisible && !autoPaused && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const u = autoU(ts);
+      slider.value = String(Math.round(u * 100));
+      render(u);
+    }
+    requestAnimationFrame(autoFrame);
+  }
+
+  const obs = new IntersectionObserver((entries) => {
+    autoVisible = entries[0]?.isIntersecting ?? false;
+    if (autoVisible) animStart = null;
+  }, { threshold: 0.25 });
+  obs.observe(fig);
+  requestAnimationFrame(autoFrame);
 })();
 </script>
 
