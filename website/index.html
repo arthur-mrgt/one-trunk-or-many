@@ -3113,7 +3113,7 @@
     <h3 id="intro-unified" style="margin-top:36px"><span class="sub-num">1.1</span>What does &ldquo;unified&rdquo; actually mean?</h3>
 
     <p>&ldquo;Unified encoder&rdquo; is a useful but fuzzy phrase. We make it concrete by sketching what each modality's latent subspace would have to look like for the encoder to be considered unified.</p>
-    <p>Any modality's latent subspace can be split into two parts: <b>modality-specific information</b> (e.g. color and style for RGB, absolute scale for depth) and <b>shared cross-modal information</b> (e.g. scene structure, layout, surfaces). A <em>perfectly unified</em> encoder maps the shared-information part of both modalities into the <em>same</em> sub-region of latent space &mdash; a single, linearly-readable shared subspace. A <em>partially unified</em> encoder still maps the shared information <em>nearby</em> in each modality's subspace, but with measurable misalignment: the same &ldquo;scene structure&rdquo; content lives in slightly different directions for RGB and for depth. We label that misalignment <b>unaligned shared information</b>.</p>
+    <p>Any modality's latent subspace can be split into two parts: <b>modality-specific information</b> (e.g. color and style for RGB, absolute scale for depth) and <b>shared cross-modal information</b> (e.g. scene structure, layout, surfaces). A <em>perfectly unified</em> encoder maps the shared-information part of both modalities into the <em>same</em> sub-region of latent space. In practice, we operationalise this via the <b>linear probing convention</b>: shared information is considered unified if it is linearly recoverable from each modality's representation. A <em>partially unified</em> encoder maps each modality's shared information into geometrically correlated but not fully aligned subspaces: the same &ldquo;scene structure&rdquo; content is encoded in similar but not identical directions for RGB and for depth. We label that misalignment <b>unaligned shared information</b>.</p>
 
     <figure class="encoder-viz" id="encoder-viz" data-state="partial" aria-labelledby="encoder-viz-title">
       <svg class="encoder-viz-svg" viewBox="0 0 640 550" role="img" aria-labelledby="encoder-viz-title">
@@ -3247,7 +3247,7 @@
       <li>
         <span class="intro-subq-letter">d</span>
         <span class="intro-subq-body">
-          How <em>complete</em> is the convergence &mdash; what fraction of the cross-modal geometric structure is linearly unified at the deepest layer, and how much remains linearly inaccessible from the projected modality?
+          How <em>complete</em> is the convergence &mdash; specifically, what fraction of the cross-modal geometric structure remains linearly inaccessible from a modality's representation after optimal linear projection, and does this residual fragmentation differ across pairs and layers?
           <span class="intro-subq-target">&rarr; <a href="#rq2-triangulation">&sect;4.7</a></span>
         </span>
       </li>
