@@ -4446,22 +4446,12 @@
 
     <div class="claim-card claim-card--positive">
       <h3>What we can formally claim</h3>
-      <ul class="clean">
-        <li>The encoder is not a hidden ensemble: null-normalised similarity is 40&ndash;80&times; above chance at deep layers.</li>
-        <li>Cross-modal alignment is progressive, monotonic, and replicates across both datasets and all three metric families.</li>
-        <li>Joint processing amplifies alignment beyond separate processing; the effect is measured and significant.</li>
-        <li>The residual fragmentation under linear probing is statistically real (BH-FDR <span class="mono">p &lt; 0.001</span> at every layer and pair) and does not vanish.</li>
-        <li>The linearly unified fraction is &ge;&nbsp;81% for every pair at layer 11, under linear probing.</li>
-      </ul>
+      <p>Cross-modal similarity is 40&ndash;80&times; above the permutation null at deep layers, consistently across all three pairs, both datasets, and all three metric families, ruling out a hidden ensemble. This alignment increases consistently with encoder depth, and joint processing further amplifies it beyond what separate passes achieve. The residual fragmentation under linear probing is statistically significant at every (layer, pair) cell tested (BH-FDR <span class="mono">p &lt; 0.001</span>) and does not vanish: the linearly unified fraction is at least 81% for every pair at layer 11.</p>
     </div>
 
     <div class="claim-card claim-card--negative">
       <h3>What we cannot formally claim</h3>
-      <ul class="clean">
-        <li>That &ldquo;86.5% unified&rdquo; measures proximity to a perfect encoder: we have no reference fragmentation for a perfectly unified encoder, so <span class="mono">1 &minus; frag</span> cannot be read as a grade toward an ideal.</li>
-        <li>That <span class="mono">frag &gt; 0</span> is caused by encoder failure alone: the residual conflates genuine alignment failure with structure intrinsically absent from the projected modality's signal. These two contributions cannot be separated by our protocol.</li>
-        <li>That cloud separation in t-SNE is evidence of imperfect unification: our working definition explicitly preserves modality-specific subspaces, so persistent spatial separation is expected, not diagnostic.</li>
-      </ul>
+      <p>Reporting &ldquo;86.5% linearly unified&rdquo; does not measure proximity to a perfect encoder: we have no reference for what a perfectly unified encoder would score, so <span class="mono">1 &minus; frag</span> is not a grade toward an ideal. Observing <span class="mono">frag &gt; 0</span> does not prove encoder failure: the residual conflates genuine misalignment with structure intrinsically absent from the projected modality's signal, and these two contributions are inseparable by our protocol. Finally, persistent t-SNE cloud separation is not evidence of imperfect unification: our working definition preserves modality-specific subspaces, so two clouds staying apart is expected, not diagnostic.</p>
     </div>
 
     <div class="claim-card claim-card--caution">
