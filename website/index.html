@@ -2632,9 +2632,13 @@
       <span class="sidenav-dot"></span>
       <span class="sidenav-label"><span class="sn-num">2.2</span>Similarity analysis</span>
     </div>
+    <div class="sidenav-item is-sub" data-href="#related-probing" tabindex="0" role="link" aria-label="Probing and subspace interpretability">
+      <span class="sidenav-dot"></span>
+      <span class="sidenav-label"><span class="sn-num">2.3</span>Probing &amp; subspaces</span>
+    </div>
     <div class="sidenav-item is-sub" data-href="#related-platonic" tabindex="0" role="link" aria-label="Platonic hypothesis">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">2.3</span>Platonic hypothesis</span>
+      <span class="sidenav-label"><span class="sn-num">2.4</span>Platonic hypothesis</span>
     </div>
     <div class="sidenav-item is-main" data-href="#method" tabindex="0" role="link" aria-label="Methodology">
       <span class="sidenav-dot"></span>
@@ -2776,16 +2780,19 @@
     <h2><span class="num">02</span>Related Work</h2>
     <div class="section-rule"></div>
 
+    <p>While multimodal architectures have demonstrated strong downstream performance, the internal geometry of their shared representation spaces remains underexplored. We build on several areas of prior work to investigate whether these models truly converge into a unified space.</p>
+
     <h3 id="related-multimodal"><span class="sub-num">2.1</span>Multimodal representation learning</h3>
-    <p>Large-scale multimodal models have converged on the design principle of a shared encoder trained across many input modalities. <b>4M</b> [1] and its successor <b>4M-21</b> [2] extend this to 21 modalities using a masked-modeling objective over a unified token vocabulary. Related models &mdash; FLAVA, ImageBind, and UnifiedIO &mdash; similarly posit a single representation space but differ in how modalities are aligned (contrastive vs. generative losses) and whether the encoder is shared or merely projection-aligned.</p>
-    <p>Our work complements these architectures by asking whether the <em>internal</em> representations of a shared encoder genuinely converge, rather than inferring convergence from downstream task performance.</p>
+    <p>Large-scale models like <b>4M</b> and <b>4M-21</b> [1, 2], FLAVA, and ImageBind posit a single representation space for disparate inputs. However, research into the <em>modality gap</em> [6] shows that models can yield representations where modalities live in distinct, near orthogonal subspaces despite paired training. Our work complements these architectures by asking whether the internal representations of a shared generative encoder genuinely converge in relational structure, rather than just inferring convergence from downstream tasks.</p>
 
-    <h3 id="related-similarity"><span class="sub-num">2.2</span>Representational similarity analysis</h3>
-    <p><b>Centered Kernel Alignment (CKA)</b> [3] has become the standard tool for comparing representations across layers and models. It is invariant to orthogonal transformations and isotropic scaling, which makes it well-suited for comparing heterogeneous modality streams. <b>PWCCA</b> [4] extends canonical correlation analysis with projection-based weights to downweight directions that the data does not use. <b>k-NN overlap</b> probes local geometric structure and has been used to compare vision and language representations.</p>
-    <p>Prior work applying these metrics typically compares <em>different models</em> or <em>different layers of the same model</em> on the same data. We apply them to compare <em>different modalities at each layer of the same model</em>, complemented by a permutation null distribution that controls for spurious correlations from shared scene content.</p>
+    <h3 id="related-similarity"><span class="sub-num">2.2</span>Representational similarity analysis (RSA)</h3>
+    <p><b>Centered Kernel Alignment (CKA)</b> [3], <b>PWCCA</b> [4], and <b>k-NN overlap</b> are standard tools for comparing heterogeneous representation spaces. Prior work typically uses these metrics to compare different models or different layers on the same data. In contrast, we apply them to compare different modalities at each layer of the same model, utilizing a permutation null distribution to control for spurious correlations.</p>
 
-    <h3 id="related-platonic"><span class="sub-num">2.3</span>The Platonic Representation Hypothesis</h3>
-    <p>Huh et al. [5] argue that sufficiently scaled models, regardless of modality or architecture, converge toward a shared statistical model of the world &mdash; a <em>Platonic representation</em>. Our study can be read as a local test of this hypothesis within a single model: does a multimodal encoder trained to handle many modalities actually learn one internal language, or does it preserve modality-specific dialects throughout the trunk?</p>
+    <h3 id="related-probing"><span class="sub-num">2.3</span>Probing and subspace interpretability</h3>
+    <p>To quantify structural fragmentation, we rely on the linear probing convention [7, 8], which conservatively bounds whether information is genuinely &ldquo;present&rdquo; in a representation. We combine this with subspace projection methods, such as <b>Iterative Null-space Projection</b> [11] and <b>LEACE</b> [13], which analyze residual structures after linearly erasing concepts. We adapt this logic into a cross-modal setting via transmodal triangulation, measuring how much shared structure between two modalities remains after accounting for what is linearly captured by a third.</p>
+
+    <h3 id="related-platonic"><span class="sub-num">2.4</span>The Platonic Representation Hypothesis</h3>
+    <p>Huh et al. [5] argue that sufficiently scaled models converge toward a shared statistical model of the world, a <em>Platonic representation</em>. Our study serves as a local, layer-wise test of this hypothesis within a single model: does a multimodal encoder trained on diverse inputs actually learn one internal language, or does it preserve modality-specific dialects throughout the trunk?</p>
   </section>
 
   <!-- ========== METHOD ========== -->
@@ -3682,6 +3689,30 @@
       </li>
       <li>
         Huh, M., Cheung, B., Wang, T., Isola, P. <span class="ref-title">The Platonic Representation Hypothesis.</span> <span class="ref-venue">ICML, 2024.</span>
+      </li>
+      <li>
+        Liang, W., Zhang, Y., Kwon, Y., Yeung, S., Zou, J. Y. <span class="ref-title">Mind the Gap: Understanding the Modality Gap in Multi-modal Contrastive Representation Learning.</span> <span class="ref-venue">NeurIPS, 2022.</span>
+      </li>
+      <li>
+        Alain, G., Bengio, Y. <span class="ref-title">Understanding Intermediate Layers Using Linear Classifier Probes.</span> <span class="ref-venue">ICLR Workshop, 2017.</span>
+      </li>
+      <li>
+        Belinkov, Y., Glass, J. <span class="ref-title">Analysis Methods in Neural Language Processing: A Survey.</span> <span class="ref-venue">TACL, 2019.</span>
+      </li>
+      <li>
+        Hewitt, J., Liang, P. <span class="ref-title">Designing and Interpreting Probes with Control Tasks.</span> <span class="ref-venue">EMNLP, 2019.</span>
+      </li>
+      <li>
+        Voita, E., Titov, I. <span class="ref-title">Information-Theoretic Probing with Minimum Description Length.</span> <span class="ref-venue">EMNLP, 2020.</span>
+      </li>
+      <li>
+        Ravfogel, S., Elazar, Y., Gonen, H., Twiton, M., Goldberg, Y. <span class="ref-title">Null It Out: Guarding Protected Attributes by Iterative Nullspace Projection.</span> <span class="ref-venue">ACL, 2020.</span>
+      </li>
+      <li>
+        Elazar, Y., Ravfogel, S., Jacovi, A., Goldberg, Y. <span class="ref-title">Amnesic Probing: Behavioral Explanation with Amnesic Counterfactuals.</span> <span class="ref-venue">TACL, 2021.</span>
+      </li>
+      <li>
+        Belrose, N., Schneider-Joseph, D., Ravfogel, S., Cotterell, R., Raff, E., Biderman, S. <span class="ref-title">LEACE: Perfect Linear Concept Erasure in Closed Form.</span> <span class="ref-venue">NeurIPS, 2023.</span>
       </li>
       <li>
         Roberts, M., Ramapuram, J., Ranjan, A., et al. <span class="ref-title">Hypersim: A Photorealistic Synthetic Dataset for Holistic Indoor Scene Understanding.</span> <span class="ref-venue">ICCV, 2021.</span>
