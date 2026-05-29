@@ -257,7 +257,7 @@
   h1.title {
     font-family: "Source Serif 4", Georgia, serif;
     font-weight: 600;
-    font-size: 44px;
+    font-size: 48px;
     line-height: 1.15;
     letter-spacing: -0.01em;
     margin: 0 0 6px;
@@ -408,7 +408,7 @@
   h2 {
     font-family: "Inter", sans-serif;
     font-weight: 600;
-    font-size: 22px;
+    font-size: 24px;
     letter-spacing: -0.005em;
     color: var(--ink);
     margin: 0 0 6px;
@@ -418,7 +418,7 @@
   }
   h2 .num {
     font-family: "JetBrains Mono", monospace;
-    font-size: 13px;
+    font-size: 1em;
     color: var(--muted-2);
     font-weight: 500;
     letter-spacing: 0;
@@ -426,24 +426,32 @@
   h3 {
     font-family: "Inter", sans-serif;
     font-weight: 600;
-    font-size: 16.5px;
+    font-size: 18px;
     color: var(--ink);
     margin: 32px 0 10px;
   }
   h3 .sub-num {
     font-family: "JetBrains Mono", monospace;
-    font-size: 12px;
+    font-size: 1em;
     color: var(--muted-2);
     font-weight: 500;
     margin-right: 8px;
   }
+  h3.results-rq {
+    margin-top: 80px;
+    scroll-margin-top: 80px;
+  }
+  h3.results-rq:first-of-type {
+    margin-top: 52px;
+  }
   h4.results-sub {
     font-family: "Inter", sans-serif;
     font-weight: 600;
-    font-size: 15px;
+    font-size: 17px;
     color: var(--ink);
     margin: 28px 0 10px;
     letter-spacing: 0.01em;
+    scroll-margin-top: 80px;
   }
   h4.results-sub + h4.results-sub { margin-top: 24px; }
   .results-rq-lead { margin-bottom: 16px; }
@@ -483,6 +491,7 @@
   .intro-mainq,
   .intro-mainq p,
   .intro-subq-target,
+  h4.results-sub,
   .stat-note,
   .method-sub-lead,
   .modality-stack-fig figcaption,
@@ -2590,7 +2599,7 @@
   .rq1-pre-finding-body { min-width: 0; }
   .rq1-pre-finding-title {
     font-family: "Source Serif 4", Georgia, serif;
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 600;
     margin: 0 0 4px;
     color: var(--ink);
@@ -2914,7 +2923,7 @@
   .rq1-finding-body { min-width: 0; }
   .rq1-finding-title {
     font-family: "Source Serif 4", Georgia, serif;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 600;
     margin: 0 0 6px;
     color: var(--ink);
@@ -3710,7 +3719,7 @@
 
     <p>We organise the results around the four sub-questions from §1.2. <a href="#results-rq-a">&sect;4.1</a> explores activation geometry qualitatively. Scalar metrics in <a href="#results-rq-b">&sect;4.2</a> and <a href="#results-rq-c">&sect;4.3</a> follow the three forward-pass regimes in <a href="#method-passes">&sect;3.3</a> (separate, then joint and imprint). <a href="#results-rq-d">&sect;4.4</a> measures how complete cross-modal unification is via transmodal triangulation.</p>
 
-    <h3 id="results-rq-a" style="margin-top:42px"><span class="sub-num">4.1</span>Activation geometry</h3>
+    <h3 id="results-rq-a" class="results-rq"><span class="sub-num">4.1</span>Activation geometry</h3>
 
     <div class="rq1-question">
       <span class="rq1-question-label">Sub-question (a)</span>
@@ -3905,7 +3914,7 @@
       <p>Taken together, the entropy figures add a final nuance to the main question. The partial alignment we observe across the network is not just a matter of the two clouds moving closer in space. The encoder also reshapes the internal complexity of each modality's representations across layers, bringing them toward similar levels of diffuseness. Even this convergence is only partial and pair-dependent. At layer 11, each modality retains a distinct representational character: RGB remains the most varied, normals consistently more diffuse than depth, depth the most variable across datasets. The encoder brings these characters closer together while preserving the modality-specific structure expected from our unification definition.</p>
     </div>
 
-    <h3 id="results-rq-b" style="margin-top:42px"><span class="sub-num">4.2</span>Paired-scene similarity</h3>
+    <h3 id="results-rq-b" class="results-rq"><span class="sub-num">4.2</span>Paired-scene similarity</h3>
 
     <div class="rq1-question">
       <span class="rq1-question-label">Sub-question (b)</span>
@@ -4036,7 +4045,7 @@
       </div>
     </div>
 
-    <h3 id="results-rq-c" style="margin-top:42px"><span class="sub-num">4.3</span>Joint processing &amp; modality imprint</h3>
+    <h3 id="results-rq-c" class="results-rq"><span class="sub-num">4.3</span>Joint processing &amp; modality imprint</h3>
 
     <div class="rq1-question">
       <span class="rq1-question-label">Sub-question (c)</span>
@@ -4340,7 +4349,7 @@
 
     <p style="margin-top:16px">Together, §4.3.1 and §4.3.2 answer sub-question (c): joint processing amplifies cross-modal similarity (especially for RGB ↔ Normals), and the partner's influence shows up both in relative joint-vs-joint geometry and, for geometric modalities, in a shift of the focal slice away from its solo-pass representation.</p>
 
-    <h3 id="results-rq-d" style="margin-top:42px"><span class="sub-num">4.4</span>Cross-modal completeness</h3>
+    <h3 id="results-rq-d" class="results-rq"><span class="sub-num">4.4</span>Cross-modal completeness</h3>
 
     <div class="rq1-question">
       <span class="rq1-question-label">Sub-question (d)</span>
