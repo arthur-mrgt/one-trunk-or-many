@@ -425,25 +425,37 @@
   ul.clean { margin: 0 0 14px; padding-left: 22px; }
   ul.clean li { margin-bottom: 6px; }
 
-  /* ---------- Abstract ---------- */
-  .abstract {
-    background: var(--panel);
-    border-left: 3px solid var(--ink);
-    padding: 22px 26px;
-    font-size: 16.5px;
-    line-height: 1.7;
-    margin: 0;
+  /* ---------- Abstract (unnumbered, distinct from body sections) ---------- */
+  section.abstract-section {
+    margin: 44px 0 72px;
+    scroll-margin-top: 24px;
   }
-  .abstract .label {
+  .abstract-section .abstract-card {
+    background: linear-gradient(135deg, #dceef0 0%, #e8f6f8 48%, #f0f8fa 100%);
+    border-left: 4px solid var(--c-accent);
+    padding: 24px 28px 26px;
+    font-size: 16.5px;
+    line-height: 1.72;
+    color: var(--ink-soft);
+    box-shadow: 0 1px 0 rgba(81, 140, 140, 0.12);
+  }
+  .abstract-section .abstract-kicker {
+    margin: 0 0 14px;
     font-family: "Inter", sans-serif;
     font-size: 11px;
-    letter-spacing: 0.18em;
+    font-weight: 600;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 10px;
+    color: var(--c-accent);
     display: block;
   }
-  .abstract p:last-child { margin-bottom: 0; }
+  .abstract-section .abstract-card p {
+    margin: 0;
+  }
+  .sidenav-item.is-abstract .sidenav-label {
+    font-style: italic;
+    color: var(--muted);
+  }
 
   /* ---------- TL;DR strip ---------- */
   .tldr {
@@ -1104,10 +1116,24 @@
     font-size: 12.5px;
     color: var(--muted);
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  footer .author-contribution {
+    max-width: 52rem;
+    line-height: 1.65;
+  }
+  footer .author-contribution h3 {
+    margin: 0 0 8px;
+    font-family: "Inter", sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: 0.02em;
+  }
+  footer .author-contribution p {
+    margin: 0;
   }
 
   /* ---------- Gap closure (cross→joint) chart ---------- */
@@ -1350,7 +1376,7 @@
     .gap-row .gr-label { font-size: 11.5px; }
   }
 
-  /* ---------- §3.1 Accordion cards ---------- */
+  /* ---------- §2.1 Accordion cards ---------- */
   .spec-accordion {
     margin: 18px 0 4px;
     border-top: 1px solid var(--rule);
@@ -1956,7 +1982,7 @@
   }
   .pdist-detail-content .pdist-chart { height: 340px; }
 
-  /* ---------- §6.1 layer-wise similarity ---------- */
+  /* ---------- §4.4 layer-wise similarity ---------- */
   .rq1-question {
     display: flex; align-items: flex-start; gap: 14px;
     padding: 14px 18px;
@@ -2239,7 +2265,7 @@
     .rq1-charts { grid-template-columns: 1fr; }
   }
 
-  /* ---------- §6.1 — Summary of findings ---------- */
+  /* ---------- §4.4 — Summary of findings ---------- */
   .rq1-findings {
     border-top: 1px solid var(--rule);
     padding-top: 28px;
@@ -2338,7 +2364,7 @@
     .rq1-finding-visual--sparks { grid-template-columns: 1fr; }
   }
 
-  /* ---------- §6.3 modality imprint ---------- */
+  /* ---------- §4.6 modality imprint ---------- */
   .imprint-toolbar {
     display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
     margin: 18px 0 14px;
@@ -2586,93 +2612,93 @@
 <nav class="sidenav" id="sidenav" aria-label="Section navigation">
   <div class="sidenav-inner">
     <div class="sidenav-track"></div>
-    <div class="sidenav-item is-main" data-href="#abstract" tabindex="0" role="link" aria-label="Abstract">
+    <div class="sidenav-item is-main is-abstract" data-href="#abstract" tabindex="0" role="link" aria-label="Abstract">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">01</span>Abstract</span>
+      <span class="sidenav-label">Abstract</span>
     </div>
     <div class="sidenav-item is-main" data-href="#intro" tabindex="0" role="link" aria-label="Introduction">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">02</span>Introduction</span>
+      <span class="sidenav-label"><span class="sn-num">01</span>Introduction</span>
     </div>
     <div class="sidenav-item is-main" data-href="#related-work" tabindex="0" role="link" aria-label="Related Work">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">03</span>Related Work</span>
+      <span class="sidenav-label"><span class="sn-num">02</span>Related Work</span>
     </div>
     <div class="sidenav-item is-sub" data-href="#related-multimodal" tabindex="0" role="link" aria-label="Multimodal learning">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">3.1</span>Multimodal learning</span>
+      <span class="sidenav-label"><span class="sn-num">2.1</span>Multimodal learning</span>
     </div>
     <div class="sidenav-item is-sub" data-href="#related-similarity" tabindex="0" role="link" aria-label="Similarity analysis">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">3.2</span>Similarity analysis</span>
+      <span class="sidenav-label"><span class="sn-num">2.2</span>Similarity analysis</span>
     </div>
     <div class="sidenav-item is-sub" data-href="#related-platonic" tabindex="0" role="link" aria-label="Platonic hypothesis">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">3.3</span>Platonic hypothesis</span>
+      <span class="sidenav-label"><span class="sn-num">2.3</span>Platonic hypothesis</span>
     </div>
     <div class="sidenav-item is-main" data-href="#method" tabindex="0" role="link" aria-label="Methodology">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">04</span>Methodology</span>
+      <span class="sidenav-label"><span class="sn-num">03</span>Methodology</span>
     </div>
     <div class="sidenav-item is-sub" data-href="#method-model" tabindex="0" role="link" aria-label="Model and datasets">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">4.1</span>Model &amp; datasets</span>
+      <span class="sidenav-label"><span class="sn-num">3.1</span>Model &amp; datasets</span>
     </div>
     <div class="sidenav-item is-sub" data-href="#method-pipeline" tabindex="0" role="link" aria-label="Pipeline">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">4.2</span>Pipeline</span>
+      <span class="sidenav-label"><span class="sn-num">3.2</span>Pipeline</span>
     </div>
     <div class="sidenav-item is-sub" data-href="#method-geometry" tabindex="0" role="link" aria-label="Geometry visualization">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">4.3</span>Geometry viz</span>
+      <span class="sidenav-label"><span class="sn-num">3.3</span>Geometry viz</span>
     </div>
     <div class="sidenav-item is-sub" data-href="#method-metrics" tabindex="0" role="link" aria-label="Metrics">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">4.4</span>Metrics</span>
+      <span class="sidenav-label"><span class="sn-num">3.4</span>Metrics</span>
     </div>
     <div class="sidenav-item is-sub" data-href="#method-null" tabindex="0" role="link" aria-label="Null distribution">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">4.5</span>Null distribution</span>
+      <span class="sidenav-label"><span class="sn-num">3.5</span>Null distribution</span>
     </div>
     <div class="sidenav-item is-main" data-href="#results" tabindex="0" role="link" aria-label="Results">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">05</span>Results</span>
+      <span class="sidenav-label"><span class="sn-num">04</span>Results</span>
     </div>
     <div class="sidenav-item is-sub" data-href="#exploration-tsne" tabindex="0" role="link" aria-label="t-SNE geometry">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">5.1</span>t-SNE geometry</span>
+      <span class="sidenav-label"><span class="sn-num">4.1</span>t-SNE geometry</span>
     </div>
     <div class="sidenav-item is-sub" data-href="#exploration-distance" tabindex="0" role="link" aria-label="Paired distances">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">5.2</span>Paired distances</span>
+      <span class="sidenav-label"><span class="sn-num">4.2</span>Paired distances</span>
     </div>
     <div class="sidenav-item is-sub" data-href="#exploration-entropy" tabindex="0" role="link" aria-label="Entropy">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">5.3</span>Entropy</span>
+      <span class="sidenav-label"><span class="sn-num">4.3</span>Entropy</span>
     </div>
     <div class="sidenav-item is-sub" data-href="#results-metrics" tabindex="0" role="link" aria-label="Cross-modal similarity">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">5.4</span>Cross-modal similarity</span>
+      <span class="sidenav-label"><span class="sn-num">4.4</span>Cross-modal similarity</span>
     </div>
     <div class="sidenav-item is-sub" data-href="#joint-processing" tabindex="0" role="link" aria-label="Joint processing">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">5.5</span>Joint processing</span>
+      <span class="sidenav-label"><span class="sn-num">4.5</span>Joint processing</span>
     </div>
     <div class="sidenav-item is-sub" data-href="#modality-imprint" tabindex="0" role="link" aria-label="Modality imprint">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">5.6</span>Modality imprint</span>
+      <span class="sidenav-label"><span class="sn-num">4.6</span>Modality imprint</span>
     </div>
     <div class="sidenav-item is-sub" data-href="#rq2-triangulation" tabindex="0" role="link" aria-label="Cross-modal unification">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">5.7</span>Cross-modal unification</span>
+      <span class="sidenav-label"><span class="sn-num">4.7</span>Cross-modal unification</span>
     </div>
     <div class="sidenav-item is-main" data-href="#discussion" tabindex="0" role="link" aria-label="Discussion and Conclusion">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">06</span>Discussion &amp; Conclusion</span>
+      <span class="sidenav-label"><span class="sn-num">05</span>Discussion &amp; Conclusion</span>
     </div>
     <div class="sidenav-item is-main" data-href="#references" tabindex="0" role="link" aria-label="References">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">07</span>References</span>
+      <span class="sidenav-label"><span class="sn-num">06</span>References</span>
     </div>
   </div>
 </nav>
@@ -2723,20 +2749,17 @@
     </div>
   </section>
 
-  <!-- ========== ABSTRACT ========== -->
-  <section id="abstract">
-    <h2><span class="num">01</span>Abstract</h2>
-    <div class="section-rule"></div>
-    <div class="abstract">
-      <span class="label sans">TL;DR</span>
-      <p>The 4M-21 model processes RGB, depth, and surface normals through a shared transformer encoder. We ask a direct empirical question: to what degree does the encoder actually learn a <em>single unified representation</em> across modalities, and where does that unification break down?</p>
-      <p>We measure representational similarity across all 12 encoder layers using <b>CKA</b>, <b>PWCCA</b>, and <b>k-NN overlap</b>, tested against a permutation null built from mismatched scenes (<span class="mono">n=1000</span> draws, BH-FDR adaptive stopping at <span class="mono">α=0.01</span>). Across all three modality pairs (RGB ↔ Depth, RGB ↔ Normals, Depth ↔ Normals) and both Hypersim and DIODE, paired-scene similarity rises monotonically with encoder depth and remains significantly above the null at deep layers. Consistently with our unification definition (which preserves modality-specific subspaces alongside the shared one), t-SNE visualisations show that modality clouds remain spatially distinct while their internal scene-level structure becomes increasingly congruent across modalities. We also observe that DIODE values are systematically higher than Hypersim's in 7 of 9 (pair × metric) cells &mdash; a dataset-character effect rather than a model effect. A <em>transmodal triangulation</em> analysis then quantifies how much of the cross-modal geometric structure is linearly unified: <b>≈86.5%</b> on average at layer 11 (≥81% for every pair tested), with the residual fragmentation significant in every pair (BH-FDR <span class="mono">p &lt; 0.001</span>). 4M's encoder is one trunk in the sense that the modalities flow through shared weights into geometrically congruent subspaces, but a measurably imperfect one under linear probing: the clouds stay in distinct subspaces (as expected from the unification definition), and a small but real fraction of cross-modal structure remains linearly inaccessible from the projected modality at every depth.</p>
+  <!-- ========== ABSTRACT (unnumbered) ========== -->
+  <section id="abstract" class="abstract-section">
+    <div class="abstract-card">
+      <h2 class="abstract-kicker sans">Abstract</h2>
+      <p>This study investigates the extent to which shared-weight multimodal models, specifically the 4M architecture, develop unified representations across disparate inputs such as RGB, depth, and surface normals. By applying a multi-metric protocol (CKA, PWCCA, and k-NN overlap) across transformer encoder layers, we analyze the geometric and topological congruence of these modalities against a null-hypothesis framework. Our findings reveal that representational similarity between paired scenes rises monotonically, becoming highly significant at deeper layers. Crucially, consistently with our definition of unification, the encoder successfully preserves modality-specific subspaces. t-SNE visualizations show that while modality clouds remain spatially distinct, their internal scene-level structures become rigorously congruent. Ultimately, our project illustrates that shared weights in this architecture do not force a spatial collapse of modalities, but rather align them into parallel, geometrically synchronized representation spaces, adding a useful perspective to the exploration of &ldquo;any-to-any&rdquo; models.</p>
     </div>
   </section>
 
   <!-- ========== INTRODUCTION ========== -->
   <section id="intro">
-    <h2><span class="num">02</span>Introduction &amp; Motivation</h2>
+    <h2><span class="num">01</span>Introduction &amp; Motivation</h2>
     <div class="section-rule"></div>
     <p>Large multimodal models like <b>4M</b> are trained to encode many modalities into one shared trunk. The design assumption is that representations <em>converge</em>: an RGB patch and the corresponding depth patch of the same scene end up nearby in latent space, with surface normals, segmentation maps, and other modalities folding into the same neighborhood.</p>
     <p>This assumption is rarely tested directly. It is mostly inferred from downstream task performance, or from the model's ability to generate one modality conditioned on another. We make it empirical — opening the trunk and measuring, layer by layer, how similarly the encoder describes the same scene observed through different sensors.</p>
@@ -2750,27 +2773,27 @@
 
   <!-- ========== RELATED WORK ========== -->
   <section id="related-work">
-    <h2><span class="num">03</span>Related Work</h2>
+    <h2><span class="num">02</span>Related Work</h2>
     <div class="section-rule"></div>
 
-    <h3 id="related-multimodal"><span class="sub-num">3.1</span>Multimodal representation learning</h3>
+    <h3 id="related-multimodal"><span class="sub-num">2.1</span>Multimodal representation learning</h3>
     <p>Large-scale multimodal models have converged on the design principle of a shared encoder trained across many input modalities. <b>4M</b> [1] and its successor <b>4M-21</b> [2] extend this to 21 modalities using a masked-modeling objective over a unified token vocabulary. Related models &mdash; FLAVA, ImageBind, and UnifiedIO &mdash; similarly posit a single representation space but differ in how modalities are aligned (contrastive vs. generative losses) and whether the encoder is shared or merely projection-aligned.</p>
     <p>Our work complements these architectures by asking whether the <em>internal</em> representations of a shared encoder genuinely converge, rather than inferring convergence from downstream task performance.</p>
 
-    <h3 id="related-similarity"><span class="sub-num">3.2</span>Representational similarity analysis</h3>
+    <h3 id="related-similarity"><span class="sub-num">2.2</span>Representational similarity analysis</h3>
     <p><b>Centered Kernel Alignment (CKA)</b> [3] has become the standard tool for comparing representations across layers and models. It is invariant to orthogonal transformations and isotropic scaling, which makes it well-suited for comparing heterogeneous modality streams. <b>PWCCA</b> [4] extends canonical correlation analysis with projection-based weights to downweight directions that the data does not use. <b>k-NN overlap</b> probes local geometric structure and has been used to compare vision and language representations.</p>
     <p>Prior work applying these metrics typically compares <em>different models</em> or <em>different layers of the same model</em> on the same data. We apply them to compare <em>different modalities at each layer of the same model</em>, complemented by a permutation null distribution that controls for spurious correlations from shared scene content.</p>
 
-    <h3 id="related-platonic"><span class="sub-num">3.3</span>The Platonic Representation Hypothesis</h3>
+    <h3 id="related-platonic"><span class="sub-num">2.3</span>The Platonic Representation Hypothesis</h3>
     <p>Huh et al. [5] argue that sufficiently scaled models, regardless of modality or architecture, converge toward a shared statistical model of the world &mdash; a <em>Platonic representation</em>. Our study can be read as a local test of this hypothesis within a single model: does a multimodal encoder trained to handle many modalities actually learn one internal language, or does it preserve modality-specific dialects throughout the trunk?</p>
   </section>
 
   <!-- ========== METHOD ========== -->
   <section id="method">
-    <h2><span class="num">04</span>Methodology</h2>
+    <h2><span class="num">03</span>Methodology</h2>
     <div class="section-rule"></div>
 
-    <h3 id="method-model"><span class="sub-num">4.1</span>Model, modalities, datasets</h3>
+    <h3 id="method-model"><span class="sub-num">3.1</span>Model, modalities, datasets</h3>
     <div class="spec-accordion" id="spec-accordion">
 
       <!-- ROW 1 — MODEL -->
@@ -2884,7 +2907,7 @@
 
     </div>
 
-    <h3 id="method-pipeline"><span class="sub-num">4.2</span>Pipeline overview</h3>
+    <h3 id="method-pipeline"><span class="sub-num">3.2</span>Pipeline overview</h3>
     <p class="sans" style="color:var(--muted);font-size:13.5px;margin:-4px 0 14px">Click any step below for details.</p>
     <div class="diagram" role="img" aria-label="Method pipeline diagram">
       <div class="diagram-row diagram-row--forked">
@@ -2956,34 +2979,34 @@
       </div>
     </div>
 
-    <h3 id="method-geometry"><span class="sub-num">4.3</span>Activation geometry visualization</h3>
+    <h3 id="method-geometry"><span class="sub-num">3.3</span>Activation geometry visualization</h3>
     <p>To complement the scalar similarity metrics, we directly visualize the geometry of the activation space at each encoder layer using dimensionality reduction. We apply PCA to 50 components as a denoising step, then run t-SNE to produce a 2D or 3D embedding. Points represent individual token activations, colored by modality, scene category, or scene identity depending on the selected granularity. This lets us see whether modality identity, scene type, or individual scene is the dominant organizing principle in the encoder's representation space at each layer.</p>
 
-    <h3 id="method-metrics"><span class="sub-num">4.4</span>Similarity metrics</h3>
+    <h3 id="method-metrics"><span class="sub-num">3.4</span>Similarity metrics</h3>
     <ul class="clean">
       <li><b>CKA</b>&nbsp; (Centered Kernel Alignment) : Compares two activation matrices via a kernel inner product; invariant to orthogonal transforms and isotropic scaling.</li>
       <li><b>PWCCA</b>&nbsp; (Projection-Weighted CCA) : A canonical-correlation score in which each direction is weighted by the L1-norm of its projection onto the activations, emphasizing the directions the data actually uses.</li>
       <li><b>k-NN overlap</b>&nbsp; : For each anchor token, fraction of its <span class="mono">k</span> nearest neighbours in modality <span class="mono">A</span> that also appear among its <span class="mono">k</span> nearest neighbours in modality <span class="mono">B</span>.</li>
     </ul>
 
-    <h3 id="method-null"><span class="sub-num">4.5</span>Permutation null &amp; multiple testing</h3>
+    <h3 id="method-null"><span class="sub-num">3.5</span>Permutation null &amp; multiple testing</h3>
     <p>For every (layer, metric, modality-pair) combination we construct a null distribution by repeatedly pairing activations from <em>different</em> scenes (shuffling scene identities while keeping per-modality batches intact). To avoid inflating the null with intra-category similarity, the two scenes in each shuffled pair are constrained to come from <em>different scene categories</em> (e.g. bathroom vs. office, drawn from Hypersim's trajectory metadata). We sample <span class="mono">n = 1000</span> mismatched draws per (layer, metric, pair) and apply adaptive stopping at <span class="mono">α = 0.01</span> with <b>Benjamini–Hochberg FDR</b> correction across the 12 layers × 3 metrics tested simultaneously. Observed paired-scene scores are reported as z-scores against this null along with BH-corrected p-values.</p>
   </section>
 
   <!-- ========== RESULTS ========== -->
   <section id="results">
-    <h2><span class="num">05</span>Results</h2>
+    <h2><span class="num">04</span>Results</h2>
     <div class="section-rule"></div>
 
-    <p>Three measurement layers, increasingly quantitative. We first look directly at the geometry of the activation space (§5.1&ndash;5.3) &mdash; what the modality clouds look like at each encoder layer, how same-scene paired distances evolve, and how internally diffuse each modality's cloud is. We then move to scalar similarity metrics under separate forward passes (§5.4), compare them against joint forward passes (§5.5&ndash;5.6), and finally quantify cross-modal unification through transmodal triangulation (§5.7).</p>
+    <p>Three measurement layers, increasingly quantitative. We first look directly at the geometry of the activation space (§4.1&ndash;4.3) &mdash; what the modality clouds look like at each encoder layer, how same-scene paired distances evolve, and how internally diffuse each modality's cloud is. We then move to scalar similarity metrics under separate forward passes (§4.4), compare them against joint forward passes (§4.5&ndash;4.6), and finally quantify cross-modal unification through transmodal triangulation (§4.7).</p>
 
-    <h3 id="exploration-tsne" style="margin-top:42px"><span class="sub-num">5.1</span>Activation space geometry (t-SNE)</h3>
+    <h3 id="exploration-tsne" style="margin-top:42px"><span class="sub-num">4.1</span>Activation space geometry (t-SNE)</h3>
 
     <p>We visualize the token activation space at each encoder layer using t-SNE (with PCA-50 pre-reduction for denoising), coloring points by modality, scene category, or scene identity. This directly reveals whether modality, scene type, or individual scene is the dominant axis of variation in the encoder's representation space at each layer — a question the scalar similarity metrics alone cannot answer.</p>
 
     <div class="aside" style="margin-top:8px">
       <span class="label">What to look for</span>
-      <p style="margin-bottom:0">Under the unification definition introduced in §2, modality-specific subspaces should persist; what we expect to converge is the relational geometry within each cloud. We therefore look for matching internal organisation across clouds (same scenes pulling to matching positions on each side of the modality boundary), not for spatial fusion of the clouds themselves.</p>
+      <p style="margin-bottom:0">Under the unification definition introduced in §1, modality-specific subspaces should persist; what we expect to converge is the relational geometry within each cloud. We therefore look for matching internal organisation across clouds (same scenes pulling to matching positions on each side of the modality boundary), not for spatial fusion of the clouds themselves.</p>
     </div>
 
     <div class="tsne-block">
@@ -3042,11 +3065,11 @@
     <div class="aside" style="margin-top:12px; border-left:none; background: color-mix(in oklch, var(--c-accent) 10%, transparent);">
       <span class="label">Summary</span>
       <p>Taken together, the three t-SNE colourings build a coherent and increasingly precise picture. The modality colouring establishes that the two modality clouds remain in distinct regions of the latent space at every layer, across both datasets — consistent with the encoder preserving modality-specific subspaces alongside the shared one. The category colouring shows that both clouds develop matching internal semantic organisation, with scene-type subclusters emerging within each modality independently. The scene identity colouring shows that by the deep layers, the two clouds have developed matching fine-grained scene-level geography: the same internal map, drawn twice.</p>
-      <p style="margin-bottom:0">The overall picture is the progressive development of matching internal structure within distinct modality subspaces — exactly the form of unification predicted by §2: shared relational geometry in a common subspace, modality-specific information preserved alongside. The similarity metrics quantify that growing correspondence; the t-SNE visualisations show what it looks like geometrically.</p>
+      <p style="margin-bottom:0">The overall picture is the progressive development of matching internal structure within distinct modality subspaces — exactly the form of unification predicted by §1: shared relational geometry in a common subspace, modality-specific information preserved alongside. The similarity metrics quantify that growing correspondence; the t-SNE visualisations show what it looks like geometrically.</p>
     </div>
 
     <!-- ========== 4a (cont.) — Paired-sample distance analysis ========== -->
-    <h3 id="exploration-distance" style="margin-top:42px"><span class="sub-num">5.2</span>Paired-sample distances per layer</h3>
+    <h3 id="exploration-distance" style="margin-top:42px"><span class="sub-num">4.2</span>Paired-sample distances per layer</h3>
     <p class="pdist-intro">
       The t-SNE figures above show how each modality's whole cloud moves. Here we measure the per-sample picture. For each scene, we compute the Euclidean distance in PCA-2 space between the representations of two modalities at each encoder layer. The boxplot shows how those per-scene distances are distributed across all scenes at each layer. A decreasing median means same-scene representations from different modalities are getting geometrically closer as depth increases. A shrinking IQR means that convergence is consistent across scenes rather than driven by a few outliers. A Wilcoxon signed-rank test comparing L00 and L11 is reported for each pair.
     </p>
@@ -3110,7 +3133,7 @@
     </div>
 
     <!-- ========== 4a (cont.) — Activation entropy per modality ========== -->
-    <h3 id="exploration-entropy" style="margin-top:42px"><span class="sub-num">5.3</span>Activation entropy per modality</h3>
+    <h3 id="exploration-entropy" style="margin-top:42px"><span class="sub-num">4.3</span>Activation entropy per modality</h3>
     <p class="pdist-intro">
       The distance plots show how close same-scene representations from different modalities are in space. Shannon entropy asks a complementary question: how internally varied is each modality's cloud at each layer? A tight, compact cloud has low entropy — the encoder is producing similar representations for all scenes under that modality. A diffuse, spread-out cloud has high entropy — the encoder is producing more varied, discriminative representations. Beyond the per-pair distances, we ask whether the encoder also brings the internal complexity of each modality cloud closer together — i.e. whether modalities are processed with similar entropy, on top of their relational alignment.
     </p>
@@ -3165,7 +3188,7 @@
       <p>Taken together, the entropy figures add a final nuance to the main question. The partial alignment we observe across the network is not just a matter of the two clouds moving closer in space. The encoder also reshapes the internal complexity of each modality's representations across layers, bringing them toward similar levels of diffuseness. Even this convergence is only partial and pair-dependent. At layer 11, each modality retains a distinct representational character: RGB remains the most varied, normals consistently more diffuse than depth, depth the most variable across datasets. The encoder brings these characters closer together while preserving the modality-specific structure expected from our unification definition.</p>
     </div>
 
-    <h3 id="results-metrics" style="margin-top:42px"><span class="sub-num">5.4</span>Cross-modality similarity (RQ1)</h3>
+    <h3 id="results-metrics" style="margin-top:42px"><span class="sub-num">4.4</span>Cross-modality similarity (RQ1)</h3>
 
     <!-- 6.1 — Layer-wise similarity curves (3 metrics × 3 pairs × 2 datasets) -->
     <div class="rq1-question">
@@ -3291,9 +3314,9 @@
       </div>
     </div>
 
-    <h3 id="joint-processing" style="margin-top:42px"><span class="sub-num">5.5</span>Joint processing &mdash; does feeding modalities together close the gap?</h3>
+    <h3 id="joint-processing" style="margin-top:42px"><span class="sub-num">4.5</span>Joint processing &mdash; does feeding modalities together close the gap?</h3>
 
-    <p>Joint processing &mdash; feeding both modalities together in a single forward pass &mdash; meaningfully increases cross-modality similarity compared to separate passes. The gap is largest for <b>RGB ↔ Normals</b> (CKA <span class="mono">+0.31</span> on Hypersim, <span class="mono">+0.16</span> on DIODE) and <b>RGB ↔ Depth</b> (<span class="mono">+0.12</span> on Hypersim, <span class="mono">+0.09</span> on DIODE). By contrast, self-vs-joint similarity stays close to 1 for RGB-involving combinations (CKA ≈ 0.999–1.000) but drops to ≈0.7–0.85 for some Depth/Normals slices in deep layers (§5.6) &mdash; the encoder integrates partner information without disrupting RGB representations, while geometric modalities are more perturbed.</p>
+    <p>Joint processing &mdash; feeding both modalities together in a single forward pass &mdash; meaningfully increases cross-modality similarity compared to separate passes. The gap is largest for <b>RGB ↔ Normals</b> (CKA <span class="mono">+0.31</span> on Hypersim, <span class="mono">+0.16</span> on DIODE) and <b>RGB ↔ Depth</b> (<span class="mono">+0.12</span> on Hypersim, <span class="mono">+0.09</span> on DIODE). By contrast, self-vs-joint similarity stays close to 1 for RGB-involving combinations (CKA ≈ 0.999–1.000) but drops to ≈0.7–0.85 for some Depth/Normals slices in deep layers (§4.6) &mdash; the encoder integrates partner information without disrupting RGB representations, while geometric modalities are more perturbed.</p>
 
     <div class="stat-row">
       <div class="stat-cell">
@@ -3529,7 +3552,7 @@
     <div class="figcap" style="margin-top:8px"><b>Table 2.</b> Joint-vs-joint peak CKA across L0–L11, per pair × dataset.</div>
 
     <!-- ========== 6.3 — Modality imprint under joint processing ========== -->
-    <h3 id="modality-imprint" style="margin-top:42px"><span class="sub-num">5.6</span>Does the partner leave an imprint?</h3>
+    <h3 id="modality-imprint" style="margin-top:42px"><span class="sub-num">4.6</span>Does the partner leave an imprint?</h3>
     <p>
       Joint processing is only interesting if the encoder actually <em>uses</em> the partner. Here we compare each modality's representation when processed alone against its representation when processed jointly with a partner. <b>A value near 1 means the partner was effectively ignored; a value well below 1 means the partner left a detectable imprint on the modality's representation.</b> Each chart's title reads as X<sub>y</sub>: modality X alone versus X when bundled with y.
     </p>
@@ -3588,7 +3611,7 @@
     </p>
 
     <!-- ========== 5.7 — Transmodal triangulation (RQ2) ========== -->
-    <h3 id="rq2-triangulation" style="margin-top:42px"><span class="sub-num">5.7</span>Cross-modal unification &mdash; transmodal triangulation (RQ2)</h3>
+    <h3 id="rq2-triangulation" style="margin-top:42px"><span class="sub-num">4.7</span>Cross-modal unification &mdash; transmodal triangulation (RQ2)</h3>
 
     <div class="rq1-question">
       <span class="rq1-question-label">RQ2</span>
@@ -3615,34 +3638,34 @@
 
   <!-- ========== DISCUSSION & CONCLUSION (merged) ========== -->
   <section id="discussion">
-    <h2><span class="num">06</span>Discussion &amp; Conclusion</h2>
+    <h2><span class="num">05</span>Discussion &amp; Conclusion</h2>
     <div class="section-rule"></div>
 
-    <p>Three complementary measurement layers point in the same direction. <em>Similarity metrics</em> (§5.4) show that CKA, PWCCA, and k-NN overlap rise monotonically with encoder depth and remain significantly above the permutation null at every deep layer, across all three pairs and both datasets. <em>Activation geometry</em> (§5.1–5.3) shows that this rise happens <em>without</em> the modality clouds ever merging in space — the per-modality clouds stay separated at every layer while their internal scene-level organisation becomes increasingly congruent across modalities. <em>Transmodal triangulation</em> (§5.7) puts a number on what fraction of the cross-modal geometric structure is linearly unified at the deepest layer.</p>
+    <p>Three complementary measurement layers point in the same direction. <em>Similarity metrics</em> (§4.4) show that CKA, PWCCA, and k-NN overlap rise monotonically with encoder depth and remain significantly above the permutation null at every deep layer, across all three pairs and both datasets. <em>Activation geometry</em> (§4.1–4.3) shows that this rise happens <em>without</em> the modality clouds ever merging in space — the per-modality clouds stay separated at every layer while their internal scene-level organisation becomes increasingly congruent across modalities. <em>Transmodal triangulation</em> (§4.7) puts a number on what fraction of the cross-modal geometric structure is linearly unified at the deepest layer.</p>
 
     <h3 style="margin-top:24px">Key takeaways</h3>
     <ul class="clean">
-      <li><b>Progressive cross-modal alignment, not spatial collapse.</b> Paired-scene similarity grows with depth, but the modality clouds remain separated at every layer (§5.1) and the per-sample paired distances decrease without ever closing to zero (§5.2). 4M converges modalities toward congruent internal geometries rather than a single shared region of latent space.</li>
+      <li><b>Progressive cross-modal alignment, not spatial collapse.</b> Paired-scene similarity grows with depth, but the modality clouds remain separated at every layer (§4.1) and the per-sample paired distances decrease without ever closing to zero (§4.2). 4M converges modalities toward congruent internal geometries rather than a single shared region of latent space.</li>
       <li><b>RGB acts as a geometric hub.</b> RGB-involving pairs (Depth–RGB, Normals–RGB) unify the most strongly under triangulation (≈91% and ≈87% at layer 11), while Depth–Normals barely moves across layers (frag. only drops from ≈23% to ≈19%). This asymmetry is consistent with RGB providing a common coordinate system that Depth and Normals each get mapped into.</li>
       <li><b>Joint processing amplifies cross-modal similarity at the slice level.</b> When two modalities share a single forward pass, the cross-modality similarity between their two slices (joint-vs-joint) is higher than between two separate passes, particularly for the harder pairs (RGB ↔ Normals: +0.31 on Hypersim, +0.16 on DIODE). The gain is largest in deeper layers, where cross-modal attention has accumulated.</li>
-      <li><b>Self-vs-joint similarity stays near identity (CKA ≈ 1.0) for RGB-involving combinations</b>, but drops to ≈0.7–0.85 for some Depth/Normals slices in deep layers (§5.6). The addition of an RGB partner barely perturbs a modality's own representation, while geometric modalities are more perturbed — the partner's effect manifests in both the <em>relative</em> joint-vs-joint geometry and, for Depth/Normals, a measurable shift of the focal slice itself.</li>
+      <li><b>Self-vs-joint similarity stays near identity (CKA ≈ 1.0) for RGB-involving combinations</b>, but drops to ≈0.7–0.85 for some Depth/Normals slices in deep layers (§4.6). The addition of an RGB partner barely perturbs a modality's own representation, while geometric modalities are more perturbed — the partner's effect manifests in both the <em>relative</em> joint-vs-joint geometry and, for Depth/Normals, a measurable shift of the focal slice itself.</li>
       <li><b>DIODE values are systematically higher than Hypersim values</b> for the same pair × metric in 7 of 9 conditions. This is likely a dataset-character effect (DIODE has lower visual diversity than Hypersim's 100 scenes across 17 categories); both datasets nonetheless yield the same monotonic depth-trend, so the qualitative finding does not depend on synthetic vs. real data.</li>
     </ul>
 
     <h3 id="conclusion" style="margin-top:32px">Conclusion</h3>
-    <p>Across both datasets, three metrics, and the full 12-layer depth, paired modalities of the same scene become progressively more similar in their relational structure (RQ1) without collapsing into a single spatial region — exactly as expected from our unification definition (§2). At the final encoder layer, transmodal triangulation gives an average of <b>≈86.5%</b> linearly unified cross-modal structure across pairs (≥81% for every pair tested), with the residual fragmentation significant at every layer (BH-FDR <span class="mono">p &lt; 0.001</span>). In the framing of our project title: 4M's encoder is <em>one trunk</em> in the sense that all modalities flow through shared weights into geometrically congruent subspaces — but it is a <em>measurably imperfect</em> one under linear probing. A small but real fraction of cross-modal structure remains linearly inaccessible from the projected modality even at the trunk's top.</p>
+    <p>Across both datasets, three metrics, and the full 12-layer depth, paired modalities of the same scene become progressively more similar in their relational structure (RQ1) without collapsing into a single spatial region — exactly as expected from our unification definition (§1). At the final encoder layer, transmodal triangulation gives an average of <b>≈86.5%</b> linearly unified cross-modal structure across pairs (≥81% for every pair tested), with the residual fragmentation significant at every layer (BH-FDR <span class="mono">p &lt; 0.001</span>). In the framing of our project title: 4M's encoder is <em>one trunk</em> in the sense that all modalities flow through shared weights into geometrically congruent subspaces — but it is a <em>measurably imperfect</em> one under linear probing. A small but real fraction of cross-modal structure remains linearly inaccessible from the projected modality even at the trunk's top.</p>
 
     <h3 style="margin-top:32px">Limitations</h3>
     <p><b>Scene diversity.</b> Our Hypersim analysis uses 4 000 paired samples drawn from 100 indoor scenes (out of 461). Statistical estimates are stable at this sample size, but the scene <em>diversity</em> is bounded — all Hypersim scenes are indoor, and DIODE adds outdoors only at smaller scale. Whether the same depth-trend holds for visually further-out distributions (e.g. medical, satellite, low-light) is an open question.</p>
     <p><b>Segmentation modality excluded.</b> The only publicly released semseg tokenizer (<span class="mono">tok_semseg</span>) was trained on COCO-Stuff (134 classes), incompatible with Hypersim's NYU-40 label set. A Hypersim-specific tokenizer would be needed to include this modality.</p>
     <p><b>Null distribution assumptions.</b> The permutation null pairs activations from mismatched scenes of different categories but preserves within-modality statistics. If scene-level content is not the primary source of cross-modal correlation, the null may be conservative and z-scores inflated.</p>
     <p><b>Geometric, not functional similarity.</b> CKA, PWCCA, and k-NN overlap measure statistical and geometric similarity. High similarity does not imply that the encoder <em>uses</em> the shared representation interchangeably for downstream tasks. Cross-modal decoding probes (e.g. RGB → Depth vs. Depth → Depth reconstruction) and residual-correlation analyses would be needed to test functional compatibility; these were sketched in the proposal but left as future work.</p>
-    <p><b>Training exposure confound.</b> RGB inputs are far more frequent than depth or normals during 4M training, which may itself explain RGB's apparent role as a geometric hub (§5.7). Disentangling architectural bias from training-frequency bias would require either retraining 4M with balanced modality exposure or a controlled exposure-frequency ablation.</p>
+    <p><b>Training exposure confound.</b> RGB inputs are far more frequent than depth or normals during 4M training, which may itself explain RGB's apparent role as a geometric hub (§4.7). Disentangling architectural bias from training-frequency bias would require either retraining 4M with balanced modality exposure or a controlled exposure-frequency ablation.</p>
   </section>
 
   <!-- ========== REFERENCES ========== -->
   <section id="references">
-    <h2><span class="num">07</span>References</h2>
+    <h2><span class="num">06</span>References</h2>
     <div class="section-rule"></div>
     <ol class="refs">
       <li>
@@ -3671,6 +3694,10 @@
 
   <footer>
     <div>CS-503 Visual Intelligence · EPFL · Spring 2026</div>
+    <div class="author-contribution">
+      <h3>Author contribution</h3>
+      <p>All authors conceived the study and shaped the research direction. A.M designed the computational framework, including the extraction stage, 4M model wrapper, and cross-modal unification. A.F and M.G carried out the implementation of the metrics, null-hypothesis, and self vs. joint passes. A.M, A.F, and M.G all performed inference. A.C led the data analysis, result interpretation, and manuscript write-up. A.F, M.G, and A.C jointly developed the project website and presentations.</p>
+    </div>
   </footer>
 </main>
 
@@ -4153,7 +4180,7 @@
 })();
 
 /* =========================================================
-   §6.3 — Modality imprint under joint processing. Six tiny
+   §4.6 — Modality imprint under joint processing. Six tiny
    line charts (one per modality × partner) showing per-layer
    self-vs-joint similarity. A horizontal "partner ignored"
    reference is drawn at y=1.
@@ -4320,7 +4347,7 @@
 })();
 
 /* =========================================================
-   §6.1 — Layer-wise cross-modality similarity. 3×3 small-multiples
+   §4.4 — Layer-wise cross-modality similarity. 3×3 small-multiples
    grid (rows = metrics CKA / PWCCA / k-NN, cols = modality pairs).
    Each cell overlays Hypersim (solid + circles) and DIODE (dashed
    + squares) in the metric color, with grey null ±2σ bands behind.
@@ -4510,7 +4537,7 @@
 })();
 
 /* =========================================================
-   §6.2 — Layer-wise joint vs separate passes. 3×3 small-multiples
+   §4.5 — Layer-wise joint vs separate passes. 3×3 small-multiples
    (rows = metrics, cols = pairs). Each cell shows 4 curves
    (Hyp/DIODE × joint/separate) with shaded fills marking the gap.
    ========================================================= */
@@ -5407,7 +5434,7 @@
 })();
 
 /* =========================================================
-   §3.1 — Accordion cards (single-open behaviour)
+   §2.1 — Accordion cards (single-open behaviour)
    ========================================================= */
 (function () {
   const accordion = document.getElementById("spec-accordion");
@@ -5659,7 +5686,7 @@
       step: "STEP 06 · Similarity",
       title: "CKA · k-NN overlap · PWCCA",
       body: `<p>Three similarity metrics computed at every layer for every modality pair:</p>
-             <p><b>CKA</b> compares two activation matrices via a centered kernel inner product; invariant to orthogonal transforms and isotropic scaling. <b>k-NN overlap</b> measures the fraction of nearest neighbors that a token shares between modalities. <b>PWCCA</b> is a projection-weighted canonical-correlation score (flagged for caveats in §5).</p>
+             <p><b>CKA</b> compares two activation matrices via a centered kernel inner product; invariant to orthogonal transforms and isotropic scaling. <b>k-NN overlap</b> measures the fraction of nearest neighbors that a token shares between modalities. <b>PWCCA</b> is a projection-weighted canonical-correlation score (flagged for caveats in §4).</p>
              <p>Each metric is computed twice per (layer, pair): once on <em>paired</em> activations (same scene across the two modalities) to produce the <em>observed</em> score, and once on <em>mismatched</em> activations (different scenes) to seed the permutation null distribution used in the next step.</p>`,
       specs: ["CKA — kernel · invariant", "k-NN overlap — local geometry", "PWCCA — weighted CCA", "Run on paired & mismatched activations"]
     },
