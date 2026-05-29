@@ -3542,7 +3542,7 @@
     <h2><span class="num">03</span>Methodology</h2>
     <div class="section-rule"></div>
 
-    <p>We probe whether 4M-21&rsquo;s shared encoder unifies RGB, depth, and surface normals across layers. After the experimental setup (§3.1), we describe the end-to-end pipeline (§3.2), how modalities are passed through the encoder (§3.3), and three analysis layers: activation geometry (§3.4), scalar similarity with permutation testing (§3.5&ndash;3.6), and transmodal triangulation for how <em>complete</em> that unification is (§3.7).</p>
+    <p>We probe whether 4M-21&rsquo;s shared encoder unifies RGB, depth, and surface normals across layers. After the experimental setup, we describe the end-to-end pipeline, how modalities are passed through the encoder, and three analysis layers: activation geometry, scalar similarity with permutation testing, and transmodal triangulation for how <em>complete</em> that unification is.</p>
 
     <h3 id="method-model"><span class="sub-num">3.1</span>Experimental setup</h3>
     <div class="method-spec">
@@ -3688,7 +3688,7 @@
     </div>
 
     <h3 id="method-passes"><span class="sub-num">3.3</span>Modality passes</h3>
-    <p>Beyond encoding each modality separately, we also run joint forward passes where two modalities are fed into the encoder simultaneously (the encoder step in §3.2). We test three regimes:</p>
+    <p>Beyond encoding each modality separately, we also run joint forward passes where two modalities are fed into the encoder simultaneously. We test three regimes:</p>
     <ol class="regime-list">
       <li><b>Separate passes</b> : Each modality of a scene is encoded in its own forward pass. This is the baseline for layer-wise similarity.</li>
       <li><b>Self-vs-joint</b> : At each layer, compare activations for modality <span class="mono">A</span> from a solo pass vs. the <span class="mono">A</span> slice from a joint pass with a partner. This tests whether the partner shifts <span class="mono">A</span>&rsquo;s representation.</li>
