@@ -1,0 +1,134 @@
+{
+  "items": [
+    {
+      "dataset": "hypersim",
+      "pair": "rgb-depth",
+      "file": "assets/tsne/hypersim__rgb-depth.json",
+      "modalities": [
+        "depth",
+        "rgb"
+      ],
+      "categories": [
+        "Bathroom",
+        "Bedroom",
+        "Courtyard",
+        "Dining room",
+        "Hall",
+        "Hallway",
+        "Hotel lobby",
+        "Kitchen",
+        "Lecture theater",
+        "Library",
+        "Living room",
+        "Office",
+        "Office (building foyer)",
+        "Office (home)",
+        "Restaurant",
+        "Retail space",
+        "Staircase"
+      ],
+      "points_per_layer": 1200
+    },
+    {
+      "dataset": "hypersim",
+      "pair": "rgb-normals",
+      "file": "assets/tsne/hypersim__rgb-normals.json",
+      "modalities": [
+        "normals",
+        "rgb"
+      ],
+      "categories": [
+        "Bathroom",
+        "Bedroom",
+        "Courtyard",
+        "Dining room",
+        "Hall",
+        "Hallway",
+        "Hotel lobby",
+        "Kitchen",
+        "Lecture theater",
+        "Library",
+        "Living room",
+        "Office",
+        "Office (building foyer)",
+        "Office (home)",
+        "Restaurant",
+        "Retail space",
+        "Staircase"
+      ],
+      "points_per_layer": 1200
+    },
+    {
+      "dataset": "hypersim",
+      "pair": "depth-normals",
+      "file": "assets/tsne/hypersim__depth-normals.json",
+      "modalities": [
+        "depth",
+        "normals"
+      ],
+      "categories": [
+        "Bathroom",
+        "Bedroom",
+        "Courtyard",
+        "Dining room",
+        "Hall",
+        "Hallway",
+        "Hotel lobby",
+        "Kitchen",
+        "Lecture theater",
+        "Library",
+        "Living room",
+        "Office",
+        "Office (building foyer)",
+        "Office (home)",
+        "Restaurant",
+        "Retail space",
+        "Staircase"
+      ],
+      "points_per_layer": 1200
+    },
+    {
+      "dataset": "diode",
+      "pair": "rgb-depth",
+      "file": "assets/tsne/diode__rgb-depth.json",
+      "modalities": [
+        "depth",
+        "rgb"
+      ],
+      "categories": [
+        "indoors",
+        "outdoor"
+      ],
+      "points_per_layer": 1200
+    },
+    {
+      "dataset": "diode",
+      "pair": "rgb-normals",
+      "file": "assets/tsne/diode__rgb-normals.json",
+      "modalities": [
+        "normals",
+        "rgb"
+      ],
+      "categories": [
+        "indoors",
+        "outdoor"
+      ],
+      "points_per_layer": 1200
+    },
+    {
+      "dataset": "diode",
+      "pair": "depth-normals",
+      "file": "assets/tsne/diode__depth-normals.json",
+      "modalities": [
+        "depth",
+        "normals"
+      ],
+      "categories": [
+        "indoors",
+        "outdoor"
+      ],
+      "points_per_layer": 1200
+    }
+  ],
+  "n_layers": 12
+}
