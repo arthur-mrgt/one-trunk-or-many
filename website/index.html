@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="icon" href="data:," />
-<title>One Trunk or Many? — Probing Representational Convergence in 4M</title>
+<title>One Trunk or Many?, Probing Representational Convergence in 4M</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -21,19 +21,19 @@
     --paper: #fdfdfb;
     --panel: #f3f3f3;
     --panel-2: #efeee9;
-    /* ── Concept palette — fixed site-wide mapping ──────────────────────────
+    /* ── Concept palette, fixed site-wide mapping ──────────────────────────
        Each modality and each modality *pair* has its own hue. We never color-
-       code by metric — CKA / k-NN / PWCCA are reported but never colored. */
+       code by metric, CKA / k-NN / PWCCA are reported but never colored. */
     --c-rgb: #ea5e00;             /* RGB modality                       */
     --c-depth: #007ba5;           /* Depth modality                     */
     --c-normals: #990165;         /* Normals modality                   */
     --c-rgb-depth: #8972d5;       /* RGB ↔ Depth pair                   */
     --c-rgb-normals: #1bb5b5;     /* RGB ↔ Normals pair                 */
     --c-depth-normals: #6fba01;   /* Depth ↔ Normals pair               */
-    /* Datasets are not color-coded — Hypersim and DIODE are distinguished by
+    /* Datasets are not color-coded, Hypersim and DIODE are distinguished by
        layout, position, and (in bar charts) solid vs diagonal-hash fill. */
 
-    /* Generic UI accent — used for sliders, focus rings, links and other
+    /* Generic UI accent, used for sliders, focus rings, links and other
        ornamentation that has no semantic relationship to any modality / pair. */
     --c-accent: #518c8c;
 
@@ -131,7 +131,7 @@
   .sidenav-item.is-sub  { height: 26px; }
   .sidenav-item.is-sub-sub { height: 22px; }
 
-  /* dots — centered on the track (track center = 20.5px from right)
+  /* dots, centered on the track (track center = 20.5px from right)
      9px dot → right: 16px → center = 16 + 4.5 = 20.5px ✓
      5px dot → right: 18px → center = 18 + 2.5 = 20.5px ✓ */
   .sidenav-dot {
@@ -184,7 +184,7 @@
     transform: translateY(-50%) scale(1.6);
   }
 
-  /* labels — plain text, no box, all visible on timeline hover */
+  /* labels, plain text, no box, all visible on timeline hover */
   /* main dot left edge: 16+9=25px → label right edge: 25+10=35px */
   .sidenav-label {
     position: absolute;
@@ -329,7 +329,7 @@
   .chip--rgb     .swatch { background: var(--c-rgb); }
   .chip--depth   .swatch { background: var(--c-depth); }
   .chip--normals .swatch { background: var(--c-normals); }
-  /* Dataset chips are intentionally NOT color-coded — the swatch is hidden and
+  /* Dataset chips are intentionally NOT color-coded, the swatch is hidden and
      the chip reads as a small uppercase label. */
   .chip--hypersim .swatch,
   .chip--diode    .swatch { display: none; }
@@ -343,7 +343,7 @@
     background: var(--panel);
     border-color: var(--rule);
   }
-  /* Pair chips — single swatch in the pair's dedicated color. */
+  /* Pair chips, single swatch in the pair's dedicated color. */
   .chip--pair-rgb-depth     .swatch { background: var(--c-rgb-depth); }
   .chip--pair-rgb-normals   .swatch { background: var(--c-rgb-normals); }
   .chip--pair-depth-normals .swatch { background: var(--c-depth-normals); }
@@ -640,7 +640,7 @@
 
   .caveat {
     background: #fff7e3;
-    border-left: 3px solid #6fba01; /* gold caveat accent — purely decorative */
+    border-left: 3px solid #6fba01; /* gold caveat accent, purely decorative */
   }
   .caveat .label { color: #8a6a16; }
 
@@ -1562,7 +1562,7 @@
   .method-spec p em,
   .method-tile p em { color: var(--ink); font-style: italic; }
 
-  /* Modality list (§3.1 bento — stacked rows, thumb + text) */
+  /* Modality list (§3.1 bento, stacked rows, thumb + text) */
   .method-tile--modalities {
     --modality-thumb-w: 96px;
   }
@@ -1963,7 +1963,7 @@
     align-items: center;
     justify-content: center;
   }
-  /* Pair-lines play button — overlaid top-left of each panel. */
+  /* Pair-lines play button, overlaid top-left of each panel. */
   .tsne-play-btn {
     position: absolute;
     top: 10px;
@@ -2575,7 +2575,7 @@
     display: flex; flex-direction: column; gap: 12px;
     margin: 0 0 6px;
   }
-  /* Pre-graph numbered findings — compact grid, no rules; body copy at default size */
+  /* Pre-graph numbered findings, compact grid, no rules; body copy at default size */
   .rq1-pre-findings {
     display: flex;
     flex-direction: column;
@@ -2607,7 +2607,7 @@
     margin: 0;
   }
 
-  /* 3×3 pair × metric grid — single outer card, matches .tsne-panel / .pdist-panel */
+  /* 3×3 pair × metric grid, single outer card, matches .tsne-panel / .pdist-panel */
   .rq1-pair-panel {
     border: 1px solid var(--rule);
     background: #fff;
@@ -2889,7 +2889,7 @@
     .rq1-charts { grid-template-columns: 1fr; }
   }
 
-  /* ---------- §4.2.1 — Summary of findings ---------- */
+  /* ---------- §4.2.1, Summary of findings ---------- */
   .rq1-findings {
     border-top: 1px solid var(--rule);
     padding-top: 28px;
@@ -3380,7 +3380,7 @@
     <figure class="encoder-viz encoder-viz--compact" id="encoder-viz" data-state="partial" aria-labelledby="encoder-viz-title">
       <div class="encoder-viz-chart">
       <svg class="encoder-viz-svg" viewBox="28 0 584 550" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="encoder-viz-title">
-        <title id="encoder-viz-title">Perfect vs. partially unified encoder &mdash; interactive diagram</title>
+        <title id="encoder-viz-title">Perfect vs. partially unified encoder, interactive diagram</title>
 
         <defs>
           <marker id="ev-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -3670,8 +3670,8 @@
           <div class="step-detail-card">
             <div class="sd-head">
               <div>
-                <div class="sd-step" id="sd-step">STEP · —</div>
-                <h4 class="sd-title" id="sd-title">—</h4>
+                <div class="sd-step" id="sd-step">STEP · -</div>
+                <h4 class="sd-title" id="sd-title">-</h4>
               </div>
               <button class="sd-close" id="sd-close" aria-label="Close detail panel">close ✕</button>
             </div>
@@ -3782,9 +3782,9 @@
       <p id="tsne-interp-text" style="margin:0; line-height:1.7;"></p>
     </div>
 
-    <p>Across both datasets and all 12 layers, the modality clouds remain in distinct regions of the latent space while their internal organisation becomes progressively congruent &mdash; first by scene category, then by scene identity. The same internal map, drawn twice: shared relational geometry in a common subspace, modality-specific information preserved alongside &mdash; exactly the form of unification predicted in §1.</p>
+    <p>Across both datasets and all 12 layers, the modality clouds remain in distinct regions of the latent space while their internal organisation becomes progressively congruent, first by scene category, then by scene identity. The same internal map, drawn twice: shared relational geometry in a common subspace, modality-specific information preserved alongside, exactly the form of unification predicted in §1.</p>
 
-    <!-- ========== 4.1.2 — Paired-sample distance analysis ========== -->
+    <!-- ========== 4.1.2, Paired-sample distance analysis ========== -->
     <h4 id="exploration-distance" class="results-sub">Paired-sample distances per layer</h4>
     <p>
       For each scene, we compute the Euclidean distance in PCA-2 space between two modalities' representations at each encoder layer, then plot the distribution across all scenes. A decreasing median (and shrinking IQR) means same-scene representations get geometrically closer with depth; a Wilcoxon signed-rank test on L00 vs. L11 is reported per pair.
@@ -3839,10 +3839,10 @@
 
     <div class="aside" style="margin-top:12px">
       <span class="label">Interpretive note</span>
-      <p style="margin-bottom:0">All three pairs become significantly closer between L00 and L11 (Wilcoxon <span class="mono">p &lt; 0.001</span>), but their trajectories differ: <b>RGB&nbsp;&harr;&nbsp;Depth</b> tightens continuously and is still decreasing at the final layer; <b>Depth&nbsp;&harr;&nbsp;Normals</b> aligns within the first few layers and then plateaus; <b>RGB&nbsp;&harr;&nbsp;Normals</b> improves slowly throughout, ending at the largest absolute distance. Same-scene representations get pulled together within distinct regions of the latent space &mdash; the clouds themselves never merge.</p>
+      <p style="margin-bottom:0">All three pairs become significantly closer between L00 and L11 (Wilcoxon <span class="mono">p &lt; 0.001</span>), but their trajectories differ: <b>RGB&nbsp;&harr;&nbsp;Depth</b> tightens continuously and is still decreasing at the final layer; <b>Depth&nbsp;&harr;&nbsp;Normals</b> aligns within the first few layers and then plateaus; <b>RGB&nbsp;&harr;&nbsp;Normals</b> improves slowly throughout, ending at the largest absolute distance. Same-scene representations get pulled together within distinct regions of the latent space, the clouds themselves never merge.</p>
     </div>
 
-    <!-- ========== 4.1.3 — Activation entropy per modality ========== -->
+    <!-- ========== 4.1.3, Activation entropy per modality ========== -->
     <h4 id="exploration-entropy" class="results-sub">Activation entropy per modality</h4>
     <p>
       Shannon entropy asks a complementary question to the paired distances: how internally varied is each modality's cloud at each layer (low entropy = compact, similar representations; high entropy = diffuse, discriminative)? This tells us whether the encoder also brings the two modalities toward similar levels of internal diffuseness, on top of pulling paired representations closer.
@@ -3888,7 +3888,7 @@
       <p style="margin-bottom:0">The geometric modalities (depth, normals) enter the encoder as tight, low-variance clouds and expand rapidly within the first one or two layers, closing most of the initial gap with the already-diffuse RGB stream. Beyond that early expansion, the entropy gap between paired modalities shrinks gradually with depth, with the three pairs converging at different rates but ending at similar diffuseness levels at the deepest layers.</p>
     </div>
 
-    <p>Beyond pulling same-scene representations closer in space, the encoder also reshapes the internal diffuseness of each modality cloud across layers, bringing the three pairs toward similar entropy levels by L11. Convergence is partial and pair-dependent &mdash; RGB stays the most varied, normals more diffuse than depth &mdash; but the overall trajectory is one of approaching internal similarity while preserving each modality's distinct character, as the unification definition predicts.</p>
+    <p>Beyond pulling same-scene representations closer in space, the encoder also reshapes the internal diffuseness of each modality cloud across layers, bringing the three pairs toward similar entropy levels by L11. Convergence is partial and pair-dependent (RGB stays the most varied, normals more diffuse than depth), but the overall trajectory is one of approaching internal similarity while preserving each modality's distinct character, as the unification definition predicts.</p>
 
     <h3 id="results-rq-b" class="results-rq"><span class="sub-num">4.2</span>Paired-scene similarity</h3>
 
@@ -3914,7 +3914,7 @@
         <div class="rq1-pre-finding-num">02</div>
         <div class="rq1-pre-finding-body">
           <h5 class="rq1-pre-finding-title">DIODE shows higher similarity than Hypersim</h5>
-          <p class="rq1-pre-finding-claim">In nearly every cell, DIODE (dashed) curves sit visibly above their Hypersim (solid) counterparts — real photographs converge more strongly than synthetic renderings.</p>
+          <p class="rq1-pre-finding-claim">In nearly every cell, DIODE (dashed) curves sit visibly above their Hypersim (solid) counterparts, real photographs converge more strongly than synthetic renderings.</p>
         </div>
       </article>
     </div>
@@ -3947,7 +3947,7 @@
           <div class="rq1-pair-cell"><div class="rq1-pair-chart" data-rq1-pair="depth-normals" data-rq1-metric="pwcca"></div></div>
           <div class="rq1-pair-cell"><div class="rq1-pair-chart" data-rq1-pair="rgb-normals"   data-rq1-metric="pwcca"></div></div>
 
-          <!-- Row 4: k-NN overlap (bottom row — x-axis ticks shown) -->
+          <!-- Row 4: k-NN overlap (bottom row, x-axis ticks shown) -->
           <div class="rq1-pair-row-h" data-metric="knn_overlap">k-NN overlap</div>
           <div class="rq1-pair-cell"><div class="rq1-pair-chart" data-rq1-pair="rgb-depth"     data-rq1-metric="knn_overlap" data-rq1-bottom="1"></div></div>
           <div class="rq1-pair-cell"><div class="rq1-pair-chart" data-rq1-pair="depth-normals" data-rq1-metric="knn_overlap" data-rq1-bottom="1"></div></div>
@@ -4028,9 +4028,9 @@
       <p>Does processing two modalities <em>jointly</em> (in one forward pass) further amplify cross-modal alignment, and does it leave any measurable imprint on each modality's solo representation?</p>
     </div>
 
-    <p class="results-rq-lead">We address this in two steps: <b>joint-vs-joint</b> cross-modality similarity vs. separate passes (<a href="#joint-processing">below</a>), then <b>self-vs-joint</b> imprint on each modality's slice (<a href="#modality-imprint">below</a>) — both regimes defined in <a href="#method-passes">§3.3</a>.</p>
+    <p class="results-rq-lead">We address this in two steps: <b>joint-vs-joint</b> cross-modality similarity vs. separate passes (<a href="#joint-processing">below</a>), then <b>self-vs-joint</b> imprint on each modality's slice (<a href="#modality-imprint">below</a>), both regimes defined in <a href="#method-passes">§3.3</a>.</p>
 
-    <h4 id="joint-processing" class="results-sub">Joint vs separate passes &mdash; does feeding modalities together close the gap?</h4>
+    <h4 id="joint-processing" class="results-sub">Joint vs separate passes (does feeding modalities together close the gap?)</h4>
 
     <p>Using the same CKA, PWCCA, and k-NN metrics as above, we compare cross-modality similarity when both modalities share a single forward pass (<b>joint</b>) against the separate-pass baseline from §4.2.1. <b>Joint-vs-joint</b> similarity measures how aligned the two modality slices are inside one pass; the shaded gap between joint and separate curves quantifies how much co-processing buys over independent passes.</p>
 
@@ -4040,22 +4040,22 @@
         <div class="rq1-pre-finding-num">01</div>
         <div class="rq1-pre-finding-body">
           <h5 class="rq1-pre-finding-title">Joint-pass similarity is uniformly higher than separate-pass similarity</h5>
-          <p class="rq1-pre-finding-claim">In every (metric × pair × dataset) cell, the solid (joint) curve sits above the dashed (separate) one. The shaded gap area is always positive &mdash; cross-modality similarity is consistently higher in the joint-pass regime than in the separate-pass baseline across every (metric × pair × dataset) cell.</p>
+          <p class="rq1-pre-finding-claim">In every (metric × pair × dataset) cell, the solid (joint) curve sits above the dashed (separate) one. The shaded gap area is always positive, cross-modality similarity is consistently higher in the joint-pass regime than in the separate-pass baseline across every (metric × pair × dataset) cell.</p>
         </div>
       </article>
       <article class="rq1-pre-finding">
         <div class="rq1-pre-finding-num">02</div>
         <div class="rq1-pre-finding-body">
           <h5 class="rq1-pre-finding-title">The gain concentrates at deep layers and is largest for the hardest pair (RGB ↔ Normals)</h5>
-          <p class="rq1-pre-finding-claim">Shaded gaps are narrow at L0–L4 and widen sharply from L6 onward — the gain is a deep-layer phenomenon. RGB ↔ Normals shows the largest joint-vs-separate gap (+0.31 CKA on Hypersim), suggesting joint processing helps most where solo alignment was weakest.</p>
+          <p class="rq1-pre-finding-claim">Shaded gaps are narrow at L0–L4 and widen sharply from L6 onward, the gain is a deep-layer phenomenon. RGB ↔ Normals shows the largest joint-vs-separate gap (+0.31 CKA on Hypersim), suggesting joint processing helps most where solo alignment was weakest.</p>
         </div>
       </article>
     </div>
 
-    <!-- 6.2 — Layer-wise joint vs separate (3×3 small multiples) -->
+    <!-- 6.2, Layer-wise joint vs separate (3×3 small multiples) -->
     <div class="rq1-pair-panel">
       <div class="rq1-pair-head">
-        <div class="rq1-pair-title">Joint pass (solid) vs separate passes (dashed) — shaded = gap closed by joint processing</div>
+        <div class="rq1-pair-title">Joint pass (solid) vs separate passes (dashed), shaded = gap closed by joint processing</div>
       </div>
       <div class="rq1-pair-grid">
         <!-- Row 1: column headers -->
@@ -4076,7 +4076,7 @@
         <div class="rq1-pair-cell"><div class="rq1-pair-chart joint-pass-chart" data-jp-pair="depth-normals" data-jp-metric="pwcca"></div></div>
         <div class="rq1-pair-cell"><div class="rq1-pair-chart joint-pass-chart" data-jp-pair="rgb-normals"   data-jp-metric="pwcca"></div></div>
 
-        <!-- Row 4: k-NN overlap (bottom — x-axis ticks shown) -->
+        <!-- Row 4: k-NN overlap (bottom, x-axis ticks shown) -->
         <div class="rq1-pair-row-h" data-metric="knn_overlap">k-NN overlap</div>
         <div class="rq1-pair-cell"><div class="rq1-pair-chart joint-pass-chart" data-jp-pair="rgb-depth"     data-jp-metric="knn_overlap" data-jp-bottom="1"></div></div>
         <div class="rq1-pair-cell"><div class="rq1-pair-chart joint-pass-chart" data-jp-pair="depth-normals" data-jp-metric="knn_overlap" data-jp-bottom="1"></div></div>
@@ -4094,14 +4094,14 @@
           <line x1="2" y1="5" x2="38" y2="5" stroke="#1f77b4" stroke-width="2" stroke-dasharray="5 3"/>
           <circle cx="20" cy="5" r="3" fill="#fff" stroke="#1f77b4" stroke-width="1.4"/>
         </svg>
-        Hypersim — separate
+        Hypersim (separate)
       </span>
       <span class="rq1-pair-legend-item">
         <svg width="40" height="10" aria-hidden="true">
           <line x1="2" y1="5" x2="38" y2="5" stroke="#1f77b4" stroke-width="2"/>
           <circle cx="20" cy="5" r="3" fill="#1f77b4" stroke="#fff" stroke-width="0.8"/>
         </svg>
-        Hypersim — joint
+        Hypersim (joint)
       </span>
       <span class="rq1-pair-legend-sep">·</span>
       <span class="rq1-pair-legend-item">
@@ -4109,14 +4109,14 @@
           <line x1="2" y1="5" x2="38" y2="5" stroke="#1f77b4" stroke-width="2" stroke-dasharray="5 3"/>
           <rect x="17" y="2" width="6" height="6" fill="#fff" stroke="#1f77b4" stroke-width="1.4"/>
         </svg>
-        DIODE — separate
+        DIODE (separate)
       </span>
       <span class="rq1-pair-legend-item">
         <svg width="40" height="10" aria-hidden="true">
           <line x1="2" y1="5" x2="38" y2="5" stroke="#1f77b4" stroke-width="2"/>
           <rect x="17" y="2" width="6" height="6" fill="#1f77b4" stroke="#fff" stroke-width="0.8"/>
         </svg>
-        DIODE — joint
+        DIODE (joint)
       </span>
       <span class="rq1-pair-legend-sep">·</span>
       <span class="rq1-pair-legend-item rq1-pair-legend-color">
@@ -4227,12 +4227,12 @@
       <div class="stat-cell stat-rgb">
         <div class="stat-k">Largest gap closure</div>
         <div class="stat-v" style="color:var(--c-rgb)">+0.31</div>
-        <div class="stat-note">RGB ↔ Normals on Hypersim — joint processing more than doubles the cross-modality CKA (0.20 → 0.51).</div>
+        <div class="stat-note">RGB ↔ Normals on Hypersim (joint) processing more than doubles the cross-modality CKA (0.20 → 0.51).</div>
       </div>
       <div class="stat-cell stat-depth">
         <div class="stat-k">Smallest gap closure</div>
         <div class="stat-v" style="color:var(--c-depth)">+0.08</div>
-        <div class="stat-note">Depth ↔ Normals on DIODE — already-aligned geometric modalities have less ground to gain.</div>
+        <div class="stat-note">Depth ↔ Normals on DIODE, already-aligned geometric modalities have less ground to gain.</div>
       </div>
       <div class="stat-cell">
         <div class="stat-k">Deep-layer phenomenon</div>
@@ -4241,7 +4241,7 @@
       </div>
     </div>
 
-    <!-- ========== 4.3.2 — Modality imprint under joint processing ========== -->
+    <!-- ========== 4.3.2, Modality imprint under joint processing ========== -->
     <h4 id="modality-imprint" class="results-sub">Does the partner leave an imprint?</h4>
     <p>
       Joint processing is only interesting if the encoder actually <em>uses</em> the partner. Under the <b>self-vs-joint</b> regime (<a href="#method-passes">§3.3</a>), we compare each modality's representation when processed alone against its representation when processed jointly with a partner. <b>A value near 1 means the partner was effectively ignored; a value well below 1 means the partner left a detectable imprint on the modality's representation.</b> Each chart's title reads as X<sub>y</sub>: modality X alone versus X when bundled with y.
@@ -4260,7 +4260,7 @@
         <div class="rq1-pre-finding-num">02</div>
         <div class="rq1-pre-finding-body">
           <h5 class="rq1-pre-finding-title">Depth and Normals show measurable imprint in deep layers</h5>
-          <p class="rq1-pre-finding-claim">For some Depth/Normals self-vs-joint curves, CKA drops to ≈0.7–0.85 in deep layers — geometric modalities are more perturbed by a partner than RGB is.</p>
+          <p class="rq1-pre-finding-claim">For some Depth/Normals self-vs-joint curves, CKA drops to ≈0.7–0.85 in deep layers, geometric modalities are more perturbed by a partner than RGB is.</p>
         </div>
       </article>
     </div>
@@ -4336,7 +4336,7 @@
 
     <h4 id="rq2-triangulation" class="results-sub">Transmodal triangulation</h4>
 
-    <p>For each directed triplet of modalities <span class="mono">(A, B, C)</span> &mdash; with <span class="mono">A</span> the <em>target</em>, <span class="mono">B</span> the <em>projected</em> modality (whose column span is used to project <span class="mono">A</span>), and <span class="mono">C</span> the <em>witness</em> &mdash; we compute a <b>CKA fragmentation score</b> <span class="mono">frag(A, B&nbsp;|&nbsp;C)</span>: the fraction of the cross-modal linear structure carried by <span class="mono">A</span> and observed through <span class="mono">C</span> that <em>cannot</em> be recovered from <span class="mono">B</span> alone. A score of 0 means <span class="mono">B</span> linearly captures everything that <span class="mono">A</span> shares with witness <span class="mono">C</span> (<span class="mono">A</span> and <span class="mono">B</span> are interchangeable predictors of <span class="mono">C</span>); a score of 1 means <span class="mono">B</span> is irrelevant to the <span class="mono">A&ndash;C</span> alignment. We report the score symmetrised across the two projection directions for a given pair <span class="mono">(A, B)</span> &mdash; namely <span class="mono">frag(A, B&nbsp;|&nbsp;C)</span> and <span class="mono">frag(B, A&nbsp;|&nbsp;C)</span>, with the witness <span class="mono">C</span> held fixed &mdash; and test it against a 1 000-permutation null (BH-FDR corrected).</p>
+    <p>For each directed triplet of modalities <span class="mono">(A, B, C)</span>, with <span class="mono">A</span> the <em>target</em>, <span class="mono">B</span> the <em>projected</em> modality (whose column span is used to project <span class="mono">A</span>), and <span class="mono">C</span> the <em>witness</em>, we compute a <b>CKA fragmentation score</b> <span class="mono">frag(A, B&nbsp;|&nbsp;C)</span>: the fraction of the cross-modal linear structure carried by <span class="mono">A</span> and observed through <span class="mono">C</span> that <em>cannot</em> be recovered from <span class="mono">B</span> alone. A score of 0 means <span class="mono">B</span> linearly captures everything that <span class="mono">A</span> shares with witness <span class="mono">C</span> (<span class="mono">A</span> and <span class="mono">B</span> are interchangeable predictors of <span class="mono">C</span>); a score of 1 means <span class="mono">B</span> is irrelevant to the <span class="mono">A&ndash;C</span> alignment. We report the score symmetrised across the two projection directions for a given pair <span class="mono">(A, B)</span>, namely <span class="mono">frag(A, B&nbsp;|&nbsp;C)</span> and <span class="mono">frag(B, A&nbsp;|&nbsp;C)</span>, with the witness <span class="mono">C</span> held fixed, and test it against a 1 000-permutation null (BH-FDR corrected).</p>
 
     <p>The three resulting triplets and their layer-11 results are shown in <a href="#rq2-l11-table">Table 3</a>.</p>
 
@@ -4365,7 +4365,7 @@
       </p>
     </div>
 
-    <p>Lower curves mean more of the <span class="mono">A&ndash;C</span> linear structure is recoverable through <span class="mono">B</span> &mdash; i.e. greater cross-modal unification via triangulation through <span class="mono">B</span>. All three curves drop monotonically with encoder depth, and at every layer the score is significantly below the 1 000-permutation null (BH-FDR <span class="mono">p &lt; 0.001</span>). The decrease is, however, not uniform across the three triplets: for the pair <span class="mono">(A, B) = (Depth, RGB)</span> with witness <span class="mono">C = Normals</span>, fragmentation falls from ≈0.36 at layer 0 to ≈0.086 at layer 11 (~27 percentage-point drop); for the pair <span class="mono">(A, B) = (Normals, RGB)</span> with witness <span class="mono">C = Depth</span>, it falls similarly, ending at ≈0.125. By contrast, for the pair <span class="mono">(A, B) = (Depth, Normals)</span> with witness <span class="mono">C = RGB</span>, fragmentation barely moves: from ≈0.23 at layer 0 to ≈0.19 at layer 11 (~3 percentage points only).</p>
+    <p>Lower curves mean more of the <span class="mono">A&ndash;C</span> linear structure is recoverable through <span class="mono">B</span>, i.e. greater cross-modal unification via triangulation through <span class="mono">B</span>. All three curves drop monotonically with encoder depth, and at every layer the score is significantly below the 1 000-permutation null (BH-FDR <span class="mono">p &lt; 0.001</span>). The decrease is, however, not uniform across the three triplets: for the pair <span class="mono">(A, B) = (Depth, RGB)</span> with witness <span class="mono">C = Normals</span>, fragmentation falls from ≈0.36 at layer 0 to ≈0.086 at layer 11 (~27 percentage-point drop); for the pair <span class="mono">(A, B) = (Normals, RGB)</span> with witness <span class="mono">C = Depth</span>, it falls similarly, ending at ≈0.125. By contrast, for the pair <span class="mono">(A, B) = (Depth, Normals)</span> with witness <span class="mono">C = RGB</span>, fragmentation barely moves: from ≈0.23 at layer 0 to ≈0.19 at layer 11 (~3 percentage points only).</p>
 
     <table id="rq2-l11-table" class="restable peaks" aria-label="Final-layer (L11) fragmentation per pair (A, B)" style="margin-top:32px">
       <thead>
@@ -4407,7 +4407,7 @@
     </table>
     <div class="figcap" style="margin-top:10px;margin-bottom:24px"><b>Table 2.</b> Layer-11 CKA fragmentation per triplet, symmetrised over the two directions <span class="mono">frag(A, B&nbsp;|&nbsp;C)</span> / <span class="mono">frag(B, A&nbsp;|&nbsp;C)</span> (shown in <span class="mono">Direction range</span>).</div>
 
-    <p>The asymmetry across the three rows is the central observation. The two triplets whose witness <span class="mono">C</span> is a geometric modality &mdash; <span class="mono">C = Normals</span> for the pair <span class="mono">(Depth, RGB)</span>, and <span class="mono">C = Depth</span> for the pair <span class="mono">(Normals, RGB)</span> &mdash; end at <b>91%</b> and <b>87%</b> linear unification respectively. The remaining triplet, whose witness is <span class="mono">C = RGB</span> (pair <span class="mono">(Depth, Normals)</span>), ends at only <b>81%</b>. This is consistent with RGB acting as a geometric hub: Depth and Normals each converge to RGB, rather than directly to each other.</p>
+    <p>The asymmetry across the three rows is the central observation. The two triplets whose witness <span class="mono">C</span> is a geometric modality (<span class="mono">C = Normals</span> for the pair <span class="mono">(Depth, RGB)</span>, and <span class="mono">C = Depth</span> for the pair <span class="mono">(Normals, RGB)</span>) end at <b>91%</b> and <b>87%</b> linear unification respectively. The remaining triplet, whose witness is <span class="mono">C = RGB</span> (pair <span class="mono">(Depth, Normals)</span>), ends at only <b>81%</b>. This is consistent with RGB acting as a geometric hub: Depth and Normals each converge to RGB, rather than directly to each other.</p>
 
     <p>In aggregate, at the final encoder layer ≈<b>86.5%</b> of the measured cross-modal structure is linearly unified under triangulation (mean across the three triplets above). The remaining residual fragmentation is small but statistically significant for every triplet at every layer (BH-FDR <span class="mono">p &lt; 0.001</span>, 1 000 permutation draws) and never vanishes: the encoder does not achieve zero fragmentation under this metric at any layer, indicating that some cross-modal structure remains linearly inaccessible from any given modality's span even at the trunk's deepest layer.</p>
 
@@ -4431,7 +4431,7 @@
       <li>
         <span class="intro-subq-letter">a</span>
         <span class="intro-subq-body">
-          Modality clouds remain spatially distinct at every layer across both datasets, but their internal scene-level organisation becomes progressively congruent: the same scenes occupy similar relative positions within each modality's cloud at deep layers. Per-sample paired distances decrease monotonically with encoder depth (Wilcoxon <span class="mono">p &lt; 0.001</span> for all pairs). Activation entropy converges across modalities at depth. Qualitatively: progressive cross-modal alignment is visible in the geometry, without spatial fusion &mdash; consistent with our working definition of unification.
+          Modality clouds remain spatially distinct at every layer across both datasets, but their internal scene-level organisation becomes progressively congruent: the same scenes occupy similar relative positions within each modality's cloud at deep layers. Per-sample paired distances decrease monotonically with encoder depth (Wilcoxon <span class="mono">p &lt; 0.001</span> for all pairs). Activation entropy converges across modalities at depth. Qualitatively: progressive cross-modal alignment is visible in the geometry, without spatial fusion, consistent with our working definition of unification.
         </span>
       </li>
       <li>
@@ -4454,7 +4454,7 @@
       </li>
     </ol>
 
-    <p style="margin-top:22px">In the framing of the project title: 4M's encoder is <em>one trunk</em> in the sense that all modalities flow through shared weights into geometrically congruent subspaces &mdash; but a <em>measurably imperfect</em> one under linear probing.</p>
+    <p style="margin-top:22px">In the framing of the project title: 4M's encoder is <em>one trunk</em> in the sense that all modalities flow through shared weights into geometrically congruent subspaces, but a <em>measurably imperfect</em> one under linear probing.</p>
 
     <div class="claim-card claim-card--positive">
       <h3>What we can formally claim</h3>
@@ -4544,8 +4544,8 @@
   <div class="lightbox-frame">
     <div class="lightbox-head">
       <div class="lightbox-title">
-        <span id="lb-title">—</span>
-        <span class="lb-meta" id="lb-meta">—</span>
+        <span id="lb-title">-</span>
+        <span class="lb-meta" id="lb-meta">-</span>
       </div>
       <div class="lightbox-actions">
         <button class="lb-btn icon" id="lb-zoom-out" aria-label="Zoom out">−</button>
@@ -4566,7 +4566,7 @@
 
 <script>
 /* =========================================================
-   Side navigation — vertical timeline with scroll-spy
+   Side navigation, vertical timeline with scroll-spy
    ========================================================= */
 (function () {
   const items = Array.from(document.querySelectorAll(".sidenav-item[data-href]"));
@@ -4612,7 +4612,7 @@
 })();
 
 /* =========================================================
-   Paired-distance plots — Plotly line chart (3 pairs overlaid)
+   Paired-distance plots, Plotly line chart (3 pairs overlaid)
    per dataset, with click-to-reveal box plots per pair.
    ========================================================= */
 (function () {
@@ -4646,7 +4646,7 @@
   }
 
   function commonLayout(layers, extra = {}) {
-    // Numeric x-axis with categorical tick labels — lets us interpolate
+    // Numeric x-axis with categorical tick labels, lets us interpolate
     // sub-segments for the striped pair lines.
     const tickvals = layers.map((_, i) => i);
     return Object.assign({
@@ -4865,7 +4865,7 @@
 })();
 
 /* =========================================================
-   Activation entropy panels — line chart per dataset; the
+   Activation entropy panels, line chart per dataset; the
    user picks which pair to display via pills underneath.
    ========================================================= */
 (function () {
@@ -5018,7 +5018,7 @@
 })();
 
 /* =========================================================
-   §4.3.2 — Modality imprint under joint processing. Six tiny
+   §4.3.2, Modality imprint under joint processing. Six tiny
    line charts (one per modality × partner) showing per-layer
    self-vs-joint similarity. A horizontal "partner ignored"
    reference is drawn at y=1.
@@ -5029,7 +5029,7 @@
     depth:   "#007ba5", // --c-depth
     normals: "#990165", // --c-normals
   };
-  // Pair colors — used for the second line (the "X_y" joint variant).
+  // Pair colors, used for the second line (the "X_y" joint variant).
   const PAIR_COLOR = {
     "rgb-depth":     "#8972d5",
     "rgb-normals":   "#1bb5b5",
@@ -5083,7 +5083,7 @@
         line: { color: "#cfcfcc", width: 1, dash: "2px,4px" },
         hoverinfo: "skip", showlegend: false,
       },
-      // Line "X_y" — self-vs-joint imprint on X (solid, modality color).
+      // Line "X_y", self-vs-joint imprint on X (solid, modality color).
       {
         type: "scatter", mode: "lines+markers",
         name: xyLabel,
@@ -5185,13 +5185,13 @@
 })();
 
 /* =========================================================
-   §4.2.1 — Layer-wise cross-modality similarity. 3×3 small-multiples
+   §4.2.1, Layer-wise cross-modality similarity. 3×3 small-multiples
    grid (rows = metrics CKA / PWCCA / k-NN, cols = modality pairs).
    Each cell overlays Hypersim (solid + circles) and DIODE (dashed
    + squares) in the metric color, with grey null ±2σ bands behind.
    ========================================================= */
 (function () {
-  // 3 × 3 small-multiples — rows = metrics, cols = modality pairs.
+  // 3 × 3 small-multiples, rows = metrics, cols = modality pairs.
   // Each cell shows Hypersim (solid + circles) and DIODE (dashed + squares)
   // overlaid in the metric color, with a grey null ±2σ band behind.
   const METRIC_LABEL = { cka: "CKA", knn_overlap: "k-NN overlap", pwcca: "PWCCA" };
@@ -5287,7 +5287,7 @@
     const { hideXAxis = false, logScale = false } = opts;
     const layers = hypPayload.layers;
     const traces = [];
-    // Null bands first (behind lines) — distinct fills mirror line style.
+    // Null bands first (behind lines), distinct fills mirror line style.
     buildNullBand(hypPayload, pair, metric, "hypersim").forEach((t) => traces.push(t));
     buildNullBand(diodePayload, pair, metric, "diode").forEach((t) => traces.push(t));
     // Lines: Hypersim (solid) then DIODE (dashed)
@@ -5375,7 +5375,7 @@
 })();
 
 /* =========================================================
-   §4.3.1 — Layer-wise joint vs separate passes. 3×3 small-multiples
+   §4.3.1, Layer-wise joint vs separate passes. 3×3 small-multiples
    (rows = metrics, cols = pairs). Each cell shows 4 curves
    (Hyp/DIODE × joint/separate) with shaded fills marking the gap.
    ========================================================= */
@@ -5410,10 +5410,10 @@
       type: "scatter", mode: "lines+markers",
       x: values.map((_, i) => i),
       y: values,
-      name: `${dsLabel} — ${passLabel}`,
+      name: `${dsLabel} (${passLabel})`,
       line: { color, width: openMarker ? 1.5 : 1.8, dash },
       marker,
-      hovertemplate: `<b>${dsLabel} — ${passLabel}</b><br>L%{x}: %{y:.3f}<extra></extra>`,
+      hovertemplate: `<b>${dsLabel} (${passLabel})</b><br>L%{x}: %{y:.3f}<extra></extra>`,
       showlegend: false,
     };
     if (fillToPrev) {
@@ -5518,7 +5518,7 @@
 })();
 
 /* =========================================================
-   §4.4.1 — RQ2 interactive fragmentation chart.
+   §4.4.1, RQ2 interactive fragmentation chart.
    Single Plotly cell with 3 overlaid pair curves, shaded
    95% CI bands, hover tooltips, and L11 unification annotations.
    Data source: website/assets/metrics/rq2.json (built by
@@ -5716,7 +5716,7 @@
 })();
 
 /* =========================================================
-   t-SNE 3D panels — render real Plotly figures from the
+   t-SNE 3D panels, render real Plotly figures from the
    per-(dataset, pair) JSON files under assets/tsne/.
    The JSON layout is documented in scripts/build_website_tsne_data.py.
    ========================================================= */
@@ -5746,14 +5746,14 @@
   };
 
   // Per-panel play state for the paired-line animation. When `playing` is true
-  // we add several "shell" traces — each represents a slice of the comet's
+  // we add several "shell" traces, each represents a slice of the comet's
   // trail at a given distance behind the head, with decreasing opacity and
-  // width — so collectively they look like a fading comet tail.
+  // width, so collectively they look like a fading comet tail.
   const playState = {
     tsne: { playing: false, raf: null, t0: 0, cometStartIdx: null },
   };
   const COMET_CYCLE_MS = 6800;        // forward + backward total
-  const COMET_TRAIL_FRAC = 0.9;       // long trail — line stays visible most of the cycle
+  const COMET_TRAIL_FRAC = 0.9;       // long trail, line stays visible most of the cycle
   // Per-shell visual params, ordered head → tail. The first entry is the
   // brightest segment riding the comet's leading edge; the last entry is the
   // dimmest tail. Greyscale so it sits behind the modality-colored points.
@@ -5854,7 +5854,7 @@
       const x = new Array(n * 3).fill(null);
       const y = new Array(n * 3).fill(null);
       const z = new Array(n * 3).fill(null);
-      // Initialize all segments collapsed at A — the first animation tick
+      // Initialize all segments collapsed at A, the first animation tick
       // moves them to their real positions immediately.
       for (let i = 0; i < n; i++) {
         const j = i * 3;
@@ -6001,9 +6001,9 @@
           z[k] = layer.z[i];
           // customdata = [modality, scene, category] regardless of color mode,
           // so the hovertemplate below can pull whichever it needs.
-          const modName = payload.modalities[layer.m[i]] || "—";
+          const modName = payload.modalities[layer.m[i]] || "-";
           const catIdx = layer.c[i];
-          const catName = catIdx >= 0 ? payload.categories[catIdx] : "—";
+          const catName = catIdx >= 0 ? payload.categories[catIdx] : "-";
           customdata[k] = [modName, layer.scene[i], catName];
         }
         const color = colorBy === "modality"
@@ -6041,7 +6041,7 @@
     // layer; fall back to the global union range for older JSON snapshots.
     const layer = payload.layers[layerIdx];
     const r = (layer && layer.range) ? layer.range : payload.range;
-    // No grid, no cube background, no axis lines — points float in clean space.
+    // No grid, no cube background, no axis lines, points float in clean space.
     const axisStyle = (range) => ({
       visible: false,
       showgrid: false,
@@ -6100,7 +6100,7 @@
       // after, sit visually on top.
       const ps = playState[panelKey];
       const pairs = payload.layers[layerIdx].pairs;
-      // Stop any in-flight animation before swapping the trace set — it will
+      // Stop any in-flight animation before swapping the trace set, it will
       // be restarted below with the new pair data if still playing.
       stopPairAnimation(panelKey);
       if (ps && ps.playing && pairs && pairs.ax && pairs.ax.length) {
@@ -6145,13 +6145,13 @@
 
   const COLORBY_TEXT = {
     hypersim: {
-      modality: `<em>Do the modalities separate?</em><br><br>Persistent separation is expected under our unification definition, which preserves modality-specific subspaces. What matters is not whether the clouds overlap, but whether their internal organisation matches. Across both datasets and all 12 layers, the two modality clouds remain in distinct spatial regions &mdash; the category and scene-identity colourings show what happens inside.`,
-      scene_category: `<em>Does scene type organise the space?</em><br><br>Colouring by scene category asks whether semantic scene type structures each modality cloud. Subclusters are largely invisible in shallow layers and emerge only subtly at depth &mdash; consistent with the encoder developing some scene-level organisation that is more clearly visible under the scene-identity colouring.`,
+      modality: `<em>Do the modalities separate?</em><br><br>Persistent separation is expected under our unification definition, which preserves modality-specific subspaces. What matters is not whether the clouds overlap, but whether their internal organisation matches. Across both datasets and all 12 layers, the two modality clouds remain in distinct spatial regions, the category and scene-identity colourings show what happens inside.`,
+      scene_category: `<em>Does scene type organise the space?</em><br><br>Colouring by scene category asks whether semantic scene type structures each modality cloud. Subclusters are largely invisible in shallow layers and emerge only subtly at depth, consistent with the encoder developing some scene-level organisation that is more clearly visible under the scene-identity colouring.`,
     },
     diode: {
-      modality: `<em>Do the modalities separate?</em><br><br>Persistent separation is expected under our unification definition, which preserves modality-specific subspaces. What matters is not whether the clouds overlap, but whether their internal organisation matches. Across both datasets and all 12 layers, the two modality clouds remain in distinct spatial regions &mdash; the category and scene-identity colourings show what happens inside.`,
-      scene_category: `<em>Does scene type organise the space?</em><br><br>Colouring by indoor / outdoor shows that modality separation persists throughout while indoor and outdoor subclusters gradually emerge inside each modality cloud. Depth and normals develop these subclusters from the first layer; RGB only around layer 6 &mdash; consistent with sparse geometric signals being easier to organise semantically than the richer RGB input.`,
-      scene: `<em>Does the encoder align specific scenes across modalities?</em><br><br>Colouring by scene identity is the most demanding view: it asks whether the encoder tracks specific scenes across the modality boundary. From around layer 8&ndash;9, same-scene points from different modalities pull toward matching positions on each side of the boundary, but never merge &mdash; RGB points stay in the RGB cloud, depth in the depth cloud. The encoder encodes scene correspondence as a shared internal organisation rather than a shared location in space.`,
+      modality: `<em>Do the modalities separate?</em><br><br>Persistent separation is expected under our unification definition, which preserves modality-specific subspaces. What matters is not whether the clouds overlap, but whether their internal organisation matches. Across both datasets and all 12 layers, the two modality clouds remain in distinct spatial regions, the category and scene-identity colourings show what happens inside.`,
+      scene_category: `<em>Does scene type organise the space?</em><br><br>Colouring by indoor / outdoor shows that modality separation persists throughout while indoor and outdoor subclusters gradually emerge inside each modality cloud. Depth and normals develop these subclusters from the first layer; RGB only around layer 6, consistent with sparse geometric signals being easier to organise semantically than the richer RGB input.`,
+      scene: `<em>Does the encoder align specific scenes across modalities?</em><br><br>Colouring by scene identity is the most demanding view: it asks whether the encoder tracks specific scenes across the modality boundary. From around layer 8&ndash;9, same-scene points from different modalities pull toward matching positions on each side of the boundary, but never merge, RGB points stay in the RGB cloud, depth in the depth cloud. The encoder encodes scene correspondence as a shared internal organisation rather than a shared location in space.`,
     },
   };
 
@@ -6244,7 +6244,7 @@
 })();
 
 /* =========================================================
-   Scatter mock generator — deterministic per panel
+   Scatter mock generator, deterministic per panel
    ========================================================= */
 (function () {
   const panels = document.querySelectorAll("svg.scatter-mock");
@@ -6306,7 +6306,7 @@
 })();
 
 /* =========================================================
-   Chart.js — peak similarity by pair × dataset
+   Chart.js, peak similarity by pair × dataset
    ========================================================= */
 (function () {
   Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
@@ -6470,7 +6470,7 @@
 })();
 
 /* =========================================================
-   Lightbox — clickable & scrollable dataset images
+   Lightbox, clickable & scrollable dataset images
    ========================================================= */
 (function () {
   const lightbox = document.getElementById("lightbox");
@@ -6498,7 +6498,7 @@
       const tag = thumb.querySelector(".ds-thumb-tag")?.textContent.trim() || "";
       const imgEl = thumb.querySelector("img");
       if (!imgEl) {
-        // placeholder — no real image yet; skip but keep thumb clickable disabled
+        // placeholder, no real image yet; skip but keep thumb clickable disabled
         thumb.style.cursor = "default";
         return;
       }
@@ -6548,7 +6548,7 @@
         setScale(scale);
       }
     };
-    // If image is cached, onload may not fire reliably — call directly
+    // If image is cached, onload may not fire reliably, call directly
     if (img.complete && img.naturalWidth) {
       if (mode === "fit") fitToStage();
       else setScale(scale);
@@ -6656,7 +6656,7 @@
 })();
 
 /* =========================================================
-   Method diagram — clickable step details
+   Method diagram, clickable step details
    ========================================================= */
 (function () {
   const STEPS = {
@@ -6671,13 +6671,13 @@
       step: "STEP 02 · Tokenization",
       title: "Per-modality tokenizers",
       body: `<p>4M-21 ships with a separate tokenizer for each modality. Each one is a small VQ-VAE-style encoder that maps a 2-D modality grid into a flat sequence of discrete tokens, with 32-dim codebook vectors that are projected to 768-dim inside the encoder.</p>
-             <p>Tokenization happens <em>independently</em> per modality — the trunk never sees raw pixels. This is the only stage where modality-specific weights are used; everything downstream is shared.</p>`,
+             <p>Tokenization happens <em>independently</em> per modality, the trunk never sees raw pixels. This is the only stage where modality-specific weights are used; everything downstream is shared.</p>`,
       specs: ["RGB tokenizer (frozen)", "Depth tokenizer", "Normals tokenizer", "32-dim codebook · 768-dim encoder space"]
     },
     encoder: {
       step: "STEP 03 · Shared trunk",
       title: "4M-21 transformer encoder",
-      body: `<p>A 12-layer transformer encoder with shared weights for every modality. Tokens from any modality flow through the <em>same</em> attention and MLP blocks — the design assumption that motivates RQ1: if the trunk is truly shared, modality-paired tokens should converge in latent space as they propagate.</p>
+      body: `<p>A 12-layer transformer encoder with shared weights for every modality. Tokens from any modality flow through the <em>same</em> attention and MLP blocks, the design assumption that motivates RQ1: if the trunk is truly shared, modality-paired tokens should converge in latent space as they propagate.</p>
              <p>We hook every block's output to extract the residual-stream activation for downstream analysis, giving us 12 sets of per-modality activations per scene.</p>`,
       specs: ["12 transformer blocks", "Hidden dim 768", "Shared weights · no modality routing", "Hooks at every layer's output"]
     },
@@ -6685,16 +6685,16 @@
       step: "STEP 04 · Activations",
       title: "Per-layer activation tensors",
       body: `<p>For every (layer, modality, scene) triple we collect a token activation tensor of shape <span class="mono">N × 768</span>. On Hypersim, the benchmark draws <span class="mono">N = 4 000</span> paired samples from 100 scenes (seed 42), balanced across scene categories. DIODE uses the full official train + val splits (indoor + outdoor). Tokens are aligned spatially across modalities so paired comparisons are well-defined.</p>
-             <p>Outlier scenes (Hypersim category "Other") are filtered before any downstream metric or null computation — left in, they fatten the null distribution and reduce sensitivity.</p>`,
+             <p>Outlier scenes (Hypersim category "Other") are filtered before any downstream metric or null computation, left in, they fatten the null distribution and reduce sensitivity.</p>`,
       specs: ["4 000 paired samples · 100 Hypersim scenes", "Aligned across modalities", "Outlier scenes filtered"]
     },
     reduce: {
       step: "STEP 05 · Geometry",
       title: "PCA / t-SNE / UMAP",
       body: `<p>Three complementary dimensionality reductions, used to qualitatively inspect the geometry of the activation space:</p>
-             <p><b>PCA</b> — linear, preserves global variance directions. <b>t-SNE</b> — non-linear, preserves local neighborhoods; we pre-reduce to 50 components with PCA for denoising. <b>UMAP</b> — non-linear, balances local and global structure.</p>
+             <p><b>PCA</b> (linear, preserves global variance directions). <b>t-SNE</b> (non-linear, preserves local neighborhoods; we pre-reduce to 50 components with PCA for denoising). <b>UMAP</b> (non-linear, balances local and global structure).</p>
              <p>Each projection is computed per layer and rendered both as a static 2-D figure and as an interactive 3-D plot with a layer slider.</p>`,
-      specs: ["PCA — linear", "t-SNE — local (PCA-50 init)", "UMAP — local + global", "2-D static + 3-D interactive"]
+      specs: ["PCA (linear)", "t-SNE (local (PCA-50 init))", "UMAP (local + global)", "2-D static + 3-D interactive"]
     },
     metrics: {
       step: "STEP 06 · Similarity",
@@ -6702,7 +6702,7 @@
       body: `<p>Three similarity metrics computed at every layer for every modality pair:</p>
              <p><b>CKA</b> compares two activation matrices via a centered kernel inner product; invariant to orthogonal transforms and isotropic scaling. <b>k-NN overlap</b> measures the fraction of nearest neighbors that a token shares between modalities. <b>PWCCA</b> is a projection-weighted canonical-correlation score (flagged for caveats in §4).</p>
              <p>Each metric is computed twice per (layer, pair): once on <em>paired</em> activations (same scene across the two modalities) to produce the <em>observed</em> score, and once on <em>mismatched</em> activations (different scenes) to seed the permutation null distribution used in the next step.</p>`,
-      specs: ["CKA — kernel · invariant", "k-NN overlap — local geometry", "PWCCA — weighted CCA", "Run on paired & mismatched activations"]
+      specs: ["CKA (kernel · invariant)", "k-NN overlap (local geometry)", "PWCCA (weighted CCA)", "Run on paired & mismatched activations"]
     },
     null: {
       step: "STEP 07 · Significance",
@@ -6763,7 +6763,7 @@
 
 <script>
 // ============================================================
-// §1.1 — Perfect vs partially unified encoder (interactive viz)
+// §1.1, Perfect vs partially unified encoder (interactive viz)
 // ============================================================
 (function initEncoderViz() {
   const fig = document.getElementById("encoder-viz");
