@@ -2051,7 +2051,6 @@
 
   /* ---------- Paired-distance analysis (§4a follow-up) ---------- */
   .pdist-block { display: flex; flex-direction: column; gap: 18px; margin: 18px 0 8px; }
-  .pdist-intro { color: var(--muted); font-size: 14.5px; font-family: "Inter", sans-serif; margin: 0; }
   .pdist-panel {
     border: 1px solid var(--rule);
     background: #fff;
@@ -3328,7 +3327,7 @@
     </div>
 
     <div class="iconlinks">
-      <a class="iconlink" href="#" target="_blank" rel="noopener">
+      <a class="iconlink" href="https://github.com/arthur-mrgt/one-trunk-or-many" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.7 5.5.7 11.8c0 5 3.3 9.3 7.8 10.8.6.1.8-.2.8-.6v-2.2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.8-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.4-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2 1-.3 2-.4 3-.4s2 .1 3 .4c2.3-1.5 3.3-1.2 3.3-1.2.6 1.6.2 2.8.1 3.1.7.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.5-1.5 7.8-5.8 7.8-10.8C23.3 5.5 18.3.5 12 .5z"/></svg>
         Code
       </a>
@@ -3783,14 +3782,11 @@
       <p id="tsne-interp-text" style="margin:0; line-height:1.7;"></p>
     </div>
 
-    <div class="aside" style="margin-top:12px; border-left:none; background: color-mix(in oklch, var(--c-accent) 10%, transparent);">
-      <span class="label">Summary</span>
-      <p style="margin-bottom:0">Across both datasets and all 12 layers, the modality clouds remain in distinct regions of the latent space while their internal organisation becomes progressively congruent &mdash; first by scene category, then by scene identity. The same internal map, drawn twice: shared relational geometry in a common subspace, modality-specific information preserved alongside &mdash; exactly the form of unification predicted in §1.</p>
-    </div>
+    <p>Across both datasets and all 12 layers, the modality clouds remain in distinct regions of the latent space while their internal organisation becomes progressively congruent &mdash; first by scene category, then by scene identity. The same internal map, drawn twice: shared relational geometry in a common subspace, modality-specific information preserved alongside &mdash; exactly the form of unification predicted in §1.</p>
 
     <!-- ========== 4.1.2 — Paired-sample distance analysis ========== -->
     <h4 id="exploration-distance" class="results-sub">Paired-sample distances per layer</h4>
-    <p class="pdist-intro">
+    <p>
       For each scene, we compute the Euclidean distance in PCA-2 space between two modalities' representations at each encoder layer, then plot the distribution across all scenes. A decreasing median (and shrinking IQR) means same-scene representations get geometrically closer with depth; a Wilcoxon signed-rank test on L00 vs. L11 is reported per pair.
     </p>
 
@@ -3848,7 +3844,7 @@
 
     <!-- ========== 4.1.3 — Activation entropy per modality ========== -->
     <h4 id="exploration-entropy" class="results-sub">Activation entropy per modality</h4>
-    <p class="pdist-intro">
+    <p>
       Shannon entropy asks a complementary question to the paired distances: how internally varied is each modality's cloud at each layer (low entropy = compact, similar representations; high entropy = diffuse, discriminative)? This tells us whether the encoder also brings the two modalities toward similar levels of internal diffuseness, on top of pulling paired representations closer.
     </p>
 
@@ -3892,10 +3888,7 @@
       <p style="margin-bottom:0">The geometric modalities (depth, normals) enter the encoder as tight, low-variance clouds and expand rapidly within the first one or two layers, closing most of the initial gap with the already-diffuse RGB stream. Beyond that early expansion, the entropy gap between paired modalities shrinks gradually with depth, with the three pairs converging at different rates but ending at similar diffuseness levels at the deepest layers.</p>
     </div>
 
-    <div class="aside" style="margin-top:12px; border-left:none; background: color-mix(in oklch, var(--c-accent) 10%, transparent);">
-      <span class="label">Summary</span>
-      <p style="margin-bottom:0">Beyond pulling same-scene representations closer in space, the encoder also reshapes the internal diffuseness of each modality cloud across layers, bringing the three pairs toward similar entropy levels by L11. Convergence is partial and pair-dependent &mdash; RGB stays the most varied, normals more diffuse than depth &mdash; but the overall trajectory is one of approaching internal similarity while preserving each modality's distinct character, as the unification definition predicts.</p>
-    </div>
+    <p>Beyond pulling same-scene representations closer in space, the encoder also reshapes the internal diffuseness of each modality cloud across layers, bringing the three pairs toward similar entropy levels by L11. Convergence is partial and pair-dependent &mdash; RGB stays the most varied, normals more diffuse than depth &mdash; but the overall trajectory is one of approaching internal similarity while preserving each modality's distinct character, as the unification definition predicts.</p>
 
     <h3 id="results-rq-b" class="results-rq"><span class="sub-num">4.2</span>Paired-scene similarity</h3>
 
