@@ -129,6 +129,7 @@
   }
   .sidenav-item.is-main { height: 34px; }
   .sidenav-item.is-sub  { height: 26px; }
+  .sidenav-item.is-sub-sub { height: 22px; }
 
   /* dots — centered on the track (track center = 20.5px from right)
      9px dot → right: 16px → center = 16 + 4.5 = 20.5px ✓
@@ -154,6 +155,12 @@
     background: var(--rule-strong);
     border: 0;
   }
+  .sidenav-item.is-sub-sub .sidenav-dot {
+    right: 20px;
+    width: 4px; height: 4px;
+    background: var(--rule);
+    border: 0;
+  }
   .sidenav-item:hover .sidenav-dot {
     background: var(--c-accent);
     border-color: var(--c-accent);
@@ -170,6 +177,11 @@
     background: var(--c-accent);
     box-shadow: 0 0 0 3px rgba(81,140,140,0.18);
     transform: translateY(-50%) scale(1.8);
+  }
+  .sidenav-item.is-sub-sub.active .sidenav-dot {
+    background: var(--c-accent);
+    box-shadow: 0 0 0 2px rgba(81,140,140,0.16);
+    transform: translateY(-50%) scale(1.6);
   }
 
   /* labels — plain text, no box, all visible on timeline hover */
@@ -197,6 +209,13 @@
     font-size: 10.5px;
     font-weight: 400;
     color: var(--muted);
+  }
+  .sidenav-item.is-sub-sub .sidenav-label {
+    right: 31px;
+    padding-left: 10px;
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--muted-2);
   }
   .sidenav-label .sn-num {
     font-family: "JetBrains Mono", monospace;
@@ -417,6 +436,16 @@
     font-weight: 500;
     margin-right: 8px;
   }
+  h4.results-sub {
+    font-family: "Inter", sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--ink);
+    margin: 28px 0 10px;
+    letter-spacing: 0.01em;
+  }
+  h4.results-sub + h4.results-sub { margin-top: 24px; }
+  .results-rq-lead { margin-bottom: 16px; }
   .section-rule {
     height: 1px;
     background: var(--rule);
@@ -2003,7 +2032,7 @@
   }
   .pdist-detail-content .pdist-chart { height: 340px; }
 
-  /* ---------- §4.4 layer-wise similarity ---------- */
+  /* ---------- §4.2.1 layer-wise similarity ---------- */
   .rq1-question {
     display: flex; align-items: flex-start; gap: 14px;
     padding: 14px 18px;
@@ -2591,7 +2620,7 @@
     border-color: #fff;
   }
 
-  /* ---------- §4.7 RQ2 interactive fragmentation chart ---------- */
+  /* ---------- §4.4.1 RQ2 interactive fragmentation chart ---------- */
   .rq2-chart-panel {
     border: 1px solid var(--rule);
     border-radius: 8px;
@@ -2816,7 +2845,7 @@
     .rq1-charts { grid-template-columns: 1fr; }
   }
 
-  /* ---------- §4.4 — Summary of findings ---------- */
+  /* ---------- §4.2.1 — Summary of findings ---------- */
   .rq1-findings {
     border-top: 1px solid var(--rule);
     padding-top: 28px;
@@ -2915,7 +2944,7 @@
     .rq1-finding-visual--sparks { grid-template-columns: 1fr; }
   }
 
-  /* ---------- §4.6 modality imprint ---------- */
+  /* ---------- §4.3.2 modality imprint ---------- */
   .imprint-toolbar {
     display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
     margin: 18px 0 14px;
@@ -3171,22 +3200,6 @@
       <span class="sidenav-dot"></span>
       <span class="sidenav-label"><span class="sn-num">02</span>Related Work</span>
     </div>
-    <div class="sidenav-item is-sub" data-href="#related-multimodal" tabindex="0" role="link" aria-label="Multimodal learning">
-      <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">2.1</span>Multimodal learning</span>
-    </div>
-    <div class="sidenav-item is-sub" data-href="#related-similarity" tabindex="0" role="link" aria-label="Similarity analysis">
-      <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">2.2</span>Similarity analysis</span>
-    </div>
-    <div class="sidenav-item is-sub" data-href="#related-probing" tabindex="0" role="link" aria-label="Probing and subspace interpretability">
-      <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">2.3</span>Probing &amp; subspaces</span>
-    </div>
-    <div class="sidenav-item is-sub" data-href="#related-platonic" tabindex="0" role="link" aria-label="Platonic hypothesis">
-      <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">2.4</span>Platonic hypothesis</span>
-    </div>
     <div class="sidenav-item is-main" data-href="#method" tabindex="0" role="link" aria-label="Methodology">
       <span class="sidenav-dot"></span>
       <span class="sidenav-label"><span class="sn-num">03</span>Methodology</span>
@@ -3223,33 +3236,21 @@
       <span class="sidenav-dot"></span>
       <span class="sidenav-label"><span class="sn-num">04</span>Results</span>
     </div>
-    <div class="sidenav-item is-sub" data-href="#exploration-tsne" tabindex="0" role="link" aria-label="t-SNE geometry">
+    <div class="sidenav-item is-sub" data-href="#results-rq-a" tabindex="0" role="link" aria-label="Activation geometry">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">4.1</span>t-SNE geometry</span>
+      <span class="sidenav-label"><span class="sn-num">4.1</span>Activation geometry</span>
     </div>
-    <div class="sidenav-item is-sub" data-href="#exploration-distance" tabindex="0" role="link" aria-label="Paired distances">
+    <div class="sidenav-item is-sub" data-href="#results-rq-b" tabindex="0" role="link" aria-label="Paired-scene similarity">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">4.2</span>Paired distances</span>
+      <span class="sidenav-label"><span class="sn-num">4.2</span>Paired similarity</span>
     </div>
-    <div class="sidenav-item is-sub" data-href="#exploration-entropy" tabindex="0" role="link" aria-label="Entropy">
+    <div class="sidenav-item is-sub" data-href="#results-rq-c" tabindex="0" role="link" aria-label="Joint processing">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">4.3</span>Entropy</span>
+      <span class="sidenav-label"><span class="sn-num">4.3</span>Joint &amp; imprint</span>
     </div>
-    <div class="sidenav-item is-sub" data-href="#results-metrics" tabindex="0" role="link" aria-label="Cross-modal similarity">
+    <div class="sidenav-item is-sub" data-href="#results-rq-d" tabindex="0" role="link" aria-label="Cross-modal completeness">
       <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">4.4</span>Cross-modal similarity</span>
-    </div>
-    <div class="sidenav-item is-sub" data-href="#joint-processing" tabindex="0" role="link" aria-label="Joint processing">
-      <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">4.5</span>Joint processing</span>
-    </div>
-    <div class="sidenav-item is-sub" data-href="#modality-imprint" tabindex="0" role="link" aria-label="Modality imprint">
-      <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">4.6</span>Modality imprint</span>
-    </div>
-    <div class="sidenav-item is-sub" data-href="#rq2-triangulation" tabindex="0" role="link" aria-label="Cross-modal unification">
-      <span class="sidenav-dot"></span>
-      <span class="sidenav-label"><span class="sn-num">4.7</span>Cross-modal unification</span>
+      <span class="sidenav-label"><span class="sn-num">4.4</span>Completeness</span>
     </div>
     <div class="sidenav-item is-main" data-href="#discussion" tabindex="0" role="link" aria-label="Discussion and Conclusion">
       <span class="sidenav-dot"></span>
@@ -3312,7 +3313,7 @@
   <section id="abstract" class="abstract-section">
     <div class="abstract-card">
       <h2 class="abstract-kicker sans">Abstract</h2>
-      <p>This study investigates the extent to which shared-weight multimodal models, specifically the 4M architecture, develop unified representations across disparate inputs such as RGB, depth, and surface normals. By applying a multi-metric protocol (CKA, PWCCA, and k-NN overlap) across transformer encoder layers, we analyze the geometric and topological congruence of these modalities against a null-hypothesis framework. Our findings reveal that representational similarity between paired scenes rises monotonically, becoming highly significant at deeper layers. Crucially, consistently with our definition of unification, the encoder successfully preserves modality-specific subspaces. t-SNE visualizations show that while modality clouds remain spatially distinct, their internal scene-level structures become rigorously congruent. Ultimately, our project illustrates that shared weights in this architecture do not force a spatial collapse of modalities, but rather align them into parallel, geometrically synchronized representation spaces, adding a useful perspective to the exploration of &ldquo;any-to-any&rdquo; models.</p>
+      <p>This study investigates the extent to which shared-weight multimodal models, specifically the 4M architecture, develop unified representations across disparate inputs such as RGB, depth, and surface normals. By applying a multi-metric protocol (CKA, PWCCA, and k-NN overlap) across transformer encoder layers, we analyze the geometric and topological congruence of these modalities against a null-hypothesis framework. Our findings reveal that representational similarity between paired scenes rises strongly with encoder depth, becoming highly significant at deeper layers. Crucially, consistently with our definition of unification, the encoder successfully preserves modality-specific subspaces. t-SNE visualizations show that while modality clouds remain spatially distinct, their internal scene-level structures become rigorously congruent. Ultimately, our project illustrates that shared weights in this architecture do not force a spatial collapse of modalities, but rather align them into parallel, geometrically synchronized representation spaces, adding a useful perspective to the exploration of &ldquo;any-to-any&rdquo; models.</p>
     </div>
   </section>
 
@@ -3433,35 +3434,35 @@
       <p>Does the 4M encoder build a single unified representation across modalities, and if so, how complete is that unification?</p>
     </div>
 
-    <p class="intro-subq-intro">We decompose this into four sub-questions, each answered in a corresponding result subsection:</p>
+    <p class="intro-subq-intro">We decompose this into four sub-questions, each answered in a corresponding result subsection (with subsubsections where noted):</p>
 
     <ol class="intro-subq">
       <li>
         <span class="intro-subq-letter">a</span>
         <span class="intro-subq-body">
           What does the layer-by-layer activation geometry of each modality look like and does it qualitatively reveal a progressive cross-modal alignment of paired scenes?
-          <span class="intro-subq-target">[<a href="#exploration-tsne">&sect;4.1</a>&ndash;<a href="#exploration-entropy">&sect;4.3</a>]</span>
+          <span class="intro-subq-target">[<a href="#results-rq-a">&sect;4.1</a>]</span>
         </span>
       </li>
       <li>
         <span class="intro-subq-letter">b</span>
         <span class="intro-subq-body">
           Do paired activations of the same scene across modalities become quantitatively more similar than mismatched activations as we go deeper into the encoder ?
-          <span class="intro-subq-target">[<a href="#results-metrics">&sect;4.4</a>]</span>
+          <span class="intro-subq-target">[<a href="#results-rq-b">&sect;4.2</a>]</span>
         </span>
       </li>
       <li>
         <span class="intro-subq-letter">c</span>
         <span class="intro-subq-body">
           Does processing two modalities <em>jointly</em> (in one forward pass) further amplify cross-modal alignment, and does it leave any measurable imprint on each modality's solo representation?
-          <span class="intro-subq-target">[<a href="#joint-processing">&sect;4.5</a>&ndash;<a href="#modality-imprint">&sect;4.6</a>]</span>
+          <span class="intro-subq-target">[<a href="#results-rq-c">&sect;4.3</a>]</span>
         </span>
       </li>
       <li>
         <span class="intro-subq-letter">d</span>
         <span class="intro-subq-body">
           How <em>complete</em> is the convergence ? Specifically, what fraction of the cross-modal geometric structure remains linearly inaccessible from a modality's representation after optimal linear projection, and does this residual fragmentation differ across pairs and layers?
-          <span class="intro-subq-target">[<a href="#rq2-triangulation">&sect;4.7</a>]</span>
+          <span class="intro-subq-target">[<a href="#results-rq-d">&sect;4.4</a>]</span>
         </span>
       </li>
     </ol>
@@ -3646,10 +3647,10 @@
     </ol>
 
     <h3 id="method-geometry"><span class="sub-num">3.4</span>Activation geometry visualization</h3>
-    <p>As the qualitative branch of the pipeline, we directly visualize the geometry of the activation space at each encoder layer using dimensionality reduction. We apply PCA to 50 components as a denoising step, then run t-SNE to produce a 2D or 3D embedding. Points represent individual token activations, colored by modality, scene category, or scene identity depending on the selected granularity. This lets us see whether modality identity, scene type, or individual scene is the dominant organizing principle in the encoder's representation space at each layer (§4.1&ndash;4.3).</p>
+    <p>As the qualitative branch of the pipeline, we directly visualize the geometry of the activation space at each encoder layer using dimensionality reduction. We apply PCA to 50 components as a denoising step, then run t-SNE to produce a 2D or 3D embedding. Points represent individual token activations, colored by modality, scene category, or scene identity depending on the selected granularity. This lets us see whether modality identity, scene type, or individual scene is the dominant organizing principle in the encoder's representation space at each layer (<a href="#results-rq-a">&sect;4.1</a>, §4.1.1&ndash;4.1.3).</p>
 
     <h3 id="method-metrics"><span class="sub-num">3.5</span>Similarity metrics</h3>
-    <p>On the scalar branch of the pipeline we compare paired activations of the same scene across modalities at each layer using three standard representational similarity scores (§4.4&ndash;4.6):</p>
+    <p>On the scalar branch of the pipeline we compare paired activations of the same scene across modalities at each layer using three standard representational similarity scores (<a href="#results-rq-b">&sect;4.2</a>&ndash;<a href="#results-rq-c">&sect;4.3</a>):</p>
     <ul class="clean">
       <li><b>CKA</b>&nbsp; (Centered Kernel Alignment) : Compares two activation matrices via a kernel inner product; invariant to orthogonal transforms and isotropic scaling.</li>
       <li><b>PWCCA</b>&nbsp; (Projection-Weighted CCA) : A canonical-correlation score in which each direction is weighted by the L1-norm of its projection onto the activations, emphasizing the directions the data actually uses.</li>
@@ -3661,9 +3662,9 @@
 
     <h3 id="method-triangulation"><span class="sub-num">3.7</span>Transmodal triangulation</h3>
     <p>If two modalities look aligned at a layer, a natural question is whether that alignment is <em>direct</em> or only mediated through a third (e.g. Depth and Normals both tracking RGB). <b>Transmodal triangulation</b> tests this: shared cross-modal structure counts as unified only if it is linearly recoverable through another modality&rsquo;s representation.</p>
-    <p>To quantify <em>how complete</em> that unification is (<a href="#intro-rq">RQ2</a>; <a href="#rq2-triangulation">&sect;4.7</a>), we adapt subspace projection logic [11, 13] to a three-modality setting under the linear probing convention [7, 8]. For each ordered triplet <span class="mono">(A<sub>target</sub>, B<sub>projected</sub>, C<sub>witness</sub>)</span> and encoder layer, we measure how much of the geometric structure shared between modalities <span class="mono">A</span> and <span class="mono">C</span> remains after optimally linearly projecting <span class="mono">A</span> onto the representation subspace of modality <span class="mono">B</span>.</p>
+    <p>To quantify <em>how complete</em> that unification is (sub-question <em>d</em>; <a href="#results-rq-d">&sect;4.4</a>, <a href="#rq2-triangulation">§4.4.1</a>), we adapt subspace projection logic [11, 13] to a three-modality setting under the linear probing convention [7, 8]. For each ordered triplet <span class="mono">(A<sub>target</sub>, B<sub>projected</sub>, C<sub>witness</sub>)</span> and encoder layer, we measure how much of the geometric structure shared between modalities <span class="mono">A</span> and <span class="mono">C</span> remains after optimally linearly projecting <span class="mono">A</span> onto the representation subspace of modality <span class="mono">B</span>.</p>
     <p>Concretely, we compute a <b>CKA fragmentation score</b>: the fraction of the <span class="mono">A</span>&ndash;<span class="mono">C</span> alignment that <em>cannot</em> be recovered through <span class="mono">B</span>'s linear span. A score of 0 means the full <span class="mono">A</span>&ndash;<span class="mono">C</span> linear structure is accessible via <span class="mono">B</span>; a score of 1 means <span class="mono">B</span> is irrelevant to that cross-modal structure. We symmetrise each unordered pair by averaging the two projection directions (which modality serves as projector vs. witness), report layer-wise curves for all three modality pairs, and summarise unification at layer 11 as <span class="mono">1 &minus; frag<sub>L11</sub></span>.</p>
-    <p>Significance is assessed with a separate <b>permutation null</b> over shuffled triplets (<span class="mono">n = 1000</span> draws, BH-FDR corrected), analogous to §3.6 but at the triplet level. This yields a conservative lower bound on linearly unified cross-modal structure: shared information counted only if it is recoverable through a third modality's representation. Layer-wise fragmentation curves and unification bounds are reported in <a href="#rq2-triangulation">&sect;4.7</a> (see the triangulation figure there).</p>
+    <p>Significance is assessed with a separate <b>permutation null</b> over shuffled triplets (<span class="mono">n = 1000</span> draws, BH-FDR corrected), analogous to §3.6 but at the triplet level. This yields a conservative lower bound on linearly unified cross-modal structure: shared information counted only if it is recoverable through a third modality's representation. Layer-wise fragmentation curves and unification bounds are reported in <a href="#rq2-triangulation">§4.4.1</a> (see the triangulation figure there).</p>
   </section>
 
   <!-- ========== RESULTS ========== -->
@@ -3671,9 +3672,16 @@
     <h2><span class="num">04</span>Results</h2>
     <div class="section-rule"></div>
 
-    <p>Three measurement layers, increasingly quantitative. We first look directly at the geometry of the activation space (§4.1&ndash;4.3) &mdash; what the modality clouds look like at each encoder layer, how same-scene paired distances evolve, and how internally diffuse each modality's cloud is. We then move to scalar similarity metrics under separate forward passes (§4.4), compare them against joint forward passes (§4.5&ndash;4.6), and finally quantify cross-modal unification through transmodal triangulation (§4.7).</p>
+    <p>We organise the results around the four sub-questions from §1.2. <a href="#results-rq-a">&sect;4.1</a> explores activation geometry qualitatively. Scalar metrics in <a href="#results-rq-b">&sect;4.2</a> and <a href="#results-rq-c">&sect;4.3</a> follow the three forward-pass regimes in <a href="#method-passes">&sect;3.3</a> (separate, then joint and imprint). <a href="#results-rq-d">&sect;4.4</a> measures how complete cross-modal unification is via transmodal triangulation.</p>
 
-    <h3 id="exploration-tsne" style="margin-top:42px"><span class="sub-num">4.1</span>Activation space geometry (t-SNE)</h3>
+    <h3 id="results-rq-a" style="margin-top:42px"><span class="sub-num">4.1</span>Activation geometry</h3>
+
+    <div class="rq1-question">
+      <span class="rq1-question-label">Sub-question (a)</span>
+      <p>What does the layer-by-layer activation geometry of each modality look like, and does it qualitatively reveal progressive cross-modal alignment of paired scenes?</p>
+    </div>
+
+    <h4 id="exploration-tsne" class="results-sub">Activation space geometry (t-SNE)</h4>
 
     <p>We visualize the token activation space at each encoder layer using t-SNE (with PCA-50 pre-reduction for denoising), coloring points by modality, scene category, or scene identity. This directly reveals whether modality, scene type, or individual scene is the dominant axis of variation in the encoder's representation space at each layer — a question the scalar similarity metrics alone cannot answer.</p>
 
@@ -3741,8 +3749,8 @@
       <p style="margin-bottom:0">The overall picture is the progressive development of matching internal structure within distinct modality subspaces — exactly the form of unification predicted by §1: shared relational geometry in a common subspace, modality-specific information preserved alongside. The similarity metrics quantify that growing correspondence; the t-SNE visualisations show what it looks like geometrically.</p>
     </div>
 
-    <!-- ========== 4a (cont.) — Paired-sample distance analysis ========== -->
-    <h3 id="exploration-distance" style="margin-top:42px"><span class="sub-num">4.2</span>Paired-sample distances per layer</h3>
+    <!-- ========== 4.1.2 — Paired-sample distance analysis ========== -->
+    <h4 id="exploration-distance" class="results-sub">Paired-sample distances per layer</h4>
     <p class="pdist-intro">
       The t-SNE figures above show how each modality's whole cloud moves. Here we measure the per-sample picture. For each scene, we compute the Euclidean distance in PCA-2 space between the representations of two modalities at each encoder layer. The boxplot shows how those per-scene distances are distributed across all scenes at each layer. A decreasing median means same-scene representations from different modalities are getting geometrically closer as depth increases. A shrinking IQR means that convergence is consistent across scenes rather than driven by a few outliers. A Wilcoxon signed-rank test comparing L00 and L11 is reported for each pair.
     </p>
@@ -3805,8 +3813,8 @@
       <p style="margin-bottom:0"><b>RGB ↔ Normals</b> converges slowly and modestly throughout. The shallow slope reflects the difficulty of bridging appearance and geometry. The encoder makes progress at every layer but absolute distances remain larger than for the other two pairs.</p>
     </div>
 
-    <!-- ========== 4a (cont.) — Activation entropy per modality ========== -->
-    <h3 id="exploration-entropy" style="margin-top:42px"><span class="sub-num">4.3</span>Activation entropy per modality</h3>
+    <!-- ========== 4.1.3 — Activation entropy per modality ========== -->
+    <h4 id="exploration-entropy" class="results-sub">Activation entropy per modality</h4>
     <p class="pdist-intro">
       The distance plots show how close same-scene representations from different modalities are in space. Shannon entropy asks a complementary question: how internally varied is each modality's cloud at each layer? A tight, compact cloud has low entropy — the encoder is producing similar representations for all scenes under that modality. A diffuse, spread-out cloud has high entropy — the encoder is producing more varied, discriminative representations. Beyond the per-pair distances, we ask whether the encoder also brings the internal complexity of each modality cloud closer together — i.e. whether modalities are processed with similar entropy, on top of their relational alignment.
     </p>
@@ -3861,21 +3869,24 @@
       <p>Taken together, the entropy figures add a final nuance to the main question. The partial alignment we observe across the network is not just a matter of the two clouds moving closer in space. The encoder also reshapes the internal complexity of each modality's representations across layers, bringing them toward similar levels of diffuseness. Even this convergence is only partial and pair-dependent. At layer 11, each modality retains a distinct representational character: RGB remains the most varied, normals consistently more diffuse than depth, depth the most variable across datasets. The encoder brings these characters closer together while preserving the modality-specific structure expected from our unification definition.</p>
     </div>
 
-    <h3 id="results-metrics" style="margin-top:42px"><span class="sub-num">4.4</span>Cross-modality similarity (RQ1)</h3>
+    <h3 id="results-rq-b" style="margin-top:42px"><span class="sub-num">4.2</span>Paired-scene similarity</h3>
 
-    <!-- 6.1 — Layer-wise similarity curves (3 metrics × 3 pairs × 2 datasets) -->
     <div class="rq1-question">
-      <span class="rq1-question-label">RQ1</span>
-      <p>Do representations of the same scene become more similar across modalities as we go deeper into the encoder?</p>
+      <span class="rq1-question-label">Sub-question (b)</span>
+      <p>Do paired activations of the same scene across modalities become quantitatively more similar than mismatched activations as we go deeper into the encoder?</p>
     </div>
+
+    <p class="results-rq-lead">The t-SNE, distance, and entropy analyses above describe <em>how</em> modality clouds are organised in space. Below we quantify paired-scene similarity under <b>separate forward passes</b> (one modality at a time; see <a href="#method-passes">§3.3</a>).</p>
+
+    <h4 id="results-metrics" class="results-sub">Cross-modality similarity with permutation null</h4>
 
     <p class="rq1-pre-findings-lede">Two patterns dominate the layer-wise picture below:</p>
     <div class="rq1-pre-findings">
       <article class="rq1-pre-finding">
         <div class="rq1-pre-finding-num">01</div>
         <div class="rq1-pre-finding-body">
-          <h5 class="rq1-pre-finding-title">Monotonic rise across encoder layers</h5>
-          <p class="rq1-pre-finding-claim">For every (metric × modality-pair) cell, similarity rises steadily with encoder depth — the deeper the layer, the more aligned same-scene representations become.</p>
+          <h5 class="rq1-pre-finding-title">Strong rise with encoder depth</h5>
+          <p class="rq1-pre-finding-claim">For every (metric × modality-pair) cell, similarity increases markedly with depth. Shallow and mid layers can show small dips, but deep layers (L7&ndash;L11) consistently sit well above the permutation null.</p>
         </div>
       </article>
       <article class="rq1-pre-finding">
@@ -3958,20 +3969,14 @@
       </div>
     </div>
 
-    <p style="margin-top:32px">For each modality pair and dataset we also compute the per-condition <em>peak</em> across layers (table below). <b>All three pairs peak at deep layers (L7–L11)</b>, confirming late-layer convergence.</p>
+    <p style="margin-top:20px">Shaded bands show the permutation-null mean ±2σ (§3.6). Formal layer-wise z-tests with BH-FDR correction confirm that paired-scene similarity sits significantly above the null at deep layers (L7&ndash;L11) for all three pairs and metrics; the charts visualise the null envelope rather than z-scores themselves.</p>
+
+    <p style="margin-top:32px">For each modality pair and dataset we also compute the per-condition <em>peak</em> across layers (charts below). <b>All three pairs peak at deep layers (L7–L11)</b>, confirming late-layer convergence.</p>
 
     <div class="charts-row charts-row--three">
       <div class="chart-card">
         <h4>Peak CKA</h4>
         <div class="chart-holder"><canvas id="chart-cka-peak"></canvas></div>
-        <div class="chart-legend">
-          <span class="lg-item"><span class="swatch fill-solid"></span>Hypersim</span>
-          <span class="lg-item"><span class="swatch fill-hash"></span>DIODE</span>
-        </div>
-      </div>
-      <div class="chart-card">
-        <h4>Peak k-NN overlap</h4>
-        <div class="chart-holder"><canvas id="chart-knn-peak"></canvas></div>
         <div class="chart-legend">
           <span class="lg-item"><span class="swatch fill-solid"></span>Hypersim</span>
           <span class="lg-item"><span class="swatch fill-hash"></span>DIODE</span>
@@ -3985,29 +3990,28 @@
           <span class="lg-item"><span class="swatch fill-hash"></span>DIODE</span>
         </div>
       </div>
-    </div>
-
-    <h3 id="joint-processing" style="margin-top:42px"><span class="sub-num">4.5</span>Joint processing &mdash; does feeding modalities together close the gap?</h3>
-
-    <p>Joint processing &mdash; feeding both modalities together in a single forward pass &mdash; meaningfully increases cross-modality similarity compared to separate passes. The gap is largest for <b>RGB ↔ Normals</b> (CKA <span class="mono">+0.31</span> on Hypersim, <span class="mono">+0.16</span> on DIODE) and <b>RGB ↔ Depth</b> (<span class="mono">+0.12</span> on Hypersim, <span class="mono">+0.09</span> on DIODE). By contrast, self-vs-joint similarity stays close to 1 for RGB-involving combinations (CKA ≈ 0.999–1.000) but drops to ≈0.7–0.85 for some Depth/Normals slices in deep layers (§4.6) &mdash; the encoder integrates partner information without disrupting RGB representations, while geometric modalities are more perturbed.</p>
-
-    <div class="stat-row">
-      <div class="stat-cell">
-        <div class="stat-k">Self-vs-joint CKA</div>
-        <div class="stat-v">≈ 1.0 <span style="font-size:0.65em;opacity:0.75">(RGB pairs)</span></div>
-        <div class="stat-note">Modality fed alone vs. with a partner — solo representation preserved for RGB-involving pairs (0.999–1.000); Depth/Normals slices drop to ≈0.7–0.85 in deep layers.</div>
-      </div>
-      <div class="stat-cell stat-rgb">
-        <div class="stat-k">Largest gap closure</div>
-        <div class="stat-v" style="color:var(--c-rgb)">+0.31</div>
-        <div class="stat-note">RGB ↔ Normals on Hypersim — joint processing more than doubles the cross-modality CKA (0.20 → 0.51).</div>
-      </div>
-      <div class="stat-cell stat-depth">
-        <div class="stat-k">Smallest gap closure</div>
-        <div class="stat-v" style="color:var(--c-depth)">+0.08</div>
-        <div class="stat-note">Depth ↔ Normals on DIODE — already-aligned geometric modalities have less ground to gain.</div>
+      <div class="chart-card">
+        <h4>Peak k-NN overlap</h4>
+        <div class="chart-holder"><canvas id="chart-knn-peak"></canvas></div>
+        <div class="chart-legend">
+          <span class="lg-item"><span class="swatch fill-solid"></span>Hypersim</span>
+          <span class="lg-item"><span class="swatch fill-hash"></span>DIODE</span>
+        </div>
       </div>
     </div>
+
+    <h3 id="results-rq-c" style="margin-top:42px"><span class="sub-num">4.3</span>Joint processing &amp; modality imprint</h3>
+
+    <div class="rq1-question">
+      <span class="rq1-question-label">Sub-question (c)</span>
+      <p>Does processing two modalities <em>jointly</em> (in one forward pass) further amplify cross-modal alignment, and does it leave any measurable imprint on each modality's solo representation?</p>
+    </div>
+
+    <p class="results-rq-lead">We address this in two steps: <b>joint-vs-joint</b> cross-modality similarity vs. separate passes (<a href="#joint-processing">below</a>), then <b>self-vs-joint</b> imprint on each modality's slice (<a href="#modality-imprint">below</a>) — both regimes defined in <a href="#method-passes">§3.3</a>.</p>
+
+    <h4 id="joint-processing" class="results-sub">Joint vs separate passes &mdash; does feeding modalities together close the gap?</h4>
+
+    <p>Using the same CKA, PWCCA, and k-NN metrics as above, we compare cross-modality similarity when both modalities share a single forward pass (<b>joint</b>) against the separate-pass baseline from §4.2.1. <b>Joint-vs-joint</b> similarity measures how aligned the two modality slices are inside one pass; the shaded gap between joint and separate curves quantifies how much co-processing buys over independent passes.</p>
 
     <p class="rq1-pre-findings-lede">Two patterns dominate the joint-vs-separate picture below:</p>
     <div class="rq1-pre-findings">
@@ -4104,7 +4108,7 @@
     <!-- Gap closure chart -->
     <div class="gap-chart">
       <div class="gc-head">
-        <h4>Cross-modality → joint-vs-joint &nbsp;·&nbsp; CKA gap closure</h4>
+        <h4>CKA gain: joint minus separate passes (peak per pair)</h4>
         <div class="sub">○ separate-pass peak &nbsp; ● shared-pass peak</div>
       </div>
       <div class="gap-axis" aria-hidden="true">
@@ -4224,11 +4228,49 @@
     </table>
     <div class="figcap" style="margin-top:8px"><b>Table 2.</b> Joint-vs-joint peak CKA across L0–L11, per pair × dataset.</div>
 
-    <!-- ========== 6.3 — Modality imprint under joint processing ========== -->
-    <h3 id="modality-imprint" style="margin-top:42px"><span class="sub-num">4.6</span>Does the partner leave an imprint?</h3>
+    <p style="margin-top:24px">Joint processing meaningfully increases cross-modality similarity compared to separate passes. The gap is largest for <b>RGB ↔ Normals</b> (CKA <span class="mono">+0.31</span> on Hypersim, <span class="mono">+0.16</span> on DIODE) and <b>RGB ↔ Depth</b> (<span class="mono">+0.12</span> on Hypersim, <span class="mono">+0.09</span> on DIODE). The gain concentrates in deep layers, where cross-modal attention has accumulated.</p>
+
+    <div class="stat-row">
+      <div class="stat-cell stat-rgb">
+        <div class="stat-k">Largest gap closure</div>
+        <div class="stat-v" style="color:var(--c-rgb)">+0.31</div>
+        <div class="stat-note">RGB ↔ Normals on Hypersim — joint processing more than doubles the cross-modality CKA (0.20 → 0.51).</div>
+      </div>
+      <div class="stat-cell stat-depth">
+        <div class="stat-k">Smallest gap closure</div>
+        <div class="stat-v" style="color:var(--c-depth)">+0.08</div>
+        <div class="stat-note">Depth ↔ Normals on DIODE — already-aligned geometric modalities have less ground to gain.</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-k">Deep-layer phenomenon</div>
+        <div class="stat-v">L6+</div>
+        <div class="stat-note">Shaded joint-vs-separate gaps are narrow at L0–L4 and widen sharply from L6 onward across all pairs.</div>
+      </div>
+    </div>
+
+    <!-- ========== 4.3.2 — Modality imprint under joint processing ========== -->
+    <h4 id="modality-imprint" class="results-sub">Does the partner leave an imprint?</h4>
     <p>
-      Joint processing is only interesting if the encoder actually <em>uses</em> the partner. Here we compare each modality's representation when processed alone against its representation when processed jointly with a partner. <b>A value near 1 means the partner was effectively ignored; a value well below 1 means the partner left a detectable imprint on the modality's representation.</b> Each chart's title reads as X<sub>y</sub>: modality X alone versus X when bundled with y.
+      Joint processing is only interesting if the encoder actually <em>uses</em> the partner. Under the <b>self-vs-joint</b> regime (<a href="#method-passes">§3.3</a>), we compare each modality's representation when processed alone against its representation when processed jointly with a partner. <b>A value near 1 means the partner was effectively ignored; a value well below 1 means the partner left a detectable imprint on the modality's representation.</b> Each chart's title reads as X<sub>y</sub>: modality X alone versus X when bundled with y.
     </p>
+
+    <p class="rq1-pre-findings-lede">Two patterns dominate the self-vs-joint picture below:</p>
+    <div class="rq1-pre-findings">
+      <article class="rq1-pre-finding">
+        <div class="rq1-pre-finding-num">01</div>
+        <div class="rq1-pre-finding-body">
+          <h5 class="rq1-pre-finding-title">RGB-involving pairs stay near identity</h5>
+          <p class="rq1-pre-finding-claim">When RGB is fed alone vs. jointly with a partner, self-vs-joint CKA stays at 0.999–1.000 across layers — the encoder integrates partner information without disrupting RGB's solo slice.</p>
+        </div>
+      </article>
+      <article class="rq1-pre-finding">
+        <div class="rq1-pre-finding-num">02</div>
+        <div class="rq1-pre-finding-body">
+          <h5 class="rq1-pre-finding-title">Depth and Normals show measurable imprint in deep layers</h5>
+          <p class="rq1-pre-finding-claim">For some Depth/Normals self-vs-joint curves, CKA drops to ≈0.7–0.85 in deep layers — geometric modalities are more perturbed by a partner than RGB is.</p>
+        </div>
+      </article>
+    </div>
 
     <div class="imprint-toolbar">
       <label class="imprint-ctrl">
@@ -4283,10 +4325,23 @@
       Each curve is the layer-wise similarity (selected metric) between the modality fed alone and the same modality slice from a joint forward pass. The horizontal dotted reference at <span class="mono">1.0</span> marks "partner ignored"; deviation downward marks "imprint".
     </p>
 
-    <!-- ========== 4.7 — Cross-modal unification (transmodal triangulation) ========== -->
-    <h3 id="rq2-triangulation" style="margin-top:42px"><span class="sub-num">4.7</span>Cross-modal unification &mdash; transmodal triangulation</h3>
+    <div class="aside" style="margin-top:12px">
+      <span class="label">Linking joint gap and imprint</span>
+      <p style="margin-bottom:0">The joint-vs-separate gain in §4.3.1 shows that co-processing improves <em>cross-modality</em> alignment between slices. The imprint curves here ask a complementary question: does the partner also change each modality's <em>solo</em> slice? For RGB the answer is largely no; for Depth and Normals, deep-layer deviation below 1.0 confirms a measurable partner effect on the focal representation itself.</p>
+    </div>
 
-    <p>This subsection addresses sub-question <em>d</em> from the introduction: how <em>complete</em> the cross-modal convergence is, by putting a number on the fraction of the cross-modal geometric structure that remains linearly inaccessible from a modality's representation after optimal linear projection through a third one.</p>
+    <p style="margin-top:16px">Together, §4.3.1 and §4.3.2 answer sub-question (c): joint processing amplifies cross-modal similarity (especially for RGB ↔ Normals), and the partner's influence shows up both in relative joint-vs-joint geometry and, for geometric modalities, in a shift of the focal slice away from its solo-pass representation.</p>
+
+    <h3 id="results-rq-d" style="margin-top:42px"><span class="sub-num">4.4</span>Cross-modal completeness</h3>
+
+    <div class="rq1-question">
+      <span class="rq1-question-label">Sub-question (d)</span>
+      <p>How <em>complete</em> is the convergence? Specifically, what fraction of the cross-modal geometric structure remains linearly inaccessible from a modality's representation after optimal linear projection, and does this residual fragmentation differ across pairs and layers?</p>
+    </div>
+
+    <p class="results-rq-lead">We quantify this via transmodal triangulation: shared cross-modal structure counts as unified only if it is linearly recoverable through a third modality's representation (<a href="#method-triangulation">§3.7</a>).</p>
+
+    <h4 id="rq2-triangulation" class="results-sub">Transmodal triangulation</h4>
 
     <p>For each directed triplet of modalities <span class="mono">(A, B, C)</span> &mdash; with <span class="mono">A</span> the <em>target</em>, <span class="mono">B</span> the <em>projected</em> modality (whose column span is used to project <span class="mono">A</span>), and <span class="mono">C</span> the <em>witness</em> &mdash; we compute a <b>CKA fragmentation score</b> <span class="mono">frag(A, B&nbsp;|&nbsp;C)</span>: the fraction of the cross-modal linear structure carried by <span class="mono">A</span> and observed through <span class="mono">C</span> that <em>cannot</em> be recovered from <span class="mono">B</span> alone. A score of 0 means <span class="mono">B</span> linearly captures everything that <span class="mono">A</span> shares with witness <span class="mono">C</span> (<span class="mono">A</span> and <span class="mono">B</span> are interchangeable predictors of <span class="mono">C</span>); a score of 1 means <span class="mono">B</span> is irrelevant to the <span class="mono">A&ndash;C</span> alignment. We report the score symmetrised across the two projection directions for a given pair <span class="mono">(A, B)</span> &mdash; namely <span class="mono">frag(A, B&nbsp;|&nbsp;C)</span> and <span class="mono">frag(B, A&nbsp;|&nbsp;C)</span>, with the witness <span class="mono">C</span> held fixed &mdash; and test it against a 1 000-permutation null (BH-FDR corrected).</p>
 
@@ -4368,10 +4423,10 @@
 
     <p>In aggregate, at the final encoder layer ≈<b>86.5%</b> of the measured cross-modal structure is linearly unified under triangulation (mean across the three triplets above). The remaining residual fragmentation is small but statistically significant for every triplet at every layer (BH-FDR <span class="mono">p &lt; 0.001</span>, 1 000 permutation draws) and never vanishes: the encoder does not achieve zero fragmentation under this metric at any layer, indicating that some cross-modal structure remains linearly inaccessible from any given modality's span even at the trunk's deepest layer.</p>
 
-    <h4 id="rq2-sanity-checks" style="margin-top:40px;margin-bottom:10px;font-family:'Inter',sans-serif;font-size:14.5px;font-weight:600;letter-spacing:0.02em">Sanity checks</h4>
+    <h4 id="rq2-sanity-checks" class="results-sub">Sanity checks</h4>
     <p>Four built-in controls validate that the metric behaves as expected. <em>Self-projection</em>: <span class="mono">frag(A, A&nbsp;|&nbsp;C)&nbsp;=&nbsp;1.7&nbsp;&middot;&nbsp;10<sup>&minus;6</sup></span> for <span class="mono">A = B = RGB</span> &mdash; zero up to the ridge floor, as expected when a modality is regressed onto itself. <em>Random-noise control</em>: replacing <span class="mono">A</span> by Gaussian noise of the same shape gives <span class="mono">frag<sub>global</sub>(noise, B)&nbsp;=&nbsp;0.81</span> (global OLS residual norm, no witness) &mdash; high and close to 1 as expected when <span class="mono">A</span> is unrelated to <span class="mono">B</span>, confirming that the ridge-regularised projection does not spuriously reduce the residual for unstructured inputs. <em>Permutation-null mean</em> across all triplets is <span class="mono">&asymp;&nbsp;0.98</span>: a randomly shuffled target <span class="mono">A</span> leaves the <span class="mono">B&ndash;C</span> structure essentially intact, again as expected. <em>Directional spread</em>: for the pair <span class="mono">(A, B) = (RGB, Depth)</span> with witness <span class="mono">C = Normals</span>, the standard deviation of the directional difference is <span class="mono">std(&Delta;) = 0.08</span>, indicating that the asymmetry between the two projection directions is real and not a numerical artefact.</p>
 
-    <h4 id="rq2-linear-caveat" style="margin-top:32px;margin-bottom:10px;font-family:'Inter',sans-serif;font-size:14.5px;font-weight:600;letter-spacing:0.02em">Linear-probing caveat</h4>
+    <h4 id="rq2-linear-caveat" class="results-sub">Linear-probing caveat</h4>
     <p>All projections in this subsection are <em>linear</em> (ridge-regularised OLS). Cross-modal structure that lives on a non-linear sub-manifold of the target modality <span class="mono">A</span> is invisible to OLS and inflates the residual. A second source of inflation is structural: some of the <span class="mono">A&ndash;C</span> shared structure may be fundamentally absent from <span class="mono">B</span>'s modality (e.g. absolute surface scale shared between Depth and Normals is not recoverable from RGB pixels regardless of what the encoder does), contributing positively to <span class="mono">frag</span> independently of encoder quality. The reported fragmentation scores therefore cannot distinguish encoder alignment failure from modality-intrinsic non-representability. They should be read as <em>upper bounds under linear probing</em>, and the unification percentages as <em>lower bounds</em> on the true geometric overlap. A non-linear probe (e.g. a small MLP) would likely shrink the residuals further, but linearity is the standard convention for representation-similarity work and is what makes CKA, PWCCA, and OLS residuals directly comparable here.</p>
   </section>
 
@@ -4380,15 +4435,15 @@
     <h2><span class="num">05</span>Discussion &amp; Conclusion</h2>
     <div class="section-rule"></div>
 
-    <p>Three complementary measurement layers point in the same direction. <em>Similarity metrics</em> (§4.4) show that CKA, PWCCA, and k-NN overlap rise monotonically with encoder depth and remain significantly above the permutation null at every deep layer, across all three pairs and both datasets. <em>Activation geometry</em> (§4.1–4.3) shows that this rise happens <em>without</em> the modality clouds ever merging in space — the per-modality clouds stay separated at every layer while their internal scene-level organisation becomes increasingly congruent across modalities. <em>Transmodal triangulation</em> (§4.7) puts a number on what fraction of the cross-modal geometric structure is linearly unified at the deepest layer.</p>
+    <p>Four result subsections aligned with §1.2 point in the same direction. <em>Activation geometry</em> (<a href="#results-rq-a">§4.1</a>) shows modality clouds stay separated while internal scene-level organisation becomes increasingly congruent. <em>Paired-scene similarity</em> (<a href="#results-rq-b">§4.2</a>) shows CKA, PWCCA, and k-NN overlap rise strongly with encoder depth and sit significantly above the permutation null at deep layers. <em>Joint processing</em> (<a href="#results-rq-c">§4.3</a>) further amplifies cross-modality alignment without collapsing modality-specific subspaces. <em>Transmodal triangulation</em> (<a href="#results-rq-d">§4.4</a>) puts a number on what fraction of cross-modal structure is linearly unified at the deepest layer.</p>
 
     <h3 style="margin-top:24px">Key takeaways</h3>
     <ul class="clean">
-      <li><b>Progressive cross-modal alignment, not spatial collapse.</b> Paired-scene similarity grows with depth, but the modality clouds remain separated at every layer (§4.1) and the per-sample paired distances decrease without ever closing to zero (§4.2). 4M converges modalities toward congruent internal geometries rather than a single shared region of latent space.</li>
+      <li><b>Progressive cross-modal alignment, not spatial collapse.</b> Paired-scene similarity grows with depth, but the modality clouds remain separated at every layer (<a href="#results-rq-a">§4.1</a>) and the per-sample paired distances decrease without ever closing to zero (<a href="#exploration-distance">§4.1.2</a>). 4M converges modalities toward congruent internal geometries rather than a single shared region of latent space.</li>
       <li><b>RGB acts as a geometric hub.</b> RGB-involving pairs (Depth–RGB, Normals–RGB) unify the most strongly under triangulation (≈91% and ≈87% at layer 11), while Depth–Normals barely moves across layers (frag. only drops from ≈23% to ≈19%). This asymmetry is consistent with RGB providing a common coordinate system that Depth and Normals each get mapped into.</li>
       <li><b>Joint processing amplifies cross-modal similarity at the slice level.</b> When two modalities share a single forward pass, the cross-modality similarity between their two slices (joint-vs-joint) is higher than between two separate passes, particularly for the harder pairs (RGB ↔ Normals: +0.31 on Hypersim, +0.16 on DIODE). The gain is largest in deeper layers, where cross-modal attention has accumulated.</li>
-      <li><b>Self-vs-joint similarity stays near identity (CKA ≈ 1.0) for RGB-involving combinations</b>, but drops to ≈0.7–0.85 for some Depth/Normals slices in deep layers (§4.6). The addition of an RGB partner barely perturbs a modality's own representation, while geometric modalities are more perturbed — the partner's effect manifests in both the <em>relative</em> joint-vs-joint geometry and, for Depth/Normals, a measurable shift of the focal slice itself.</li>
-      <li><b>DIODE values are systematically higher than Hypersim values</b> for the same pair × metric in 7 of 9 conditions. This is likely a dataset-character effect (DIODE has lower visual diversity than Hypersim's 100 scenes across 17 categories); both datasets nonetheless yield the same monotonic depth-trend, so the qualitative finding does not depend on synthetic vs. real data.</li>
+      <li><b>Self-vs-joint similarity stays near identity (CKA ≈ 1.0) for RGB-involving combinations</b>, but drops to ≈0.7–0.85 for some Depth/Normals slices in deep layers (<a href="#modality-imprint">§4.3.2</a>). The addition of an RGB partner barely perturbs a modality's own representation, while geometric modalities are more perturbed — the partner's effect manifests in both the <em>relative</em> joint-vs-joint geometry and, for Depth/Normals, a measurable shift of the focal slice itself.</li>
+      <li><b>DIODE values are systematically higher than Hypersim values</b> for the same pair × metric in 7 of 9 conditions. This is likely a dataset-character effect (DIODE has lower visual diversity than Hypersim's 100 scenes across 17 categories); both datasets nonetheless yield the same depth-trend toward stronger alignment, so the qualitative finding does not depend on synthetic vs. real data.</li>
     </ul>
 
     <h3 id="conclusion" style="margin-top:32px">Conclusion</h3>
@@ -4399,7 +4454,7 @@
     <p><b>Segmentation modality excluded.</b> The only publicly released semseg tokenizer (<span class="mono">tok_semseg</span>) was trained on COCO-Stuff (134 classes), incompatible with Hypersim's NYU-40 label set. A Hypersim-specific tokenizer would be needed to include this modality.</p>
     <p><b>Null distribution assumptions.</b> The permutation null pairs activations from mismatched scenes of different categories but preserves within-modality statistics. If scene-level content is not the primary source of cross-modal correlation, the null may be conservative and z-scores inflated.</p>
     <p><b>Geometric, not functional similarity.</b> CKA, PWCCA, and k-NN overlap measure statistical and geometric similarity. High similarity does not imply that the encoder <em>uses</em> the shared representation interchangeably for downstream tasks. Cross-modal decoding probes (e.g. RGB → Depth vs. Depth → Depth reconstruction) and residual-correlation analyses would be needed to test functional compatibility; these were sketched in the proposal but left as future work.</p>
-    <p><b>Training exposure confound.</b> RGB inputs are far more frequent than depth or normals during 4M training, which may itself explain RGB's apparent role as a geometric hub (§4.7). Disentangling architectural bias from training-frequency bias would require either retraining 4M with balanced modality exposure or a controlled exposure-frequency ablation.</p>
+    <p><b>Training exposure confound.</b> RGB inputs are far more frequent than depth or normals during 4M training, which may itself explain RGB's apparent role as a geometric hub (<a href="#results-rq-d">§4.4</a>). Disentangling architectural bias from training-frequency bias would require either retraining 4M with balanced modality exposure or a controlled exposure-frequency ablation.</p>
   </section>
 
   <!-- ========== REFERENCES ========== -->
@@ -4943,7 +4998,7 @@
 })();
 
 /* =========================================================
-   §4.6 — Modality imprint under joint processing. Six tiny
+   §4.3.2 — Modality imprint under joint processing. Six tiny
    line charts (one per modality × partner) showing per-layer
    self-vs-joint similarity. A horizontal "partner ignored"
    reference is drawn at y=1.
@@ -5110,7 +5165,7 @@
 })();
 
 /* =========================================================
-   §4.4 — Layer-wise cross-modality similarity. 3×3 small-multiples
+   §4.2.1 — Layer-wise cross-modality similarity. 3×3 small-multiples
    grid (rows = metrics CKA / PWCCA / k-NN, cols = modality pairs).
    Each cell overlays Hypersim (solid + circles) and DIODE (dashed
    + squares) in the metric color, with grey null ±2σ bands behind.
@@ -5300,7 +5355,7 @@
 })();
 
 /* =========================================================
-   §4.5 — Layer-wise joint vs separate passes. 3×3 small-multiples
+   §4.3.1 — Layer-wise joint vs separate passes. 3×3 small-multiples
    (rows = metrics, cols = pairs). Each cell shows 4 curves
    (Hyp/DIODE × joint/separate) with shaded fills marking the gap.
    ========================================================= */
@@ -5443,7 +5498,7 @@
 })();
 
 /* =========================================================
-   §4.7 — RQ2 interactive fragmentation chart.
+   §4.4.1 — RQ2 interactive fragmentation chart.
    Single Plotly cell with 3 overlaid pair curves, shaded
    95% CI bands, hover tooltips, and L11 unification annotations.
    Data source: website/assets/metrics/rq2.json (built by
