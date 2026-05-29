@@ -6,7 +6,7 @@ Project page (source of truth for results and figures):
 <https://arthur-mrgt.github.io/one-trunk-or-many/>
 
 EPFL CS-503 *Visual Intelligence*, Spring 2026 —
-Martina Gatti, Albert Fares, Adrien Clement, Arthur Margeat.
+Arthur Margeat, Adrien Clement, Martina Gatti, Albert Fares.
 
 ---
 
