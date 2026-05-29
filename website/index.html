@@ -4047,7 +4047,7 @@
         <div class="rq1-pre-finding-num">01</div>
         <div class="rq1-pre-finding-body">
           <h5 class="rq1-pre-finding-title">Joint-pass similarity is uniformly higher than separate-pass similarity</h5>
-          <p class="rq1-pre-finding-claim">In every (metric × pair × dataset) cell, the solid (joint) curve sits above the dashed (separate) one. The shaded gap area is always positive — the encoder consistently makes better use of a partner modality when it can see both at once.</p>
+          <p class="rq1-pre-finding-claim">In every (metric × pair × dataset) cell, the solid (joint) curve sits above the dashed (separate) one. The shaded gap area is always positive &mdash; cross-modality similarity is consistently higher in the joint-pass regime than in the separate-pass baseline across every (metric × pair × dataset) cell.</p>
         </div>
       </article>
       <article class="rq1-pre-finding">
@@ -4228,7 +4228,7 @@
       </div>
     </div>
 
-    <p style="margin-top:24px">Joint processing meaningfully increases cross-modality similarity compared to separate passes. The gap is largest for <b>RGB ↔ Normals</b> (CKA <span class="mono">+0.31</span> on Hypersim, <span class="mono">+0.16</span> on DIODE) and <b>RGB ↔ Depth</b> (<span class="mono">+0.12</span> on Hypersim, <span class="mono">+0.09</span> on DIODE). The gain concentrates in deep layers, where cross-modal attention has accumulated.</p>
+    <p style="margin-top:24px">Joint processing meaningfully increases cross-modality similarity compared to separate passes. The gap is largest for <b>RGB ↔ Normals</b> (CKA <span class="mono">+0.31</span> on Hypersim, <span class="mono">+0.16</span> on DIODE) and <b>RGB ↔ Depth</b> (<span class="mono">+0.12</span> on Hypersim, <span class="mono">+0.09</span> on DIODE). The gain concentrates in deep layers, consistent with cross-modal interactions building up across successive attention blocks.</p>
 
     <div class="stat-row">
       <div class="stat-cell stat-rgb">
@@ -4260,7 +4260,7 @@
         <div class="rq1-pre-finding-num">01</div>
         <div class="rq1-pre-finding-body">
           <h5 class="rq1-pre-finding-title">RGB-involving pairs stay near identity</h5>
-          <p class="rq1-pre-finding-claim">When RGB is fed alone vs. jointly with a partner, self-vs-joint CKA stays at 0.999–1.000 across layers — the encoder integrates partner information without disrupting RGB's solo slice.</p>
+          <p class="rq1-pre-finding-claim">When RGB is fed alone vs. jointly with a partner, RGB's solo representation is barely perturbed by the addition of a partner modality (self-vs-joint CKA &asymp; 0.999&ndash;1.000 across layers).</p>
         </div>
       </article>
       <article class="rq1-pre-finding">
@@ -4327,7 +4327,7 @@
 
     <div class="aside" style="margin-top:12px">
       <span class="label">Linking joint gap and imprint</span>
-      <p style="margin-bottom:0">The joint-vs-separate gain in §4.3.1 shows that co-processing improves <em>cross-modality</em> alignment between slices. The imprint curves here ask a complementary question: does the partner also change each modality's <em>solo</em> slice? For RGB the answer is largely no; for Depth and Normals, deep-layer deviation below 1.0 confirms a measurable partner effect on the focal representation itself.</p>
+      <p style="margin-bottom:0">The joint-vs-separate gain in §4.3.1 shows that co-processing improves <em>cross-modality</em> alignment between slices. The imprint curves here ask a complementary question: does the partner also change each modality's <em>solo</em> slice? For RGB the answer is largely no; for Depth and Normals, deep-layer deviation below 1.0 indicates a measurable partner effect on the focal representation itself. Whether this shift reflects the encoder incorporating useful cross-modal information or simply a perturbation of the focal representation cannot be determined from this metric alone.</p>
     </div>
 
     <p style="margin-top:16px">Together, §4.3.1 and §4.3.2 answer sub-question (c): joint processing amplifies cross-modal similarity (especially for RGB ↔ Normals), and the partner's influence shows up both in relative joint-vs-joint geometry and, for geometric modalities, in a shift of the focal slice away from its solo-pass representation.</p>
@@ -4345,12 +4345,7 @@
 
     <p>For each directed triplet of modalities <span class="mono">(A, B, C)</span> &mdash; with <span class="mono">A</span> the <em>target</em>, <span class="mono">B</span> the <em>projected</em> modality (whose column span is used to project <span class="mono">A</span>), and <span class="mono">C</span> the <em>witness</em> &mdash; we compute a <b>CKA fragmentation score</b> <span class="mono">frag(A, B&nbsp;|&nbsp;C)</span>: the fraction of the cross-modal linear structure carried by <span class="mono">A</span> and observed through <span class="mono">C</span> that <em>cannot</em> be recovered from <span class="mono">B</span> alone. A score of 0 means <span class="mono">B</span> linearly captures everything that <span class="mono">A</span> shares with witness <span class="mono">C</span> (<span class="mono">A</span> and <span class="mono">B</span> are interchangeable predictors of <span class="mono">C</span>); a score of 1 means <span class="mono">B</span> is irrelevant to the <span class="mono">A&ndash;C</span> alignment. We report the score symmetrised across the two projection directions for a given pair <span class="mono">(A, B)</span> &mdash; namely <span class="mono">frag(A, B&nbsp;|&nbsp;C)</span> and <span class="mono">frag(B, A&nbsp;|&nbsp;C)</span>, with the witness <span class="mono">C</span> held fixed &mdash; and test it against a 1 000-permutation null (BH-FDR corrected).</p>
 
-    <p>From the three modalities <span class="mono">{RGB, Depth, Normals}</span>, three triplets are possible, each defined by a pair <span class="mono">(A, B)</span> and its witness <span class="mono">C</span>:</p>
-    <ul class="clean">
-      <li>pair <span class="mono">(A, B) = (Depth, RGB)</span> with witness <span class="mono">C = Normals</span>;</li>
-      <li>pair <span class="mono">(A, B) = (Normals, RGB)</span> with witness <span class="mono">C = Depth</span>;</li>
-      <li>pair <span class="mono">(A, B) = (Depth, Normals)</span> with witness <span class="mono">C = RGB</span>.</li>
-    </ul>
+    <p>The three resulting triplets and their layer-11 results are shown in <a href="#rq2-l11-table">Table 3</a>.</p>
 
     <div class="rq2-chart-panel" id="rq2-frag-panel">
       <div class="rq2-chart-title">Layer-wise CKA fragmentation per pair (A,&nbsp;B), witness C fixed</div>
@@ -4379,7 +4374,7 @@
 
     <p>Lower curves mean more of the <span class="mono">A&ndash;C</span> linear structure is recoverable through <span class="mono">B</span> &mdash; i.e. greater cross-modal unification via triangulation through <span class="mono">B</span>. All three curves drop monotonically with encoder depth, and at every layer the score is significantly below the 1 000-permutation null (BH-FDR <span class="mono">p &lt; 0.001</span>). The decrease is, however, not uniform across the three triplets: for the pair <span class="mono">(A, B) = (Depth, RGB)</span> with witness <span class="mono">C = Normals</span>, fragmentation falls from ≈0.36 at layer 0 to ≈0.086 at layer 11 (~27 percentage-point drop); for the pair <span class="mono">(A, B) = (Normals, RGB)</span> with witness <span class="mono">C = Depth</span>, it falls similarly, ending at ≈0.125. By contrast, for the pair <span class="mono">(A, B) = (Depth, Normals)</span> with witness <span class="mono">C = RGB</span>, fragmentation barely moves: from ≈0.23 at layer 0 to ≈0.19 at layer 11 (~3 percentage points only).</p>
 
-    <table class="restable peaks" aria-label="Final-layer (L11) fragmentation per pair (A, B)" style="margin-top:32px">
+    <table id="rq2-l11-table" class="restable peaks" aria-label="Final-layer (L11) fragmentation per pair (A, B)" style="margin-top:32px">
       <thead>
         <tr>
           <th>Pair (A, B)</th>
@@ -4419,12 +4414,12 @@
     </table>
     <div class="figcap" style="margin-top:10px;margin-bottom:24px"><b>Table 2.</b> Layer-11 CKA fragmentation per triplet, symmetrised over the two directions <span class="mono">frag(A, B&nbsp;|&nbsp;C)</span> / <span class="mono">frag(B, A&nbsp;|&nbsp;C)</span> (shown in <span class="mono">Direction range</span>).</div>
 
-    <p>The asymmetry across the three rows is the central observation. The two triplets whose witness <span class="mono">C</span> is a geometric modality &mdash; <span class="mono">C = Normals</span> for the pair <span class="mono">(Depth, RGB)</span>, and <span class="mono">C = Depth</span> for the pair <span class="mono">(Normals, RGB)</span> &mdash; end at <b>91%</b> and <b>87%</b> linear unification respectively. The remaining triplet, whose witness is <span class="mono">C = RGB</span> (pair <span class="mono">(Depth, Normals)</span>), ends at only <b>81%</b>. Equivalently, Depth and Normals each align to RGB closely enough that one can substitute for the other in predicting the third modality, but they are <em>not</em> interchangeable predictors of RGB itself. This is consistent with RGB acting as a geometric hub: Depth and Normals each converge to RGB, rather than directly to each other.</p>
+    <p>The asymmetry across the three rows is the central observation. The two triplets whose witness <span class="mono">C</span> is a geometric modality &mdash; <span class="mono">C = Normals</span> for the pair <span class="mono">(Depth, RGB)</span>, and <span class="mono">C = Depth</span> for the pair <span class="mono">(Normals, RGB)</span> &mdash; end at <b>91%</b> and <b>87%</b> linear unification respectively. The remaining triplet, whose witness is <span class="mono">C = RGB</span> (pair <span class="mono">(Depth, Normals)</span>), ends at only <b>81%</b>. This is consistent with RGB acting as a geometric hub: Depth and Normals each converge to RGB, rather than directly to each other.</p>
 
     <p>In aggregate, at the final encoder layer ≈<b>86.5%</b> of the measured cross-modal structure is linearly unified under triangulation (mean across the three triplets above). The remaining residual fragmentation is small but statistically significant for every triplet at every layer (BH-FDR <span class="mono">p &lt; 0.001</span>, 1 000 permutation draws) and never vanishes: the encoder does not achieve zero fragmentation under this metric at any layer, indicating that some cross-modal structure remains linearly inaccessible from any given modality's span even at the trunk's deepest layer.</p>
 
     <h4 id="rq2-sanity-checks" class="results-sub">Sanity checks</h4>
-    <p>Four built-in controls validate that the metric behaves as expected. <em>Self-projection</em>: <span class="mono">frag(A, A&nbsp;|&nbsp;C)&nbsp;=&nbsp;1.7&nbsp;&middot;&nbsp;10<sup>&minus;6</sup></span> for <span class="mono">A = B = RGB</span> &mdash; zero up to the ridge floor, as expected when a modality is regressed onto itself. <em>Random-noise control</em>: replacing <span class="mono">A</span> by Gaussian noise of the same shape gives <span class="mono">frag<sub>global</sub>(noise, B)&nbsp;=&nbsp;0.81</span> (global OLS residual norm, no witness) &mdash; high and close to 1 as expected when <span class="mono">A</span> is unrelated to <span class="mono">B</span>, confirming that the ridge-regularised projection does not spuriously reduce the residual for unstructured inputs. <em>Permutation-null mean</em> across all triplets is <span class="mono">&asymp;&nbsp;0.98</span>: a randomly shuffled target <span class="mono">A</span> leaves the <span class="mono">B&ndash;C</span> structure essentially intact, again as expected. <em>Directional spread</em>: for the pair <span class="mono">(A, B) = (RGB, Depth)</span> with witness <span class="mono">C = Normals</span>, the standard deviation of the directional difference is <span class="mono">std(&Delta;) = 0.08</span>, indicating that the asymmetry between the two projection directions is real and not a numerical artefact.</p>
+    <p>Four controls validate the metric. Self-projection gives <span class="mono">frag &asymp; 0</span> (<span class="mono">1.7&nbsp;&middot;&nbsp;10<sup>&minus;6</sup></span> for RGB), confirming the ridge floor. A random-noise target gives <span class="mono">frag<sub>global</sub>&nbsp;=&nbsp;0.81</span>, showing the projection does not spuriously reduce unstructured residuals. The permutation-null mean is <span class="mono">&asymp;&nbsp;0.98</span>, meaning a shuffled target leaves <span class="mono">B&ndash;C</span> structure intact. Directional spread (<span class="mono">std(&Delta;)&nbsp;=&nbsp;0.08</span> for the RGB&ndash;Depth triplet) confirms that the asymmetry between projection directions is real.</p>
 
     <h4 id="rq2-linear-caveat" class="results-sub">Linear-probing caveat</h4>
     <p>All projections in this subsection are <em>linear</em> (ridge-regularised OLS). Cross-modal structure that lives on a non-linear sub-manifold of the target modality <span class="mono">A</span> is invisible to OLS and inflates the residual. A second source of inflation is structural: some of the <span class="mono">A&ndash;C</span> shared structure may be fundamentally absent from <span class="mono">B</span>'s modality (e.g. absolute surface scale shared between Depth and Normals is not recoverable from RGB pixels regardless of what the encoder does), contributing positively to <span class="mono">frag</span> independently of encoder quality. The reported fragmentation scores therefore cannot distinguish encoder alignment failure from modality-intrinsic non-representability. They should be read as <em>upper bounds under linear probing</em>, and the unification percentages as <em>lower bounds</em> on the true geometric overlap. A non-linear probe (e.g. a small MLP) would likely shrink the residuals further, but linearity is the standard convention for representation-similarity work and is what makes CKA, PWCCA, and OLS residuals directly comparable here.</p>
