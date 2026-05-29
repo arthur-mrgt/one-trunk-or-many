@@ -2012,6 +2012,347 @@
     color: var(--ink);
     font-style: italic;
   }
+
+  /* ---------- §1.1 Perfect vs. partially unified encoder (interactive) ---------- */
+  .encoder-viz {
+    margin: 26px 0 8px;
+    padding: 22px 22px 18px;
+    background: color-mix(in oklch, var(--c-accent) 5%, #fff);
+    border: 1px solid color-mix(in oklch, var(--c-accent) 18%, #fff);
+    border-radius: 12px;
+  }
+  .encoder-viz-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 720px;
+    margin: 0 auto;
+    font-family: "Inter", sans-serif;
+  }
+
+  /* SVG palette */
+  .encoder-viz .ev-scene-img-frame {
+    fill: none;
+    stroke: #cdd2da;
+    stroke-width: 1;
+  }
+  .encoder-viz .ev-scene-label {
+    fill: #2f3e4f;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .encoder-viz .ev-encoder {
+    fill: #d9c8f1;
+    stroke: #7c5ec2;
+    stroke-width: 1.6;
+    transition: fill 200ms ease, stroke 200ms ease;
+  }
+  .encoder-viz[data-state="hidden"]  .ev-encoder { fill: #f3d4d4; stroke: #b85050; }
+  .encoder-viz[data-state="perfect"] .ev-encoder { fill: #c8e6d4; stroke: #3aa063; }
+  .encoder-viz .ev-encoder-label {
+    fill: #3a2f55;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .encoder-viz[data-state="hidden"]  .ev-encoder-label { fill: #6e2727; }
+  .encoder-viz[data-state="perfect"] .ev-encoder-label { fill: #1d5a36; }
+
+  .encoder-viz .ev-arrow-line {
+    stroke: #6b6f78;
+    stroke-width: 1.8;
+    fill: none;
+  }
+  .encoder-viz .ev-arrow-head { fill: #6b6f78; }
+  .encoder-viz .ev-arrow-head-red { fill: #c0392b; }
+
+  .encoder-viz .ev-rgb-specific {
+    fill: #bfe1f5;
+    stroke: #4ea3d2;
+    stroke-width: 1.4;
+  }
+  .encoder-viz .ev-depth-specific {
+    fill: #fde6b9;
+    stroke: #d49a2e;
+    stroke-width: 1.4;
+  }
+  .encoder-viz .ev-shared {
+    fill: #cfeacb;
+    stroke: #4caf50;
+    stroke-width: 1.4;
+    transition: x 220ms ease, width 220ms ease;
+  }
+  .encoder-viz .ev-unalign-left,
+  .encoder-viz .ev-unalign-right {
+    fill: #f9c9c4;
+    stroke: #c0392b;
+    stroke-width: 1.4;
+    transition: x 220ms ease, width 220ms ease, opacity 220ms ease;
+  }
+  .encoder-viz[data-state="perfect"] .ev-unalign-left,
+  .encoder-viz[data-state="perfect"] .ev-unalign-right { opacity: 0; }
+
+  .encoder-viz .ev-box-label {
+    fill: #1f2a36;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .encoder-viz .ev-box-sub {
+    fill: #4a5563;
+    font-size: 10.5px;
+    font-style: italic;
+  }
+  .encoder-viz .ev-rgb-label    { fill: #134a6c; }
+  .encoder-viz .ev-shared-label { fill: #1d5a36; }
+  .encoder-viz .ev-depth-label  { fill: #7a5212; }
+  .encoder-viz .ev-subspace-label {
+    fill: #4a5563;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+  .encoder-viz .ev-rgb-cap   { fill: #1f7bb6; }
+  .encoder-viz .ev-depth-cap { fill: #b8821c; }
+
+  .encoder-viz .ev-callout-line {
+    stroke: #c0392b;
+    stroke-width: 1.4;
+    fill: none;
+    transition: opacity 220ms ease;
+  }
+  .encoder-viz .ev-callout-label {
+    fill: #c0392b;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    transition: opacity 220ms ease;
+  }
+  .encoder-viz[data-state="perfect"] .ev-unalign-callout { opacity: 0; }
+
+  /* Hide the green/shared text labels when the green box is too narrow */
+  .encoder-viz[data-shared-narrow="true"] .ev-shared-label { opacity: 0; }
+  .encoder-viz .ev-shared-label { transition: opacity 200ms ease; }
+
+  /* Slider control */
+  .encoder-viz-control {
+    margin: 18px auto 8px;
+    max-width: 560px;
+    font-family: "Inter", sans-serif;
+  }
+  .encoder-viz-control .ev-control-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--c-accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .encoder-viz-control .ev-control-value {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .encoder-viz-control input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: linear-gradient(
+      to right,
+      #f9c9c4 0%,
+      #cfeacb 100%
+    );
+    border-radius: 999px;
+    outline: none;
+    cursor: pointer;
+  }
+  .encoder-viz-control input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid var(--c-accent);
+    cursor: grab;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+    transition: transform 80ms ease;
+  }
+  .encoder-viz-control input[type="range"]::-webkit-slider-thumb:active { transform: scale(1.1); cursor: grabbing; }
+  .encoder-viz-control input[type="range"]::-moz-range-thumb {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid var(--c-accent);
+    cursor: grab;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  }
+
+  .encoder-viz-control .ev-ticks {
+    position: relative;
+    display: block;
+    margin-top: 6px;
+    height: 46px;
+  }
+  .encoder-viz-control .ev-tick {
+    position: absolute;
+    transform: translateX(-50%);
+    text-align: center;
+    width: 130px;
+  }
+  .encoder-viz-control .ev-tick[data-u="0"]   { left: 0%; }
+  .encoder-viz-control .ev-tick[data-u="100"] { left: 100%; }
+  .encoder-viz-control .ev-tick-marker {
+    display: block;
+    width: 1px; height: 6px;
+    background: #9aa0a8;
+    margin: 0 auto 4px;
+  }
+  .encoder-viz-control .ev-tick-label {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #4a5563;
+    line-height: 1.25;
+  }
+  .encoder-viz-control .ev-tick-label em {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-style: normal;
+    font-size: 10px;
+    color: #8a8f97;
+  }
+  .encoder-viz-control .ev-tick-label a {
+    color: var(--c-accent);
+    text-decoration: none;
+    border-bottom: 1px dotted color-mix(in oklch, var(--c-accent) 50%, transparent);
+  }
+  .encoder-viz-control .ev-tick-label a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+  .encoder-viz .ev-figcap {
+    margin-top: 18px;
+    text-align: left;
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 14px;
+    color: #4a5563;
+  }
+  .encoder-viz .ev-figcap a {
+    color: var(--c-accent);
+    text-decoration: none;
+    border-bottom: 1px dotted color-mix(in oklch, var(--c-accent) 50%, transparent);
+  }
+  .encoder-viz .ev-figcap a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+  /* ---------- §1.2 Intro research-question block ---------- */
+  .intro-pullquote {
+    margin: 22px 0 18px;
+    padding: 14px 22px;
+    border-left: 3px solid color-mix(in oklch, var(--c-accent) 70%, transparent);
+    background: color-mix(in oklch, var(--c-accent) 4%, #fff);
+    border-radius: 0 6px 6px 0;
+  }
+  .intro-pullquote p {
+    margin: 0;
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 17px;
+    font-style: italic;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .intro-pullquote cite {
+    display: block;
+    margin-top: 6px;
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 600;
+    color: #5a6270;
+    letter-spacing: 0.04em;
+  }
+  .intro-mainq {
+    background: color-mix(in oklch, var(--c-accent) 14%, #fff);
+    border-left-width: 4px;
+  }
+  .intro-mainq .rq1-question-label {
+    background: var(--c-accent);
+    color: #fff;
+    border-color: var(--c-accent);
+  }
+  .intro-mainq p {
+    font-size: 17px;
+    font-weight: 500;
+    font-style: italic;
+  }
+  .intro-subq-intro {
+    margin: 16px 0 8px;
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 15px;
+    color: #4a5563;
+  }
+  .intro-subq {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: subq;
+  }
+  .intro-subq > li {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 12px;
+    align-items: start;
+    padding: 12px 14px;
+    margin: 8px 0;
+    background: #f7f8f9;
+    border-radius: 6px;
+    border-left: 2px solid color-mix(in oklch, var(--c-accent) 35%, transparent);
+  }
+  .intro-subq-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--c-accent);
+    color: #fff;
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .intro-subq-body {
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .intro-subq-target {
+    display: inline-block;
+    margin-left: 4px;
+    font-family: "Inter", sans-serif;
+    font-size: 12.5px;
+    color: #5a6270;
+    white-space: nowrap;
+  }
+  .intro-subq-target a {
+    color: var(--c-accent);
+    text-decoration: none;
+    border-bottom: 1px dotted color-mix(in oklch, var(--c-accent) 50%, transparent);
+  }
+  .intro-subq-target a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+  @media (max-width: 720px) {
+    .encoder-viz { padding: 16px 12px; }
+    .encoder-viz-control .ev-tick { width: 92px; font-size: 10px; }
+    .encoder-viz-control .ev-tick-label { font-size: 9.5px; }
+    .intro-subq-target { display: block; margin-left: 0; margin-top: 4px; }
+  }
+
   .rq1-toolbar {
     display: flex; align-items: center; gap: 16px;
     margin: 0 0 18px;
@@ -2761,14 +3102,145 @@
   <section id="intro">
     <h2><span class="num">01</span>Introduction &amp; Motivation</h2>
     <div class="section-rule"></div>
-    <p>Large multimodal models like <b>4M</b> are trained to encode many modalities into one shared trunk. The design assumption is that representations <em>converge</em>: an RGB patch and the corresponding depth patch of the same scene end up nearby in latent space, with surface normals, segmentation maps, and other modalities folding into the same neighborhood.</p>
-    <p>This assumption is rarely tested directly. It is mostly inferred from downstream task performance, or from the model's ability to generate one modality conditioned on another. We make it empirical — opening the trunk and measuring, layer by layer, how similarly the encoder describes the same scene observed through different sensors.</p>
-    <p>Two threads of prior work motivate the question. The <b>Platonic Representation Hypothesis</b> argues that sufficiently scaled models converge to a shared world model independent of the surface form of their input. And <b>CKA</b> and related similarity probes have proven to be effective tools for unpacking representational structure inside deep networks. Combining them gives us a concrete way to ask whether 4M's "one trunk" is genuinely one.</p>
-    <div class="aside">
-      <span class="label">Research questions</span>
-      <p><b>RQ1.</b> Across the 12 encoder layers of 4M-21, do paired activations from different modalities of the same scene cluster more tightly than activations from mismatched scenes — and if so, where in the network does this convergence emerge and persist?</p>
-      <p style="margin-bottom:0"><b>RQ2.</b> To what degree is that convergence complete? Specifically, what fraction of the cross-modal geometric structure is linearly unified, and how much remains modality-specific (fragmented) at the deepest layer?</p>
+    <p>4M-21 is designed around the idea of <em>one shared trunk</em>. Each modality &mdash; RGB, depth, surface normals, and more &mdash; gets its own small <b>tokenizer</b> that converts raw pixels (or per-pixel depth, per-pixel normals&hellip;) into a sequence of discrete tokens. From there, every modality flows through the <b>same 12-layer transformer encoder, with shared weights</b> for every block, attention head, and MLP. There is no per-modality routing inside the trunk.</p>
+    <p>But <em>shared weights are not the same thing as a shared representation</em>. The same encoder, applied to two very different token distributions, could still carve out two largely disjoint regions of its latent space &mdash; one per modality &mdash; and operate as a <b>hidden ensemble</b> of modality-specific sub-networks. Whether 4M actually escapes that failure mode is an empirical question that downstream task performance cannot answer on its own. We open the trunk and measure, layer by layer, how similarly the encoder describes the same scene observed through different sensors.</p>
+
+    <!-- ========== 1.1 — What does "unified" actually mean? ========== -->
+    <h3 id="intro-unified" style="margin-top:36px"><span class="sub-num">1.1</span>What does &ldquo;unified&rdquo; actually mean?</h3>
+
+    <p>&ldquo;Unified encoder&rdquo; is a useful but fuzzy phrase. We make it concrete by sketching what each modality's latent subspace would have to look like for the encoder to be considered unified.</p>
+    <p>Any modality's latent subspace can be split into two parts: <b>modality-specific information</b> (e.g. color and style for RGB, absolute scale for depth) and <b>shared cross-modal information</b> (e.g. scene structure, layout, surfaces). A <em>perfectly unified</em> encoder maps the shared-information part of both modalities into the <em>same</em> sub-region of latent space &mdash; a single, linearly-readable shared subspace. A <em>partially unified</em> encoder still maps the shared information <em>nearby</em> in each modality's subspace, but with measurable misalignment: the same &ldquo;scene structure&rdquo; content lives in slightly different directions for RGB and for depth. We label that misalignment <b>unaligned shared information</b>.</p>
+
+    <figure class="encoder-viz" id="encoder-viz" data-state="partial" aria-labelledby="encoder-viz-title">
+      <svg class="encoder-viz-svg" viewBox="0 0 640 550" role="img" aria-labelledby="encoder-viz-title">
+        <title id="encoder-viz-title">Perfect vs. partially unified encoder &mdash; interactive diagram</title>
+
+        <defs>
+          <marker id="ev-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="ev-arrow-head"/>
+          </marker>
+          <marker id="ev-arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="ev-arrow-head-red"/>
+          </marker>
+        </defs>
+
+        <!-- Scene input: two thumbnail modalities + caption below -->
+        <g class="ev-scene-group">
+          <image href="assets/hypersim_rgb.png"   x="182" y="10" width="130" height="98" preserveAspectRatio="xMidYMid slice"/>
+          <rect class="ev-scene-img-frame"        x="182" y="10" width="130" height="98" rx="3"/>
+          <image href="assets/hypersim_depth.png" x="328" y="10" width="130" height="98" preserveAspectRatio="xMidYMid slice"/>
+          <rect class="ev-scene-img-frame"        x="328" y="10" width="130" height="98" rx="3"/>
+          <text class="ev-scene-label" x="320" y="128" text-anchor="middle">SCENE S (RGB, Depth)</text>
+        </g>
+
+        <!-- Arrow from scene to encoder -->
+        <line class="ev-arrow-line" x1="320" y1="138" x2="320" y2="170" marker-end="url(#ev-arrow)"/>
+
+        <!-- Encoder diamond -->
+        <polygon class="ev-encoder" points="320,178 460,248 320,318 180,248"/>
+        <text class="ev-encoder-label" x="320" y="242" text-anchor="middle">
+          <tspan class="ev-encoder-line1" x="320" dy="0">PARTIALLY UNIFIED</tspan>
+          <tspan class="ev-encoder-line2" x="320" dy="20">ENCODER</tspan>
+        </text>
+
+        <!-- Two branching arrows from encoder to latent stack -->
+        <line class="ev-arrow-line ev-branch-left"  x1="240" y1="300" x2="170" y2="370" marker-end="url(#ev-arrow)"/>
+        <line class="ev-arrow-line ev-branch-right" x1="400" y1="300" x2="470" y2="370" marker-end="url(#ev-arrow)"/>
+
+        <!-- Latent-subspace stack (5 rects, 440 wide, all at y=380, h=80) -->
+        <g class="ev-stack">
+          <rect class="ev-rgb-specific"   x="100" y="380" width="123" height="80"/>
+          <rect class="ev-unalign-left"   x="223" y="380" width="18"  height="80"/>
+          <rect class="ev-shared"         x="241" y="380" width="158" height="80"/>
+          <rect class="ev-unalign-right"  x="399" y="380" width="18"  height="80"/>
+          <rect class="ev-depth-specific" x="417" y="380" width="123" height="80"/>
+
+          <text class="ev-box-label ev-rgb-label"    x="161" y="413" text-anchor="middle">SPECIFIC</text>
+          <text class="ev-box-label ev-rgb-label"    x="161" y="429" text-anchor="middle">INFORMATION</text>
+          <text class="ev-box-sub   ev-rgb-label"    x="161" y="445" text-anchor="middle">(Color, Style)</text>
+
+          <text class="ev-box-label ev-shared-label" x="320" y="413" text-anchor="middle">UNIFIED SHARED</text>
+          <text class="ev-box-label ev-shared-label" x="320" y="429" text-anchor="middle">INFORMATION</text>
+          <text class="ev-box-sub   ev-shared-label" x="320" y="445" text-anchor="middle">(Scene Structure)</text>
+
+          <text class="ev-box-label ev-depth-label"  x="478" y="413" text-anchor="middle">SPECIFIC</text>
+          <text class="ev-box-label ev-depth-label"  x="478" y="429" text-anchor="middle">INFORMATION</text>
+          <text class="ev-box-sub   ev-depth-label"  x="478" y="445" text-anchor="middle">(Absolute Scale)</text>
+        </g>
+
+        <!-- Subspace captions under the stack -->
+        <text class="ev-subspace-label ev-rgb-cap"   x="161" y="482" text-anchor="middle">RGB SUBSPACE</text>
+        <text class="ev-subspace-label ev-depth-cap" x="478" y="482" text-anchor="middle">DEPTH SUBSPACE</text>
+
+        <!-- "Unaligned shared information" callout (hidden when u=1.0 via CSS) -->
+        <g class="ev-unalign-callout">
+          <line class="ev-callout-line" x1="232" y1="528" x2="232" y2="465" marker-end="url(#ev-arrow-red)"/>
+          <line class="ev-callout-line" x1="408" y1="528" x2="408" y2="465" marker-end="url(#ev-arrow-red)"/>
+          <text class="ev-callout-label" x="320" y="540" text-anchor="middle">UNALIGNED SHARED INFORMATION</text>
+        </g>
+      </svg>
+
+      <div class="encoder-viz-control">
+        <label for="encoder-slider" class="ev-control-label">
+          Unification level <span class="ev-control-value" id="encoder-slider-value">0.50</span>
+        </label>
+        <input id="encoder-slider" type="range" min="0" max="100" value="50" step="1"
+               aria-valuetext="0.50, partially unified"/>
+        <div class="ev-ticks" aria-hidden="true">
+          <span class="ev-tick" data-u="0">
+            <span class="ev-tick-marker"></span>
+            <span class="ev-tick-label">Hidden ensemble<br><em>0</em></span>
+          </span>
+          <span class="ev-tick" data-u="100">
+            <span class="ev-tick-marker"></span>
+            <span class="ev-tick-label">Perfectly unified<br><em>1.0</em></span>
+          </span>
+        </div>
+      </div>
+
+      <figcaption class="figcap ev-figcap">
+        Drag the slider to interpolate between a fully <b>modality-specific</b> encoder (no shared subspace &mdash; the hidden-ensemble failure mode), a <b>partially unified</b> encoder (some shared subspace, some unaligned wedges), and a <b>perfectly unified</b> encoder (no unaligned wedges). This conceptual axis is what we will measure quantitatively in §5.
+      </figcaption>
+    </figure>
+
+    <!-- ========== 1.2 — Research question ========== -->
+    <h3 id="intro-rq" style="margin-top:42px"><span class="sub-num">1.2</span>Research question</h3>
+
+    <blockquote class="intro-pullquote">
+      <p>&ldquo;We think that secretly, under the hood, the models cheat and create a little ensemble of independent models&hellip;&rdquo;</p>
+      <cite>&mdash; Prof. Amir Zamir</cite>
+    </blockquote>
+
+    <div class="rq1-question intro-mainq">
+      <span class="rq1-question-label">Main question</span>
+      <p>Does the 4M encoder build a single unified representation across modalities, and if so, how complete is that unification?</p>
     </div>
+
+    <p class="intro-subq-intro">We decompose this into three sub-questions, each answered in a corresponding result subsection:</p>
+
+    <ol class="intro-subq">
+      <li>
+        <span class="intro-subq-letter">a</span>
+        <span class="intro-subq-body">
+          Do paired activations of the same scene across modalities become more similar than mismatched activations as we go deeper into the encoder &mdash; and where does this convergence emerge?
+          <span class="intro-subq-target">&rarr; <a href="#exploration-tsne">&sect;4.1</a>&ndash;<a href="#results-metrics">&sect;4.4</a></span>
+        </span>
+      </li>
+      <li>
+        <span class="intro-subq-letter">b</span>
+        <span class="intro-subq-body">
+          Does processing two modalities <em>jointly</em> (in one forward pass) further amplify cross-modal alignment, and does it leave any measurable imprint on each modality's solo representation?
+          <span class="intro-subq-target">&rarr; <a href="#joint-processing">&sect;4.5</a>&ndash;<a href="#modality-imprint">&sect;4.6</a></span>
+        </span>
+      </li>
+      <li>
+        <span class="intro-subq-letter">c</span>
+        <span class="intro-subq-body">
+          How <em>complete</em> is the convergence &mdash; what fraction of the cross-modal geometric structure is linearly unified at the deepest layer, and how much remains modality-specific?
+          <span class="intro-subq-target">&rarr; <a href="#rq2-triangulation">&sect;4.7</a></span>
+        </span>
+      </li>
+    </ol>
   </section>
 
   <!-- ========== RELATED WORK ========== -->
@@ -5744,6 +6216,94 @@
   // Auto-open the "Scene" step on page load
   const sceneBox = document.querySelector('.dbox[data-step="scene"]');
   if (sceneBox) open("scene", sceneBox);
+})();
+</script>
+
+<script>
+// ============================================================
+// §1.1 — Perfect vs partially unified encoder (interactive viz)
+// ============================================================
+(function initEncoderViz() {
+  const fig = document.getElementById("encoder-viz");
+  if (!fig) return;
+  const slider    = fig.querySelector("#encoder-slider");
+  const valueOut  = fig.querySelector("#encoder-slider-value");
+  const greenR    = fig.querySelector(".ev-shared");
+  const ulR       = fig.querySelector(".ev-unalign-left");
+  const urR       = fig.querySelector(".ev-unalign-right");
+  const rgbR      = fig.querySelector(".ev-rgb-specific");
+  const depthR    = fig.querySelector(".ev-depth-specific");
+  const lblLine1  = fig.querySelector(".ev-encoder-line1");
+  const lblLine2  = fig.querySelector(".ev-encoder-line2");
+  const sharedLbls = fig.querySelectorAll(".ev-shared-label");
+
+  // Geometry constants (SVG-px). 2*S + T = 440 = total stack width.
+  const S  = 123;   // fixed width of each specific (blue/yellow) flank
+  const T  = 194;   // total budget for shared + unaligned wedges
+  const X0 = 100;   // left edge of the stack
+
+  function setState(u) {
+    if (u >= 0.99)      fig.dataset.state = "perfect";
+    else if (u < 0.20)  fig.dataset.state = "hidden";
+    else                fig.dataset.state = "partial";
+
+    // Encoder label
+    if (lblLine1 && lblLine2) {
+      if (u >= 0.99) {
+        lblLine1.textContent = "PERFECTLY UNIFIED";
+        lblLine2.textContent = "ENCODER";
+      } else if (u < 0.20) {
+        lblLine1.textContent = "MODALITY-SPECIFIC";
+        lblLine2.textContent = "ENCODER";
+      } else {
+        lblLine1.textContent = "PARTIALLY UNIFIED";
+        lblLine2.textContent = "ENCODER";
+      }
+    }
+  }
+
+  function render(u) {
+    u = Math.max(0, Math.min(1, u));
+    const green = T * u;
+    const red   = T * (1 - u) / 2;
+
+    // RGB-specific flank: fixed
+    rgbR.setAttribute("x", X0);
+    rgbR.setAttribute("width", S);
+
+    // Left unaligned wedge
+    ulR.setAttribute("x", X0 + S);
+    ulR.setAttribute("width", red);
+
+    // Shared (green) block
+    greenR.setAttribute("x", X0 + S + red);
+    greenR.setAttribute("width", green);
+
+    // Right unaligned wedge
+    urR.setAttribute("x", X0 + S + red + green);
+    urR.setAttribute("width", red);
+
+    // Depth-specific flank
+    depthR.setAttribute("x", X0 + S + red + green + red);
+    depthR.setAttribute("width", S);
+
+    // Hide green text labels if the green box is too narrow to fit them
+    fig.dataset.sharedNarrow = green < 80 ? "true" : "false";
+
+    // Update slider readout
+    if (valueOut) valueOut.textContent = u.toFixed(2);
+    if (slider)   slider.setAttribute("aria-valuetext",
+                    u.toFixed(2) + ", " + (
+                      u >= 0.99 ? "perfectly unified"
+                                : u < 0.20 ? "modality-specific (hidden ensemble)"
+                                           : "partially unified"
+                    ));
+
+    setState(u);
+  }
+
+  slider.addEventListener("input", (e) => render(+e.target.value / 100));
+  render(+slider.value / 100);
 })();
 </script>
 
