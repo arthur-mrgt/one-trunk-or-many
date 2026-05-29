@@ -535,6 +535,49 @@
     color: var(--muted);
   }
 
+  /* ---------- Claim cards (§05): green = formally claimable, red = not claimable.
+     Same visual language as .abstract-card (gradient + left rail + soft shadow). */
+  .claim-card {
+    padding: 22px 28px 24px;
+    margin: 32px 0 0;
+    font-size: 16.5px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    border-left: 4px solid var(--c-accent);
+    background: linear-gradient(135deg, #dceef0 0%, #e8f6f8 48%, #f0f8fa 100%);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+  }
+  .claim-card h3 {
+    margin: 0 0 12px;
+    color: var(--ink);
+  }
+  .claim-card ul.clean {
+    margin-bottom: 0;
+  }
+  .claim-card ul.clean li:last-child {
+    margin-bottom: 0;
+  }
+  .claim-card--positive {
+    background: linear-gradient(135deg, #ecf7e8 0%, #f3faef 48%, #fafcf8 100%);
+    border-left-color: #b9dcb4;
+    box-shadow: 0 1px 0 rgba(150, 200, 140, 0.10);
+  }
+  .claim-card--positive h3 { color: #4f8a4a; }
+  .claim-card--negative {
+    background: linear-gradient(135deg, #fbe9e9 0%, #fdf1f1 48%, #fef7f7 100%);
+    border-left-color: #ecbcbc;
+    box-shadow: 0 1px 0 rgba(220, 170, 170, 0.10);
+  }
+  .claim-card--negative h3 { color: #a35858; }
+  .claim-card--caution {
+    background: linear-gradient(135deg, #fbf3d6 0%, #fdf8e6 48%, #fefcf2 100%);
+    border-left-color: #e8d488;
+    box-shadow: 0 1px 0 rgba(220, 195, 110, 0.10);
+  }
+  .claim-card--caution h3 { color: #8a7530; }
+  .claim-card p { margin: 0 0 12px; }
+  .claim-card p:last-child { margin-bottom: 0; }
+
   /* ---------- TL;DR strip ---------- */
   .tldr {
     display: grid;
@@ -2454,6 +2497,17 @@
     border-bottom: 1px dotted color-mix(in oklch, var(--c-accent) 50%, transparent);
   }
   .intro-subq-target a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+  ol.intro-subq > li { scroll-margin-top: 80px; }
+  /* §05 backlink from each "(x) …" answer paragraph to the matching sub-question
+     in the introduction. Inherits the surrounding <b>'s weight; the dotted accent
+     underline mirrors the .intro-subq-target link style. */
+  .subq-backlink {
+    color: var(--c-accent);
+    text-decoration: none;
+    font-weight: inherit;
+    border-bottom: 1px dotted color-mix(in oklch, var(--c-accent) 50%, transparent);
+  }
+  .subq-backlink:hover { color: var(--ink); border-bottom-color: var(--ink); }
 
   @media (max-width: 900px) {
     .intro-unified-grid {
@@ -3437,28 +3491,28 @@
     <p class="intro-subq-intro">We decompose this into four sub-questions, each answered in a corresponding result subsection (with subsubsections where noted):</p>
 
     <ol class="intro-subq">
-      <li>
+      <li id="subq-a">
         <span class="intro-subq-letter">a</span>
         <span class="intro-subq-body">
           What does the layer-by-layer activation geometry of each modality look like and does it qualitatively reveal a progressive cross-modal alignment of paired scenes?
           <span class="intro-subq-target">[<a href="#results-rq-a">&sect;4.1</a>]</span>
         </span>
       </li>
-      <li>
+      <li id="subq-b">
         <span class="intro-subq-letter">b</span>
         <span class="intro-subq-body">
           Do paired activations of the same scene across modalities become quantitatively more similar than mismatched activations as we go deeper into the encoder ?
           <span class="intro-subq-target">[<a href="#results-rq-b">&sect;4.2</a>]</span>
         </span>
       </li>
-      <li>
+      <li id="subq-c">
         <span class="intro-subq-letter">c</span>
         <span class="intro-subq-body">
           Does processing two modalities <em>jointly</em> (in one forward pass) further amplify cross-modal alignment, and does it leave any measurable imprint on each modality's solo representation?
           <span class="intro-subq-target">[<a href="#results-rq-c">&sect;4.3</a>]</span>
         </span>
       </li>
-      <li>
+      <li id="subq-d">
         <span class="intro-subq-letter">d</span>
         <span class="intro-subq-body">
           How <em>complete</em> is the convergence ? Specifically, what fraction of the cross-modal geometric structure remains linearly inaccessible from a modality's representation after optimal linear projection, and does this residual fragmentation differ across pairs and layers?
@@ -4437,24 +4491,47 @@
 
     <p>Four result subsections aligned with §1.2 point in the same direction. <em>Activation geometry</em> (<a href="#results-rq-a">§4.1</a>) shows modality clouds stay separated while internal scene-level organisation becomes increasingly congruent. <em>Paired-scene similarity</em> (<a href="#results-rq-b">§4.2</a>) shows CKA, PWCCA, and k-NN overlap rise strongly with encoder depth and sit significantly above the permutation null at deep layers. <em>Joint processing</em> (<a href="#results-rq-c">§4.3</a>) further amplifies cross-modality alignment without collapsing modality-specific subspaces. <em>Transmodal triangulation</em> (<a href="#results-rq-d">§4.4</a>) puts a number on what fraction of cross-modal structure is linearly unified at the deepest layer.</p>
 
-    <h3 style="margin-top:24px">Key takeaways</h3>
-    <ul class="clean">
-      <li><b>Progressive cross-modal alignment, not spatial collapse.</b> Paired-scene similarity grows with depth, but the modality clouds remain separated at every layer (<a href="#results-rq-a">§4.1</a>) and the per-sample paired distances decrease without ever closing to zero (<a href="#exploration-distance">§4.1.2</a>). 4M converges modalities toward congruent internal geometries rather than a single shared region of latent space.</li>
-      <li><b>RGB acts as a geometric hub.</b> RGB-involving pairs (Depth–RGB, Normals–RGB) unify the most strongly under triangulation (≈91% and ≈87% at layer 11), while Depth–Normals barely moves across layers (frag. only drops from ≈23% to ≈19%). This asymmetry is consistent with RGB providing a common coordinate system that Depth and Normals each get mapped into.</li>
-      <li><b>Joint processing amplifies cross-modal similarity at the slice level.</b> When two modalities share a single forward pass, the cross-modality similarity between their two slices (joint-vs-joint) is higher than between two separate passes, particularly for the harder pairs (RGB ↔ Normals: +0.31 on Hypersim, +0.16 on DIODE). The gain is largest in deeper layers, where cross-modal attention has accumulated.</li>
-      <li><b>Self-vs-joint similarity stays near identity (CKA ≈ 1.0) for RGB-involving combinations</b>, but drops to ≈0.7–0.85 for some Depth/Normals slices in deep layers (<a href="#modality-imprint">§4.3.2</a>). The addition of an RGB partner barely perturbs a modality's own representation, while geometric modalities are more perturbed — the partner's effect manifests in both the <em>relative</em> joint-vs-joint geometry and, for Depth/Normals, a measurable shift of the focal slice itself.</li>
-      <li><b>DIODE values are systematically higher than Hypersim values</b> for the same pair × metric in 7 of 9 conditions. This is likely a dataset-character effect (DIODE has lower visual diversity than Hypersim's 100 scenes across 17 categories); both datasets nonetheless yield the same depth-trend toward stronger alignment, so the qualitative finding does not depend on synthetic vs. real data.</li>
-    </ul>
+    <h3 style="margin-top:32px">Answers to the four sub-questions</h3>
 
-    <h3 id="conclusion" style="margin-top:32px">Conclusion</h3>
-    <p>Across both datasets, three metrics, and the full 12-layer depth, paired modalities of the same scene become progressively more similar in their relational structure (RQ1) without collapsing into a single spatial region — exactly as expected from our unification definition (§1). At the final encoder layer, transmodal triangulation gives an average of <b>≈86.5%</b> linearly unified cross-modal structure across pairs (≥81% for every pair tested), with the residual fragmentation significant at every layer (BH-FDR <span class="mono">p &lt; 0.001</span>). In the framing of our project title: 4M's encoder is <em>one trunk</em> in the sense that all modalities flow through shared weights into geometrically congruent subspaces — but it is a <em>measurably imperfect</em> one under linear probing. A small but real fraction of cross-modal structure remains linearly inaccessible from the projected modality even at the trunk's top.</p>
+    <p><b><a class="subq-backlink" href="#subq-a">(a) Activation geometry.</a></b> Modality clouds remain spatially distinct at every layer across both datasets, but their internal scene-level organisation becomes progressively congruent: the same scenes occupy similar relative positions within each modality's cloud at deep layers. Per-sample paired distances decrease monotonically with encoder depth (Wilcoxon <span class="mono">p &lt; 0.001</span> for all pairs). Activation entropy converges across modalities at depth. Qualitatively: progressive cross-modal alignment is visible in the geometry, without spatial fusion &mdash; consistent with our working definition of unification.</p>
 
-    <h3 style="margin-top:32px">Limitations</h3>
-    <p><b>Scene diversity.</b> Our Hypersim analysis uses 4 000 paired samples drawn from 100 indoor scenes (out of 461). Statistical estimates are stable at this sample size, but the scene <em>diversity</em> is bounded — all Hypersim scenes are indoor, and DIODE adds outdoors only at smaller scale. Whether the same depth-trend holds for visually further-out distributions (e.g. medical, satellite, low-light) is an open question.</p>
-    <p><b>Segmentation modality excluded.</b> The only publicly released semseg tokenizer (<span class="mono">tok_semseg</span>) was trained on COCO-Stuff (134 classes), incompatible with Hypersim's NYU-40 label set. A Hypersim-specific tokenizer would be needed to include this modality.</p>
-    <p><b>Null distribution assumptions.</b> The permutation null pairs activations from mismatched scenes of different categories but preserves within-modality statistics. If scene-level content is not the primary source of cross-modal correlation, the null may be conservative and z-scores inflated.</p>
-    <p><b>Geometric, not functional similarity.</b> CKA, PWCCA, and k-NN overlap measure statistical and geometric similarity. High similarity does not imply that the encoder <em>uses</em> the shared representation interchangeably for downstream tasks. Cross-modal decoding probes (e.g. RGB → Depth vs. Depth → Depth reconstruction) and residual-correlation analyses would be needed to test functional compatibility; these were sketched in the proposal but left as future work.</p>
-    <p><b>Training exposure confound.</b> RGB inputs are far more frequent than depth or normals during 4M training, which may itself explain RGB's apparent role as a geometric hub (<a href="#results-rq-d">§4.4</a>). Disentangling architectural bias from training-frequency bias would require either retraining 4M with balanced modality exposure or a controlled exposure-frequency ablation.</p>
+    <p><b><a class="subq-backlink" href="#subq-b">(b) Quantitative similarity.</a></b> CKA, PWCCA, and k-NN overlap rise monotonically with depth for all three pairs and both datasets, remaining significantly above the permutation null at every (layer, pair) cell tested (BH-FDR <span class="mono">p &lt; 0.001</span>, z-scores 40&ndash;80&times; the null mean at layer 11). Paired activations become quantitatively more similar than mismatched ones, and the gap grows with depth.</p>
+
+    <p><b><a class="subq-backlink" href="#subq-c">(c) Joint processing.</a></b> Feeding two modalities jointly increases cross-modal CKA relative to separate passes (peak gain: +0.31 for RGB&harr;Normals on Hypersim), with the effect concentrated at deep layers. Self-vs-joint CKA stays near 1.0 for RGB-involving pairs but drops to 0.7&ndash;0.85 for Depth/Normals pairs in deep layers, indicating a modest but real imprint on geometric modalities' own representations.</p>
+
+    <p><b><a class="subq-backlink" href="#subq-d">(d) Completeness.</a></b> Under transmodal triangulation with linear probing, fragmentation at layer 11 averages 13.5% across pairs (Depth&ndash;RGB: 8.6%, Normals&ndash;RGB: 12.5%, Depth&ndash;Normals: 19.4%), all significant (BH-FDR <span class="mono">p &lt; 0.001</span>). All three decrease monotonically from layer 0 to layer 11; the Depth&ndash;Normals pair barely moves (~3 pp) compared to Depth&ndash;RGB (~27 pp), consistent with RGB acting as a geometric hub.</p>
+
+    <p style="margin-top:22px">In the framing of the project title: 4M's encoder is <em>one trunk</em> in the sense that all modalities flow through shared weights into geometrically congruent subspaces &mdash; but a <em>measurably imperfect</em> one under linear probing.</p>
+
+    <div class="claim-card claim-card--positive">
+      <h3>What we can formally claim</h3>
+      <ul class="clean">
+        <li>The encoder is not a hidden ensemble: null-normalised similarity is 40&ndash;80&times; above chance at deep layers.</li>
+        <li>Cross-modal alignment is progressive, monotonic, and replicates across both datasets and all three metric families.</li>
+        <li>Joint processing amplifies alignment beyond separate processing; the effect is measured and significant.</li>
+        <li>The residual fragmentation under linear probing is statistically real (BH-FDR <span class="mono">p &lt; 0.001</span> at every layer and pair) and does not vanish.</li>
+        <li>The linearly unified fraction is &ge;&nbsp;81% for every pair at layer 11, under linear probing.</li>
+      </ul>
+    </div>
+
+    <div class="claim-card claim-card--negative">
+      <h3>What we cannot formally claim</h3>
+      <ul class="clean">
+        <li>That &ldquo;86.5% unified&rdquo; measures proximity to a perfect encoder: we have no reference fragmentation for a perfectly unified encoder, so <span class="mono">1 &minus; frag</span> cannot be read as a grade toward an ideal.</li>
+        <li>That <span class="mono">frag &gt; 0</span> is caused by encoder failure alone: the residual conflates genuine alignment failure with structure intrinsically absent from the projected modality's signal. These two contributions cannot be separated by our protocol.</li>
+        <li>That cloud separation in t-SNE is evidence of imperfect unification: our working definition explicitly preserves modality-specific subspaces, so persistent spatial separation is expected, not diagnostic.</li>
+      </ul>
+    </div>
+
+    <div class="claim-card claim-card--caution">
+      <h3>Limitations</h3>
+      <p><b>Modality scope.</b> We test three modalities. The only publicly released semseg tokenizer (<span class="mono">tok_semseg</span>) was trained on COCO-Stuff (134 classes), incompatible with Hypersim's NYU-40 label set; a Hypersim-specific tokenizer would be needed to include segmentation. Additional modalities from 4M-21 would allow transitivity checks on the hub structure and broaden the scope of the unification claim.</p>
+      <p><b>Scene and dataset scope.</b> Hypersim uses 4 000 paired samples from 100 indoor synthetic scenes (out of 461); DIODE adds real outdoor images at smaller scale. DIODE values are systematically higher than Hypersim in 7 of 9 pair&times;metric conditions, likely reflecting lower visual diversity rather than a qualitative difference in depth trends. Generalisation to further-out distributions (medical, satellite, low-light) is untested.</p>
+      <p><b>Null distribution assumptions.</b> The permutation null pairs activations from mismatched scenes of different categories but preserves within-modality statistics. If scene-level content is not the primary source of cross-modal correlation, the null may be conservative and z-scores inflated.</p>
+      <p><b>Linear probing only.</b> Cross-modal structure on non-linear sub-manifolds inflates the fragmentation scores. A non-linear probe would likely reduce residuals; linearity is kept here as the standard convention and to maintain comparability with CKA and PWCCA.</p>
+      <p><b>Geometric, not functional similarity.</b> High CKA does not imply interchangeable downstream use. Cross-modal decoding probes (e.g. RGB&nbsp;&rarr;&nbsp;Depth vs. Depth&nbsp;&rarr;&nbsp;Depth reconstruction) would be needed to test functional compatibility; these were sketched in the proposal but remain future work.</p>
+      <p><b>Training-exposure confound.</b> RGB is more frequent than depth or normals during 4M training. This may contribute to RGB's geometric hub role independently of architecture. Disentangling requires retraining with balanced exposure or a controlled ablation.</p>
+    </div>
   </section>
 
   <!-- ========== REFERENCES ========== -->
