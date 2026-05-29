@@ -2499,6 +2499,125 @@
     background: #fff;
     border-color: #fff;
   }
+
+  /* ---------- §4.7 RQ2 interactive fragmentation chart ---------- */
+  .rq2-chart-panel {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px 18px 12px;
+    background: #fff;
+    margin: 32px 0 28px;
+  }
+  .rq2-chart-title {
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  /* Per-pair toggles in the RQ2 fragmentation chart: the dot keeps the
+     pair's curve color in both active and inactive states so users can
+     match each button to its curve (and shaded CI band). */
+  .rq2-pair-toggle .rq1-pair-toggle-icon {
+    background: var(--pair-color);
+    border-color: var(--pair-color);
+  }
+  .rq2-pair-toggle.active .rq1-pair-toggle-icon {
+    background: var(--pair-color);
+    border-color: #fff;
+  }
+  /* When a pair toggle is the only active one, lock it so the user cannot
+     end up with an empty chart. The CSS only adjusts the cursor; the click
+     handler is what actually rejects the deactivation. */
+  .rq2-pair-toggle.rq2-pair-locked {
+    cursor: not-allowed;
+    opacity: 0.92;
+  }
+  .rq2-toolbar-sep {
+    display: inline-block;
+    width: 1px;
+    height: 18px;
+    background: var(--rule-strong);
+    margin: 0 4px;
+    align-self: center;
+  }
+  /* On/off switch used by the 95% CI band control in the RQ2 toolbar. */
+  .rq2-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    user-select: none;
+    align-self: center;
+  }
+  .rq2-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+  .rq2-switch-slider {
+    position: relative;
+    display: inline-block;
+    width: 30px;
+    height: 17px;
+    background: #d6d8dc;
+    border-radius: 999px;
+    transition: background .15s ease;
+    flex-shrink: 0;
+  }
+  .rq2-switch-slider::after {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 2px;
+    width: 13px;
+    height: 13px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    transition: transform .15s ease;
+  }
+  .rq2-switch input:checked + .rq2-switch-slider {
+    background: var(--ink);
+  }
+  .rq2-switch input:checked + .rq2-switch-slider::after {
+    transform: translateX(13px);
+  }
+  .rq2-switch:hover .rq2-switch-slider {
+    background: #c8cad0;
+  }
+  .rq2-switch:hover input:checked + .rq2-switch-slider {
+    background: #2a2a30;
+  }
+  .rq2-switch input:focus-visible + .rq2-switch-slider {
+    outline: 2px solid rgba(0, 0, 0, 0.18);
+    outline-offset: 2px;
+  }
+  .rq2-switch-text {
+    color: var(--ink);
+  }
+  .rq2-chart-toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .rq2-chart {
+    width: 100%;
+    height: 420px;
+  }
+  @media (max-width: 720px) {
+    .rq2-chart { height: 340px; }
+  }
+
   .rq1-pair-grid {
     display: grid;
     grid-template-columns: 30px 1fr 1fr 1fr;
@@ -4096,30 +4215,96 @@
       Each curve is the layer-wise similarity (selected metric) between the modality fed alone and the same modality slice from a joint forward pass. The horizontal dotted reference at <span class="mono">1.0</span> marks "partner ignored"; deviation downward marks "imprint".
     </p>
 
-    <!-- ========== 5.7 — Transmodal triangulation (RQ2) ========== -->
-    <h3 id="rq2-triangulation" style="margin-top:42px"><span class="sub-num">4.7</span>Cross-modal unification &mdash; transmodal triangulation (RQ2)</h3>
+    <!-- ========== 4.7 — Cross-modal unification (transmodal triangulation) ========== -->
+    <h3 id="rq2-triangulation" style="margin-top:42px"><span class="sub-num">4.7</span>Cross-modal unification &mdash; transmodal triangulation</h3>
 
-    <div class="rq1-question">
-      <span class="rq1-question-label">RQ2</span>
-      <p>RQ1 establishes that the encoder converges; RQ2 quantifies <em>how complete</em> that convergence is. What fraction of the cross-modal geometric structure between two modalities is linearly unified, and how much remains modality-specific?</p>
+    <p>This subsection addresses sub-question <em>d</em> from the introduction: how <em>complete</em> the cross-modal convergence is, by putting a number on the fraction of the cross-modal geometric structure that remains linearly inaccessible from a modality's representation after optimal linear projection through a third one.</p>
+
+    <p>For each directed triplet of modalities <span class="mono">(A, B, C)</span> &mdash; with <span class="mono">A</span> the <em>target</em>, <span class="mono">B</span> the <em>projected</em> modality (whose column span is used to project <span class="mono">A</span>), and <span class="mono">C</span> the <em>witness</em> &mdash; we compute a <b>CKA fragmentation score</b> <span class="mono">frag(A, B&nbsp;|&nbsp;C)</span>: the fraction of the cross-modal linear structure carried by <span class="mono">A</span> and observed through <span class="mono">C</span> that <em>cannot</em> be recovered from <span class="mono">B</span> alone. A score of 0 means <span class="mono">B</span> linearly captures everything that <span class="mono">A</span> shares with witness <span class="mono">C</span> (<span class="mono">A</span> and <span class="mono">B</span> are interchangeable predictors of <span class="mono">C</span>); a score of 1 means <span class="mono">B</span> is irrelevant to the <span class="mono">A&ndash;C</span> alignment. We report the score symmetrised across the two projection directions for a given pair <span class="mono">(A, B)</span> &mdash; namely <span class="mono">frag(A, B&nbsp;|&nbsp;C)</span> and <span class="mono">frag(B, A&nbsp;|&nbsp;C)</span>, with the witness <span class="mono">C</span> held fixed &mdash; and test it against a 1 000-permutation null (BH-FDR corrected).</p>
+
+    <p>From the three modalities <span class="mono">{RGB, Depth, Normals}</span>, three triplets are possible, each defined by a pair <span class="mono">(A, B)</span> and its witness <span class="mono">C</span>:</p>
+    <ul class="clean">
+      <li>pair <span class="mono">(A, B) = (Depth, RGB)</span> with witness <span class="mono">C = Normals</span>;</li>
+      <li>pair <span class="mono">(A, B) = (Normals, RGB)</span> with witness <span class="mono">C = Depth</span>;</li>
+      <li>pair <span class="mono">(A, B) = (Depth, Normals)</span> with witness <span class="mono">C = RGB</span>.</li>
+    </ul>
+
+    <div class="rq2-chart-panel" id="rq2-frag-panel">
+      <div class="rq2-chart-title">Layer-wise CKA fragmentation per pair (A,&nbsp;B), witness C fixed</div>
+      <div class="rq2-chart-toolbar">
+        <button id="rq2-frag-pair-depth-rgb" type="button" class="rq1-pair-toggle rq2-pair-toggle active" aria-pressed="true" data-pair="depth-rgb" style="--pair-color:#1f77b4">
+          <span class="rq1-pair-toggle-icon" aria-hidden="true"></span>(Depth,&nbsp;RGB) | C=Normals
+        </button>
+        <button id="rq2-frag-pair-normals-rgb" type="button" class="rq1-pair-toggle rq2-pair-toggle active" aria-pressed="true" data-pair="normals-rgb" style="--pair-color:#d62728">
+          <span class="rq1-pair-toggle-icon" aria-hidden="true"></span>(Normals,&nbsp;RGB) | C=Depth
+        </button>
+        <button id="rq2-frag-pair-depth-normals" type="button" class="rq1-pair-toggle rq2-pair-toggle active" aria-pressed="true" data-pair="depth-normals" style="--pair-color:#2ca02c">
+          <span class="rq1-pair-toggle-icon" aria-hidden="true"></span>(Depth,&nbsp;Normals) | C=RGB
+        </button>
+        <span class="rq2-toolbar-sep" aria-hidden="true"></span>
+        <label class="rq2-switch" for="rq2-frag-ci-toggle">
+          <input type="checkbox" id="rq2-frag-ci-toggle" />
+          <span class="rq2-switch-slider" aria-hidden="true"></span>
+          <span class="rq2-switch-text">95% CI band</span>
+        </label>
+      </div>
+      <div class="rq2-chart" id="rq2-frag-chart" data-rq2-kind="fragmentation"></div>
+      <p class="figcap" style="margin-top:8px">
+        Symmetrised CKA fragmentation per layer (Hypersim, 4 000 samples, 1 000-perm. null). One curve per triplet; L11 annotations show <span class="mono">1 &minus; frag<sub>L11</sub></span>. Hover for value &amp; 95% CI.
+      </p>
     </div>
 
-    <p>For every triplet <span class="mono">(A<sub>target</sub>, B<sub>projected</sub>, C<sub>witness</sub>)</span> we compute a <b>CKA fragmentation score</b>: the fraction of the structure shared between the target modality A and the witness C that <em>cannot</em> be linearly recovered from B (the modality whose linear span is used for projection). A score of 0 means the full A&ndash;C linear structure is recoverable through B; a score of 1 means B is irrelevant to the A&ndash;C alignment. We report the symmetrised score per pair, averaged over the two possible projection directions (which modality is projected vs. witnessed), and test it against a <b>permutation null</b> (1 000 shuffled triplets, BH-FDR corrected).</p>
+    <p>Lower curves mean more of the <span class="mono">A&ndash;C</span> linear structure is recoverable through <span class="mono">B</span> &mdash; i.e. greater cross-modal unification via triangulation through <span class="mono">B</span>. All three curves drop monotonically with encoder depth, and at every layer the score is significantly below the 1 000-permutation null (BH-FDR <span class="mono">p &lt; 0.001</span>). The decrease is, however, not uniform across the three triplets: for the pair <span class="mono">(A, B) = (Depth, RGB)</span> with witness <span class="mono">C = Normals</span>, fragmentation falls from ≈0.36 at layer 0 to ≈0.086 at layer 11 (~27 percentage-point drop); for the pair <span class="mono">(A, B) = (Normals, RGB)</span> with witness <span class="mono">C = Depth</span>, it falls similarly, ending at ≈0.125. By contrast, for the pair <span class="mono">(A, B) = (Depth, Normals)</span> with witness <span class="mono">C = RGB</span>, fragmentation barely moves: from ≈0.23 at layer 0 to ≈0.19 at layer 11 (~3 percentage points only).</p>
 
-    <figure class="rq2-figure" style="margin: 22px 0 6px; text-align:center">
-      <img src="assets/rq2_triangulation.png"
-           alt="Layer-wise CKA fragmentation score per modality pair, with shaded plateau for Depth-Normals and annotated unification lower bounds at layer 11"
-           style="max-width:100%; height:auto; display:block; margin:0 auto" loading="lazy">
-      <figcaption class="figcap" style="margin-top:8px">
-        Layer-wise CKA fragmentation score per modality pair (Hypersim, 4 000 paired samples, symmetrised, 1 000 permutation draws). Lower = more unified via triangulation. Annotated values are the unification lower bound at layer 11 (i.e. <span class="mono">1 &minus; frag<sub>L11</sub></span>).
-      </figcaption>
-    </figure>
+    <table class="restable peaks" aria-label="Final-layer (L11) fragmentation per pair (A, B)" style="margin-top:32px">
+      <thead>
+        <tr>
+          <th>Pair (A, B)</th>
+          <th>Witness C</th>
+          <th>frag<sub>CKA</sub> (sym., L11)</th>
+          <th>Direction range</th>
+          <th>p<sub>adj</sub> (BH-FDR)</th>
+          <th>1 &minus; frag<sub>CKA</sub></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="pair">(Depth, RGB)</td>
+          <td>Normals</td>
+          <td class="num">0.086</td>
+          <td class="num">[0.070 &ndash; 0.102]</td>
+          <td class="num">&lt; 0.001</td>
+          <td class="num"><b>91%</b></td>
+        </tr>
+        <tr>
+          <td class="pair">(Normals, RGB)</td>
+          <td>Depth</td>
+          <td class="num">0.125</td>
+          <td class="num">[0.066 &ndash; 0.184]</td>
+          <td class="num">&lt; 0.001</td>
+          <td class="num"><b>87%</b></td>
+        </tr>
+        <tr>
+          <td class="pair">(Depth, Normals)</td>
+          <td>RGB</td>
+          <td class="num">0.194</td>
+          <td class="num">[0.097 &ndash; 0.292]</td>
+          <td class="num">&lt; 0.001</td>
+          <td class="num"><b>81%</b></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="figcap" style="margin-top:10px;margin-bottom:24px"><b>Table 3.</b> Layer-11 CKA fragmentation per triplet, symmetrised over the two directions <span class="mono">frag(A, B&nbsp;|&nbsp;C)</span> / <span class="mono">frag(B, A&nbsp;|&nbsp;C)</span> (shown in <span class="mono">Direction range</span>).</div>
 
-    <div class="aside" style="margin-top:14px">
-      <span class="label">Interpretive note</span>
-      <p>At layer 11, all three pairs sit far below their layer-0 fragmentation level, but not uniformly. The two RGB-involving pairs (Depth&ndash;RGB, Normals&ndash;RGB) drop sharply, ending at ≈<b>91%</b> and ≈<b>87%</b> linearly unified respectively. The non-RGB pair Depth&ndash;Normals barely moves: it starts at ≈23% fragmentation and ends at ≈19%, a drop of only ~3 percentage points compared with ~27 pp for Depth&ndash;RGB. This asymmetry is consistent with RGB acting as a geometric hub through which Depth and Normals are each indirectly aligned, rather than the two geometric modalities converging directly.</p>
-      <p style="margin-bottom:0">In aggregate, at the final encoder layer ≈<b>86.5%</b> of the cross-modal geometric structure is linearly unified under triangulation. The remaining residual fragmentation is small but statistically significant in every pair (BH-FDR <span class="mono">p &lt; 0.001</span>, 1 000 permutation draws), and it does not vanish at any layer: the encoder approaches full linear unification without reaching it under linear probing.</p>
-    </div>
+    <p>The asymmetry across the three rows is the central observation. The two triplets whose witness <span class="mono">C</span> is a geometric modality &mdash; <span class="mono">C = Normals</span> for the pair <span class="mono">(Depth, RGB)</span>, and <span class="mono">C = Depth</span> for the pair <span class="mono">(Normals, RGB)</span> &mdash; end at <b>91%</b> and <b>87%</b> linear unification respectively. The remaining triplet, whose witness is <span class="mono">C = RGB</span> (pair <span class="mono">(Depth, Normals)</span>), ends at only <b>81%</b>. Equivalently, Depth and Normals each align to RGB closely enough that one can substitute for the other in predicting the third modality, but they are <em>not</em> interchangeable predictors of RGB itself. This is consistent with RGB acting as a geometric hub: Depth and Normals each converge to RGB, rather than directly to each other.</p>
+
+    <p>In aggregate, at the final encoder layer ≈<b>86.5%</b> of the measured cross-modal structure is linearly unified under triangulation (mean across the three triplets above). The remaining residual fragmentation is small but statistically significant for every triplet at every layer (BH-FDR <span class="mono">p &lt; 0.001</span>, 1 000 permutation draws) and never vanishes: the encoder does not achieve zero fragmentation under this metric at any layer, indicating that some cross-modal structure remains linearly inaccessible from any given modality's span even at the trunk's deepest layer.</p>
+
+    <h4 id="rq2-sanity-checks" style="margin-top:40px;margin-bottom:10px;font-family:'Inter',sans-serif;font-size:14.5px;font-weight:600;letter-spacing:0.02em">Sanity checks</h4>
+    <p>Four built-in controls validate that the metric behaves as expected. <em>Self-projection</em>: <span class="mono">frag(A, A&nbsp;|&nbsp;C)&nbsp;=&nbsp;1.7&nbsp;&middot;&nbsp;10<sup>&minus;6</sup></span> for <span class="mono">A = B = RGB</span> &mdash; zero up to the ridge floor, as expected when a modality is regressed onto itself. <em>Random-noise control</em>: replacing <span class="mono">A</span> by Gaussian noise of the same shape gives <span class="mono">frag<sub>global</sub>(noise, B)&nbsp;=&nbsp;0.81</span> (global OLS residual norm, no witness) &mdash; high and close to 1 as expected when <span class="mono">A</span> is unrelated to <span class="mono">B</span>, confirming that the ridge-regularised projection does not spuriously reduce the residual for unstructured inputs. <em>Permutation-null mean</em> across all triplets is <span class="mono">&asymp;&nbsp;0.98</span>: a randomly shuffled target <span class="mono">A</span> leaves the <span class="mono">B&ndash;C</span> structure essentially intact, again as expected. <em>Directional spread</em>: for the pair <span class="mono">(A, B) = (RGB, Depth)</span> with witness <span class="mono">C = Normals</span>, the standard deviation of the directional difference is <span class="mono">std(&Delta;) = 0.08</span>, indicating that the asymmetry between the two projection directions is real and not a numerical artefact.</p>
+
+    <h4 id="rq2-linear-caveat" style="margin-top:32px;margin-bottom:10px;font-family:'Inter',sans-serif;font-size:14.5px;font-weight:600;letter-spacing:0.02em">Linear-probing caveat</h4>
+    <p>All projections in this subsection are <em>linear</em> (ridge-regularised OLS). Cross-modal structure that lives on a non-linear sub-manifold of the target modality <span class="mono">A</span> is invisible to OLS and inflates the residual. A second source of inflation is structural: some of the <span class="mono">A&ndash;C</span> shared structure may be fundamentally absent from <span class="mono">B</span>'s modality (e.g. absolute surface scale shared between Depth and Normals is not recoverable from RGB pixels regardless of what the encoder does), contributing positively to <span class="mono">frag</span> independently of encoder quality. The reported fragmentation scores therefore cannot distinguish encoder alignment failure from modality-intrinsic non-representability. They should be read as <em>upper bounds under linear probing</em>, and the unification percentages as <em>lower bounds</em> on the true geometric overlap. A non-linear probe (e.g. a small MLP) would likely shrink the residuals further, but linearity is the standard convention for representation-similarity work and is what makes CKA, PWCCA, and OLS residuals directly comparable here.</p>
   </section>
 
   <!-- ========== DISCUSSION & CONCLUSION (merged) ========== -->
@@ -5179,6 +5364,204 @@
 
     window.addEventListener("resize", () => {
       cells.forEach((el) => { if (el && el.data) Plotly.Plots.resize(el); });
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+
+/* =========================================================
+   §4.7 — RQ2 interactive fragmentation chart.
+   Single Plotly cell with 3 overlaid pair curves, shaded
+   95% CI bands, hover tooltips, and L11 unification annotations.
+   Data source: website/assets/metrics/rq2.json (built by
+   scripts/build_rq2_json.py from the fragmentation summary CSV).
+   ========================================================= */
+(function initRq2Chart() {
+  const fragEl = document.getElementById("rq2-frag-chart");
+  if (!fragEl) return;
+  if (typeof Plotly === "undefined") return;
+
+  let DATA = null;
+  let showCI = false;
+  let showL11 = true;
+
+  const PAIR_COLOR = {
+    "depth-rgb":     "#1f77b4",
+    "normals-rgb":   "#d62728",
+    "depth-normals": "#2ca02c",
+  };
+  const PAIR_LABEL = {
+    "depth-rgb":     "(Depth, RGB) | C=Normals",
+    "normals-rgb":   "(Normals, RGB) | C=Depth",
+    "depth-normals": "(Depth, Normals) | C=RGB",
+  };
+  const visiblePairs = {
+    "depth-rgb":     true,
+    "normals-rgb":   true,
+    "depth-normals": true,
+  };
+
+  function hexToRgba(hex, alpha) {
+    const h = hex.replace("#", "");
+    const r = parseInt(h.substring(0, 2), 16);
+    const g = parseInt(h.substring(2, 4), 16);
+    const b = parseInt(h.substring(4, 6), 16);
+    return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
+  }
+
+  function buildTraces() {
+    const traces = [];
+    const layers = DATA.layers;
+    DATA.pairs.forEach((pair) => {
+      if (!visiblePairs[pair]) return;
+      const rows = DATA.fragmentation[pair];
+      const y  = rows.map((r) => r.mean);
+      const lo = rows.map((r) => r.ci_lo);
+      const hi = rows.map((r) => r.ci_hi);
+      const col = PAIR_COLOR[pair];
+
+      if (showCI) {
+        traces.push({
+          x: layers, y: hi, mode: "lines",
+          line: { width: 0 }, hoverinfo: "skip", showlegend: false,
+        });
+        traces.push({
+          x: layers, y: lo, mode: "lines",
+          line: { width: 0 }, fill: "tonexty",
+          fillcolor: hexToRgba(col, 0.13),
+          hoverinfo: "skip", showlegend: false,
+        });
+      }
+      traces.push({
+        x: layers, y: y, mode: "lines+markers",
+        name: PAIR_LABEL[pair],
+        line: { color: col, width: 2.5 },
+        marker: { color: col, size: 7 },
+        hovertemplate:
+          "<b>" + PAIR_LABEL[pair] + "</b><br>" +
+          "Layer %{x}<br>" +
+          "Fragmentation: %{y:.3f}<br>" +
+          "95% CI: [%{customdata[0]:.3f}, %{customdata[1]:.3f}]<extra></extra>",
+        customdata: rows.map((r) => [r.ci_lo, r.ci_hi]),
+      });
+    });
+    return traces;
+  }
+
+  function buildAnnotations() {
+    if (!showL11) return [];
+    return DATA.pairs.filter((pair) => visiblePairs[pair]).map((pair) => {
+      const yEnd = DATA.fragmentation[pair][11].mean;
+      const pct  = DATA.l11_summary[pair].unified_pct;
+      const col  = PAIR_COLOR[pair];
+      return {
+        x: 11, y: yEnd, xref: "x", yref: "y",
+        text: pct + "% unified",
+        showarrow: true, arrowhead: 0, arrowwidth: 1, arrowcolor: col,
+        ax: 36, ay: 0,
+        font: { color: col, size: 12, family: "Inter, sans-serif", weight: 600 },
+        bgcolor: "rgba(255,255,255,0.92)",
+        bordercolor: col, borderwidth: 1, borderpad: 4,
+      };
+    });
+  }
+
+  function render() {
+    Plotly.react(fragEl, buildTraces(), {
+      margin: { l: 56, r: 110, t: 12, b: 50 },
+      xaxis: {
+        title: { text: "Encoder layer", font: { size: 12, family: "Inter, sans-serif" } },
+        tickmode: "array", tickvals: DATA.layers,
+        range: [-0.4, 12.2], autorange: false,
+        gridcolor: "#eee", zerolinecolor: "#ddd",
+        showline: true, linecolor: "#bbb",
+      },
+      yaxis: {
+        title: { text: "CKA fragmentation (lower = more unified)", font: { size: 12, family: "Inter, sans-serif" } },
+        range: [0, 0.45], autorange: false,
+        gridcolor: "#eee", zerolinecolor: "#ddd",
+        showline: true, linecolor: "#bbb",
+      },
+      shapes: [
+        { type: "line", x0: -0.4, x1: 12.2, y0: 0, y1: 0,
+          line: { color: "#9aa0a8", width: 1, dash: "dot" } },
+      ],
+      annotations: buildAnnotations(),
+      legend: {
+        orientation: "h", y: -0.18, x: 0.5, xanchor: "center",
+        font: { size: 12, family: "Inter, sans-serif" },
+      },
+      font: { family: "Inter, sans-serif", size: 12, color: "#1f2a36" },
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor:  "rgba(0,0,0,0)",
+      hoverlabel: { font: { family: "Inter, sans-serif" } },
+    }, { responsive: true, displayModeBar: false });
+  }
+
+  function init() {
+    fetch("assets/metrics/rq2.json")
+      .then((r) => {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then((json) => {
+        DATA = json;
+        render();
+      })
+      .catch((e) => {
+        fragEl.innerHTML =
+          '<div style="padding:8px;color:#b51f1f;font-size:11px;font-family:Inter,sans-serif">' +
+          "Failed to load rq2.json: " + e.message + "</div>";
+      });
+
+    const ciInput = document.getElementById("rq2-frag-ci-toggle");
+    if (ciInput) {
+      ciInput.checked = showCI;
+      ciInput.addEventListener("change", () => {
+        showCI = ciInput.checked;
+        if (DATA) render();
+      });
+    }
+
+    function updatePairLockState() {
+      const activeList = Object.keys(visiblePairs).filter((p) => visiblePairs[p]);
+      const onlyOne = activeList.length === 1 ? activeList[0] : null;
+      Object.keys(PAIR_COLOR).forEach((p) => {
+        const b = document.getElementById("rq2-frag-pair-" + p);
+        if (!b) return;
+        b.classList.toggle("rq2-pair-locked", p === onlyOne);
+        b.setAttribute("aria-disabled", p === onlyOne ? "true" : "false");
+      });
+    }
+
+    Object.keys(PAIR_COLOR).forEach((pair) => {
+      const btn = document.getElementById("rq2-frag-pair-" + pair);
+      if (!btn) return;
+      btn.addEventListener("click", () => {
+        const next = !visiblePairs[pair];
+        if (!next) {
+          const othersActive = Object.keys(visiblePairs).some(
+            (p) => p !== pair && visiblePairs[p]
+          );
+          if (!othersActive) return;
+        }
+        visiblePairs[pair] = next;
+        btn.classList.toggle("active", next);
+        btn.setAttribute("aria-pressed", next ? "true" : "false");
+        updatePairLockState();
+        if (DATA) render();
+      });
+    });
+
+    updatePairLockState();
+
+    window.addEventListener("resize", () => {
+      if (DATA && fragEl && fragEl.data) Plotly.Plots.resize(fragEl);
     });
   }
 
