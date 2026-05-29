@@ -3220,27 +3220,34 @@
       <p>Does the 4M encoder build a single unified representation across modalities, and if so, how complete is that unification?</p>
     </div>
 
-    <p class="intro-subq-intro">We decompose this into three sub-questions, each answered in a corresponding result subsection:</p>
+    <p class="intro-subq-intro">We decompose this into four sub-questions, each answered in a corresponding result subsection:</p>
 
     <ol class="intro-subq">
       <li>
         <span class="intro-subq-letter">a</span>
         <span class="intro-subq-body">
-          Do paired activations of the same scene across modalities become more similar than mismatched activations as we go deeper into the encoder &mdash; and where does this convergence emerge?
-          <span class="intro-subq-target">&rarr; <a href="#exploration-tsne">&sect;4.1</a>&ndash;<a href="#results-metrics">&sect;4.4</a></span>
+          What does the layer-by-layer activation geometry of each modality look like &mdash; in t-SNE projections, in paired-sample distances, and in per-modality entropy &mdash; and does it qualitatively reveal a progressive cross-modal alignment of paired scenes?
+          <span class="intro-subq-target">&rarr; <a href="#exploration-tsne">&sect;4.1</a>&ndash;<a href="#exploration-entropy">&sect;4.3</a></span>
         </span>
       </li>
       <li>
         <span class="intro-subq-letter">b</span>
+        <span class="intro-subq-body">
+          Do paired activations of the same scene across modalities become quantitatively more similar than mismatched activations as we go deeper into the encoder &mdash; and where does this convergence emerge?
+          <span class="intro-subq-target">&rarr; <a href="#results-metrics">&sect;4.4</a></span>
+        </span>
+      </li>
+      <li>
+        <span class="intro-subq-letter">c</span>
         <span class="intro-subq-body">
           Does processing two modalities <em>jointly</em> (in one forward pass) further amplify cross-modal alignment, and does it leave any measurable imprint on each modality's solo representation?
           <span class="intro-subq-target">&rarr; <a href="#joint-processing">&sect;4.5</a>&ndash;<a href="#modality-imprint">&sect;4.6</a></span>
         </span>
       </li>
       <li>
-        <span class="intro-subq-letter">c</span>
+        <span class="intro-subq-letter">d</span>
         <span class="intro-subq-body">
-          How <em>complete</em> is the convergence &mdash; what fraction of the cross-modal geometric structure is linearly unified at the deepest layer, and how much remains modality-specific?
+          How <em>complete</em> is the convergence &mdash; what fraction of the cross-modal geometric structure is linearly unified at the deepest layer, and how much remains linearly inaccessible from the projected modality?
           <span class="intro-subq-target">&rarr; <a href="#rq2-triangulation">&sect;4.7</a></span>
         </span>
       </li>
